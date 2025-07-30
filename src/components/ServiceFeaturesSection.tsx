@@ -32,7 +32,7 @@ const ServiceFeaturesSection: React.FC = () => {
   const iconMap: IconMap = {
     truck: (
       <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25M16.5 10.5V7.875c0-.621-.504-1.125-1.125-1.125H14.25M16.5 10.5h2.25c.621 0 1.125.504 1.125 1.125v3.375c0 .621-.504 1.125-1.125 1.125h-2.25m0-5.25v5.25M3.75 16.125c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v.375m-4.5-.375v-1.5A2.25 2.25 0 0 1 5.625 12h10.5a.75.75 0 0 1 .75.75v3.75A2.25 2.25 0 0 1 14.625 18.5H5.625A2.25 2.25 0 0 1 3.375 16.25v-.125Z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M21 7.5l-2.25-1.313L16.875 4.5H15.75L14.25 2.25 12 1.5l-2.25.75L8.25 4.5H7.125L5.25 6.188 3 7.5v9a2.25 2.25 0 0 0 2.25 2.25h13.5A2.25 2.25 0 0 0 21 16.5v-9zM9 15.75l-3-3m0 0l3-3m-3 3h12" />
       </svg>
     ),
     headphones: (
@@ -77,12 +77,12 @@ const ServiceFeaturesSection: React.FC = () => {
             </div>
             
             {/* Title */}
-            <h3 className="text-xl font-semibold text-gray-900 mb-3 leading-tight" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
+            <h3 className="text-xl font-semibold text-black mb-3 leading-tight" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
               {features[currentSlide].title}
             </h3>
             
             {/* Description */}
-            <p className="text-base text-gray-600 leading-relaxed" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
+            <p className="text-base text-black leading-relaxed" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
               {features[currentSlide].description}
             </p>
           </div>
@@ -123,12 +123,12 @@ const ServiceFeaturesSection: React.FC = () => {
                   {/* Text Content on the Right */}
                   <div className="flex-1">
                     {/* Title */}
-                    <h3 className="text-lg font-semibold text-red-500 mb-1 leading-tight">
+                    <h3 className="text-lg font-semibold text-black mb-1 leading-tight">
                       {feature.title}
                     </h3>
                     
                     {/* Description */}
-                    <p className="text-sm text-red-500 leading-relaxed">
+                    <p className="text-sm text-black leading-relaxed">
                       {feature.description}
                     </p>
                   </div>

@@ -292,9 +292,7 @@ const HeroCarousel: React.FC = () => {
               backgroundImage: `url(${slide.image})`,
               backgroundSize: 'cover',
               backgroundRepeat: 'no-repeat',
-              backgroundPosition: 'center center',
-              border: '3px solid #ef4444',
-              boxShadow: '0 0 10px rgba(239, 68, 68, 0.5)'
+              backgroundPosition: 'center center'
             }}
           >
             {/* Content Section - Overlaid on background */}
@@ -303,7 +301,7 @@ const HeroCarousel: React.FC = () => {
               className="flex flex-col items-center text-center px-4 sm:px-8 lg:px-16 py-4 sm:py-8 relative z-10 w-full h-full justify-start pt-8 sm:pt-16"
             >
               {/* Main Heading */}
-              <h2 className={`font-normal mb-3 sm:mb-6 leading-tight text-red-500 ${
+              <h2 className={`font-normal mb-3 sm:mb-6 leading-tight text-black ${
                 index === activeIndex 
                   ? 'text-[32px] sm:text-[48px] lg:text-[68px]' 
                   : 'text-[24px] sm:text-[36px] lg:text-[48px]'
@@ -317,7 +315,7 @@ const HeroCarousel: React.FC = () => {
               </h2>
               
               {/* Subheading - Hidden on mobile */}
-              <p className={`mb-6 sm:mb-12 max-w-xs sm:max-w-md hidden sm:block text-red-500 ${
+              <p className={`mb-6 sm:mb-12 max-w-xs sm:max-w-md hidden sm:block text-black ${
                 index === activeIndex 
                   ? 'text-[14px] sm:text-[16px] lg:text-[20px]' 
                   : 'text-[12px] sm:text-[14px] lg:text-[16px]'
@@ -329,7 +327,7 @@ const HeroCarousel: React.FC = () => {
               {index === activeIndex && (
                 <button 
                   ref={buttonRef}
-                  className="inline-flex items-center border-2 border-red-500 px-4 sm:px-8 py-2 sm:py-3 rounded-full text-sm sm:text-lg font-medium transition-all duration-300 hover:bg-red-500 hover:text-white group text-red-500"
+                  className="inline-flex items-center border-2 border-black px-4 sm:px-8 py-2 sm:py-3 rounded-full text-sm sm:text-lg font-medium transition-all duration-300 hover:bg-black hover:text-white group text-black"
                 >
                   {slide.button}
                   <svg 

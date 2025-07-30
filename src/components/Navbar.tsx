@@ -107,7 +107,8 @@ const Navbar: React.FC = () => {
           </button>
 
           {/* Account Icon - Hidden on mobile */}
-          <button 
+          <Link 
+            to="/account"
             className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200 hidden lg:block" 
             aria-label="Account"
           >
@@ -125,7 +126,7 @@ const Navbar: React.FC = () => {
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
               <circle cx="12" cy="7" r="4"/>
             </svg>
-          </button>
+          </Link>
 
           {/* Compare Icon - Hidden on mobile and tablet */}
           <button 
@@ -355,13 +356,17 @@ const Navbar: React.FC = () => {
         {/* Sidebar Footer */}
         <div className="border-t border-gray-200 p-4">
           {/* Login Button */}
-          <button className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors mb-4">
+          <Link 
+            to="/account"
+            onClick={() => setIsSidebarOpen(false)}
+            className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors mb-4"
+          >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
               <circle cx="12" cy="7" r="4"/>
             </svg>
-            <span className="font-medium">Login</span>
-          </button>
+            <span className="font-medium">Account</span>
+          </Link>
 
           {/* Language and Currency */}
           <div className="flex gap-4">

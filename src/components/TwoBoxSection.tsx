@@ -26,14 +26,14 @@ const TwoBoxSection: React.FC = () => {
       <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Title */}
         <div className="mb-12">
-          {/* Divider above section */}
-          <div className="w-3/4 sm:w-4/5 lg:w-5/6 h-[2px] bg-gray-300 rounded-full mx-auto mb-6 transition-colors" />
           <h2 
-            className="hidden sm:block text-xl sm:text-2xl lg:text-3xl font-medium text-black ml-[12.5%] sm:ml-[10%] lg:ml-[8.33%]"
+            className="hidden sm:block text-xl sm:text-2xl lg:text-3xl font-medium text-black ml-[12.5%] sm:ml-[10%] lg:ml-[8.33%] mb-6"
             style={{ fontFamily: "'Albert Sans', sans-serif" }}
           >
             {featuredCollections.title}
           </h2>
+          {/* Divider below section title */}
+          <div className="w-3/4 sm:w-4/5 lg:w-5/6 h-[2px] bg-gray-300 rounded-full mx-auto transition-colors" />
         </div>
 
         {/* Mobile Carousel View */}
@@ -42,7 +42,7 @@ const TwoBoxSection: React.FC = () => {
           <div className="relative overflow-hidden bg-gray-100 rounded-lg aspect-[5/4] transition-transform duration-300 hover:scale-[1.02]">
             {/* Background Image */}
             <div 
-              className="absolute inset-0 bg-cover bg-center transition-transform duration-700 border-2 border-gray-400"
+              className="absolute inset-0 bg-cover bg-center transition-transform duration-700"
               style={{
                 backgroundImage: `url(${featuredCollections.collections[currentSlide].image})`,
                 boxShadow: '0 0 10px rgba(0, 0, 0, 0.5)'
@@ -114,7 +114,7 @@ const TwoBoxSection: React.FC = () => {
               >
                 {/* Background Image */}
                 <div 
-                  className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110 border-2 border-gray-400"
+                  className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
                   style={{
                     backgroundImage: `url(${collection.image})`,
                     boxShadow: '0 0 10px rgba(0, 0, 0, 0.5)'

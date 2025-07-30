@@ -45,7 +45,7 @@ const ActiveDealBadge: React.FC<ActiveDealBadgeProps> = ({ product, onClose, dea
   const discountPercent = calculateDiscountPercentage(product.originalPrice || 0, product.price);
   
   return (
-    <div className="absolute top-2 left-2 z-20 bg-black text-white px-3 py-1 rounded-md text-sm font-semibold flex items-center gap-1">
+    <div className="absolute top-2 left-2 z-20 bg-red-500 text-white px-3 py-1 rounded-md text-sm font-semibold flex items-center gap-1">
       <span style={{ fontFamily: "'Albert Sans', sans-serif" }}>{discountPercent}% OFF</span>
       <button
         onClick={(e) => {
@@ -103,7 +103,7 @@ const DealCard: React.FC<DealCardProps> = ({ deal, onColorSelect, onCloseDeal })
         <img
           src={deal.images?.[0]}
           alt={deal.name}
-          className="w-full h-full object-cover border-2 border-gray-400"
+          className="w-full h-full object-cover"
           style={{ 
             fontFamily: "'Albert Sans', sans-serif",
             boxShadow: '0 0 10px rgba(239, 68, 68, 0.5)'
@@ -355,15 +355,17 @@ const HotDealsSection: React.FC = () => {
 
   return (
     <section className="py-16 bg-white" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-black mb-4" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
+        <div className="mb-12">
+          <h2 
+            className="hidden sm:block text-xl sm:text-2xl lg:text-3xl font-medium text-black ml-[12.5%] sm:ml-[10%] lg:ml-[8.33%] mb-6"
+            style={{ fontFamily: "'Albert Sans', sans-serif" }}
+          >
             {hotDealsSection.title}
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
-            {hotDealsSection.subtitle}
-          </p>
+          {/* Divider below section title */}
+          <div className="w-3/4 sm:w-4/5 lg:w-5/6 h-[2px] bg-gray-300 rounded-full mx-auto transition-colors" />
         </div>
 
         {/* Deals Carousel */}

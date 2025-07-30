@@ -31,7 +31,7 @@ const Footer = () => {
             </div>
             
             {/* Address */}
-            <div className="mb-3 sm:mb-4 md:mb-4 text-xs sm:text-sm md:text-base lg:text-base text-black leading-relaxed">
+            <div className="mb-3 sm:mb-4 md:mb-4 text-xs sm:text-sm md:text-base lg:text-base text-red-500 leading-relaxed">
               <p className="mb-1">Address: {company.address.street},</p>
               <p className="mb-1">{company.address.city}, {company.address.state} {company.address.zip}</p>
               <p className="mb-1">Email: {company.contact.email}</p>
@@ -41,7 +41,7 @@ const Footer = () => {
             {/* Get Direction Link */}
             <a 
               href={footer.getDirectionLink} 
-              className="text-xs sm:text-sm md:text-base lg:text-base text-black underline hover:no-underline mb-4 sm:mb-5 md:mb-6 inline-block transition-colors hover:text-gray-700"
+              className="text-xs sm:text-sm md:text-base lg:text-base text-red-500 underline hover:no-underline mb-4 sm:mb-5 md:mb-6 inline-block transition-colors hover:text-red-700"
             >
               {footer.getDirectionText}
             </a>
@@ -106,9 +106,9 @@ const Footer = () => {
           </div>
           
           {/* Dynamic Footer Sections */}
-          {footer.sections.filter(section => section.title.toLowerCase() !== 'shop').map((section, index) => (
+          {footer.sections.map((section, index) => (
             <div key={index} className="flex flex-col">
-              <h3 className="text-sm sm:text-base md:text-lg lg:text-lg xl:text-xl font-semibold text-black mb-2 sm:mb-3 md:mb-4">
+              <h3 className="text-sm sm:text-base md:text-lg lg:text-lg xl:text-xl font-semibold text-red-500 mb-2 sm:mb-3 md:mb-4">
                 {section.title}
               </h3>
               <div className="flex flex-col gap-1.5 sm:gap-2">
@@ -116,7 +116,7 @@ const Footer = () => {
                   <Link 
                     key={linkIndex}
                     to={link.link} 
-                    className="text-xs sm:text-sm md:text-base lg:text-base text-black hover:text-gray-700 hover:underline transition-colors duration-200"
+                    className="text-xs sm:text-sm md:text-base lg:text-base text-red-500 hover:text-red-700 hover:underline transition-colors duration-200"
                   >
                     {link.name}
                   </Link>
@@ -127,10 +127,10 @@ const Footer = () => {
 
           {/* Newsletter Section */}
           <div className="flex flex-col sm:col-span-2 lg:col-span-1">
-            <h3 className="text-sm sm:text-base md:text-lg lg:text-lg xl:text-xl font-semibold text-black mb-2 sm:mb-3 md:mb-4">
+            <h3 className="text-sm sm:text-base md:text-lg lg:text-lg xl:text-xl font-semibold text-red-500 mb-2 sm:mb-3 md:mb-4">
               {footer.newsletter.title}
             </h3>
-            <p className="text-xs sm:text-sm md:text-base lg:text-base text-black mb-3 sm:mb-4 leading-relaxed">
+            <p className="text-xs sm:text-sm md:text-base lg:text-base text-red-500 mb-3 sm:mb-4 leading-relaxed">
               {footer.newsletter.description}
             </p>
             

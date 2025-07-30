@@ -36,7 +36,7 @@ const AnnouncementBar: React.FC = () => {
   const announcements = announcementBar.announcements;
 
   return (
-    <div className="w-full bg-announcement text-white h-12 flex items-center relative overflow-hidden" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
+    <div className="w-full bg-announcement text-white h-12 flex items-center relative overflow-hidden" style={{ fontFamily: "'Albert Sans', sans-serif", color: 'white' }}>
       
       {/* Left gradient fade */}
       <div className="absolute left-0 top-0 w-20 h-full bg-gradient-to-r from-announcement to-transparent z-10"></div>
@@ -49,13 +49,13 @@ const AnnouncementBar: React.FC = () => {
         <div className="animate-scroll-left flex items-center space-x-16 whitespace-nowrap pl-16">
           {/* First set of announcements */}
           {announcements.map((announcement, index) => (
-            <span key={`first-${index}`} className="text-sm font-medium text-red-400">
+            <span key={`first-${index}`} className="text-sm font-medium text-white">
               {announcement}
             </span>
           ))}
           {/* Duplicate set for seamless loop */}
           {announcements.map((announcement, index) => (
-            <span key={`second-${index}`} className="text-sm font-medium text-red-400">
+            <span key={`second-${index}`} className="text-sm font-medium text-white">
               {announcement}
             </span>
           ))}

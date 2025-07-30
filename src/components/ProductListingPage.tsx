@@ -146,7 +146,7 @@ const ProductListingPage: React.FC = () => {
             <img
               src={product.images[0]}
               alt={product.name}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 border-2 border-gray-400"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               style={{ boxShadow: '0 0 10px rgba(0, 0, 0, 0.5)' }}
             />
           </div>

@@ -76,7 +76,7 @@ const TestimonialSection: React.FC = () => {
                 {/* Testimonial Text - Fixed height container */}
                 <div className="min-h-[80px] sm:min-h-[100px] md:min-h-[120px] lg:min-h-[140px] xl:min-h-[160px] flex items-center mb-3 sm:mb-4 md:mb-5 lg:mb-6">
                   <blockquote 
-                    className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl 2xl:text-3xl text-black font-medium leading-relaxed text-center"
+                    className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl 2xl:text-3xl text-white font-medium leading-relaxed text-center"
                     style={{ fontFamily: "'Albert Sans', sans-serif" }}
                   >
                     "{current.text}"
@@ -86,7 +86,7 @@ const TestimonialSection: React.FC = () => {
                 {/* Author Info - Fixed positioning */}
                 <div className="mb-4 sm:mb-6 md:mb-7 lg:mb-8 text-center">
                   <div 
-                    className="font-bold text-sm sm:text-base md:text-lg lg:text-lg xl:text-xl text-black mb-1"
+                    className="font-bold text-sm sm:text-base md:text-lg lg:text-lg xl:text-xl text-white mb-1"
                     style={{ fontFamily: "'Albert Sans', sans-serif" }}
                   >
                     {current.name}

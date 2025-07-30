@@ -1,17 +1,10 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
-type TabType = 'dashboard' | 'orders' | 'addresses' | 'account-details' | 'wishlist' | 'logout';
+const AccountPage = () => {
+  const [activeTab, setActiveTab] = useState('dashboard');
 
-interface SidebarItem {
-  id: TabType;
-  label: string;
-}
-
-const AccountPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<TabType>('dashboard');
-
-  const sidebarItems: SidebarItem[] = [
+  const sidebarItems = [
     { id: 'dashboard', label: 'Dashboard' },
     { id: 'orders', label: 'Orders' },
     { id: 'addresses', label: 'Addresses' },
@@ -20,7 +13,7 @@ const AccountPage: React.FC = () => {
     { id: 'logout', label: 'Logout' }
   ];
 
-  const getPageTitle = (): string => {
+  const getPageTitle = () => {
     switch (activeTab) {
       case 'dashboard': return 'My Account';
       case 'orders': return 'My Orders';
@@ -31,7 +24,7 @@ const AccountPage: React.FC = () => {
     }
   };
 
-  const renderDashboard = (): React.ReactElement => (
+  const renderDashboard = () => (
     <div className="text-left">
       <h2 className="text-2xl font-semibold mb-4">Hello Themesflat</h2>
       <p className="text-gray-600 leading-relaxed">
@@ -61,7 +54,7 @@ const AccountPage: React.FC = () => {
     </div>
   );
 
-  const renderOrders = (): React.ReactElement => (
+  const renderOrders = () => (
     <div>
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
@@ -114,7 +107,7 @@ const AccountPage: React.FC = () => {
     </div>
   );
 
-  const renderAddresses = (): React.ReactElement => (
+  const renderAddresses = () => (
     <div>
       <button className="bg-black text-white px-6 py-3 font-medium mb-8 hover:bg-gray-800 transition-colors">
         Add a new address
@@ -139,7 +132,7 @@ const AccountPage: React.FC = () => {
     </div>
   );
 
-  const renderWishlist = (): React.ReactElement => (
+  const renderWishlist = () => (
     <div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {/* Product 1 */}
@@ -196,7 +189,7 @@ const AccountPage: React.FC = () => {
     </div>
   );
 
-  const renderAccountDetails = (): React.ReactElement => (
+  const renderAccountDetails = () => (
     <div>
       <form className="max-w-2xl">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -286,7 +279,7 @@ const AccountPage: React.FC = () => {
     </div>
   );
 
-  const renderContent = (): React.ReactElement => {
+  const renderContent = () => {
     switch (activeTab) {
       case 'dashboard': return renderDashboard();
       case 'orders': return renderOrders();
