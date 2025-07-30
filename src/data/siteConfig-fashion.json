@@ -1,0 +1,94 @@
+{
+  "branding": {
+    "name": "StyleHub",
+    "tagline": "Fashion & Lifestyle Destination",
+    "logo": {
+      "light": "/logo.svg",
+      "dark": "/logo.png",
+      "alt": "StyleHub Logo"
+    },
+    "favicon": "/favicon.ico"
+  },
+  "announcementBar": {
+    "isActive": true,
+    "announcements": [
+      "New Season Collection - Free shipping on orders over $75!",
+      "Spring Sale - Up to 60% off fashion items!",
+      "Trending now - Shop the latest fashion arrivals!",
+      "Limited Edition - Buy 3 get 1 free on all accessories!",
+      "VIP Members get exclusive early access to sales!",
+      "Style experts available 24/7 for fashion advice!"
+    ]
+  },
+  "hero": {
+    "slides": [
+      {
+        "id": 1,
+        "heading": "Spring\nCollection",
+        "subheading": "Discover the latest trends in fashion and lifestyle accessories.",
+        "button": "Shop collection",
+        "buttonLink": "/products",
+        "image": "/images/IMAGE_11.png"
+      },
+      {
+        "id": 2,
+        "heading": "Lifestyle\nEssentials",
+        "subheading": "Curated pieces that define your personal style and comfort.",
+        "button": "Explore now",
+        "buttonLink": "/products",
+        "image": "/images/IMAGE_12.png"
+      },
+      {
+        "id": 3,
+        "heading": "Premium\nQuality",
+        "subheading": "Handpicked items crafted with attention to detail and style.",
+        "button": "Shop now",
+        "buttonLink": "/products",
+        "image": "/images/IMAGE_9.png"
+      }
+    ]
+  },
+  "pages": {
+    "products": {
+      "title": "Fashion Collection",
+      "description": "Discover premium fashion and lifestyle products curated just for you"
+    }
+  },
+  "company": {
+    "name": "StyleHub Inc.",
+    "address": {
+      "street": "456 Fashion Avenue, Suite 123",
+      "city": "New York",
+      "state": "NY",
+      "zip": "10001",
+      "country": "USA"
+    },
+    "contact": {
+      "email": "hello@stylehub.com",
+      "phone": "(212) 555-0123",
+      "support": "support@stylehub.com"
+    }
+  },
+  "footer": {
+    "sections": [
+      {
+        "title": "Shop",
+        "links": [
+          { "name": "Women's Fashion", "link": "/products?category=women" },
+          { "name": "Men's Fashion", "link": "/products?category=men" },
+          { "name": "Accessories", "link": "/products?category=accessories" },
+          { "name": "Lifestyle", "link": "/products?category=lifestyle" },
+          { "name": "New Arrivals", "link": "/products?sort=newest" },
+          { "name": "Sale Items", "link": "/products?sale=true" }
+        ]
+      }
+    ],
+    "newsletter": {
+      "title": "Stay in Style",
+      "description": "Get the latest fashion trends and exclusive offers delivered to your inbox.",
+      "placeholder": "Enter your email for style updates",
+      "buttonText": "Join StyleHub"
+    },
+    "copyright": "© 2025 StyleHub Inc. All rights reserved."
+  }
+}

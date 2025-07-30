@@ -1,0 +1,430 @@
+{
+  "//": "=================================================================",
+  "_comment_header": "PRODUCTS DATA FILE - SINGLE SOURCE FOR ALL PRODUCT DATA",
+  "_comment_purpose": "Contains all product information, categories, and metadata",
+  "_comment_backend": "When moving to backend, this becomes API endpoint: GET /api/products",
+  "_comment_dynamic": "All product data shown in UI comes from this file",
+  "_comment_usage": "Import via dataService.js - DO NOT import directly in components",
+  "_comment_structure": "Categories define the product taxonomy, products contain full product details",
+  "//": "=================================================================",
+  
+  "//": "--- PRODUCT CATEGORIES ---",
+  "_comment_categories": "Product taxonomy - used for navigation, filtering, and organization",
+  "categories": [
+    {
+      "id": "charging",
+      "name": "Charging Solutions",
+      "description": "Wireless chargers and charging accessories"
+    },
+    {
+      "id": "audio",
+      "name": "Audio Devices",
+      "description": "Earbuds, headphones, and audio accessories"
+    },
+    {
+      "id": "wearables",
+      "name": "Wearables",
+      "description": "Smart watches and watch accessories"
+    },
+    {
+      "id": "accessories",
+      "name": "Accessories",
+      "description": "Phone cases, cables, and other accessories"
+    }
+  ],
+  
+  "//": "--- PRODUCTS DATABASE ---",
+  "_comment_products": "Complete product catalog with all details",
+  "_comment_fields": "id: unique identifier, name: product title, price: current price, originalPrice: before discount",
+  "_comment_images": "images array: first image is primary, others are gallery images",
+  "_comment_flags": "featured: show in featured sections, bestseller: show in bestsellers, inStock: availability",
+  "_comment_deals": "Products with originalPrice > price are considered on sale/deals",
+  "products": [
+    {
+      "id": 1,
+      "name": "Three Device Wireless Charger",
+      "price": 49.99,
+      "originalPrice": 69.99,
+      "description": "Charge up to three devices simultaneously with this premium wireless charging station. Features fast charging technology and a sleek design that complements any workspace.",
+      "category": "Charging Solutions",
+      "categoryId": "charging",
+      "images": [
+        "/images/three-device-wireless-charger.png",
+        "/images/charger-cable.png",
+        "/images/two-device-wireless-charger.png"
+      ],
+      "colors": [
+        { "name": "black", "value": "#000000" },
+        { "name": "white", "value": "#FFFFFF" },
+        { "name": "silver", "value": "#C0C0C0" }
+      ],
+      "sizes": ["One Size"],
+      "inStock": true,
+      "rating": 4.5,
+      "reviews": 128,
+      "features": [
+        "Fast Wireless Charging",
+        "3-Device Support",
+        "LED Indicator",
+        "Non-Slip Base",
+        "Universal Compatibility"
+      ],
+      "specifications": {
+        "power": "15W Max Output",
+        "compatibility": "Qi-enabled devices",
+        "dimensions": "220 x 90 x 12mm",
+        "weight": "350g"
+      },
+      "tags": ["wireless", "charging", "multi-device", "premium"],
+      "bestseller": true,
+      "featured": true
+    },
+    {
+      "id": 2,
+      "name": "Two Device Wireless Charger",
+      "price": 34.99,
+      "originalPrice": 49.99,
+      "description": "Simultaneously charge two devices with this efficient wireless charging pad. Perfect for your phone and earbuds with anti-slip design.",
+      "category": "Charging Solutions",
+      "categoryId": "charging",
+      "images": [
+        "/images/two-device-wireless-charger.png",
+        "/images/three-device-wireless-charger.png",
+        "/images/charger-cable.png"
+      ],
+      "colors": [
+        { "name": "black", "value": "#000000" },
+        { "name": "gray", "value": "#6B7280" },
+        { "name": "white", "value": "#FFFFFF" }
+      ],
+      "sizes": ["One Size"],
+      "inStock": true,
+      "rating": 4.3,
+      "reviews": 95,
+      "features": [
+        "Dual Device Charging",
+        "10W Fast Charging",
+        "Temperature Control",
+        "LED Status Light"
+      ],
+      "specifications": {
+        "power": "10W Max Output",
+        "compatibility": "Qi-enabled devices",
+        "dimensions": "180 x 80 x 10mm",
+        "weight": "280g"
+      },
+      "tags": ["wireless", "charging", "dual-device"],
+      "bestseller": false,
+      "featured": false
+    },
+    {
+      "id": 3,
+      "name": "Wireless Earbuds Pro",
+      "price": 129.99,
+      "originalPrice": 179.99,
+      "description": "Premium wireless earbuds with active noise cancellation, superior sound quality, and all-day battery life. Perfect for music lovers and professionals.",
+      "category": "Audio Devices",
+      "categoryId": "audio",
+      "images": [
+        "/images/red-beats-airpods.png",
+        "/images/wireless-white-beats-earbuds.png",
+        "/images/phone-case.png"
+      ],
+      "colors": [
+        { "name": "red", "value": "#EF4444" },
+        { "name": "black", "value": "#000000" },
+        { "name": "white", "value": "#FFFFFF" }
+      ],
+      "sizes": ["One Size"],
+      "inStock": true,
+      "rating": 4.8,
+      "reviews": 342,
+      "features": [
+        "Active Noise Cancellation",
+        "30-Hour Battery Life",
+        "Touch Controls",
+        "IPX4 Water Resistance",
+        "Quick Charge"
+      ],
+      "specifications": {
+        "battery": "30 hours with case",
+        "connectivity": "Bluetooth 5.2",
+        "drivers": "12mm Dynamic",
+        "weight": "4.5g per earbud"
+      },
+      "tags": ["wireless", "earbuds", "noise-cancelling", "premium"],
+      "bestseller": true,
+      "featured": true
+    },
+    {
+      "id": 4,
+      "name": "Wireless White Beats Earbuds",
+      "price": 89.99,
+      "originalPrice": 129.99,
+      "description": "Experience premium audio with these wireless earbuds featuring advanced drivers, comfortable fit, and seamless connectivity.",
+      "category": "Audio Devices",
+      "categoryId": "audio",
+      "images": [
+        "/images/wireless-white-beats-earbuds.png",
+        "/images/red-beats-airpods.png",
+        "/images/smart-watch-strap.png"
+      ],
+      "colors": [
+        { "name": "white", "value": "#FFFFFF" },
+        { "name": "beige", "value": "#D4B896" },
+        { "name": "gray", "value": "#6B7280" }
+      ],
+      "sizes": ["One Size"],
+      "inStock": true,
+      "rating": 4.6,
+      "reviews": 218,
+      "features": [
+        "Premium Sound Quality",
+        "20-Hour Battery",
+        "Comfortable Fit",
+        "Voice Assistant",
+        "Fast Pairing"
+      ],
+      "specifications": {
+        "battery": "20 hours with case",
+        "connectivity": "Bluetooth 5.1",
+        "drivers": "10mm Dynamic",
+        "weight": "5g per earbud"
+      },
+      "tags": ["wireless", "earbuds", "comfortable"],
+      "bestseller": false,
+      "featured": false
+    },
+    {
+      "id": 5,
+      "name": "Smart Watch Series Pro",
+      "price": 299.99,
+      "originalPrice": 399.99,
+      "description": "Advanced smartwatch with health monitoring, GPS tracking, water resistance, and customizable watch faces. Your perfect fitness companion.",
+      "category": "Wearables",
+      "categoryId": "wearables",
+      "images": [
+        "/images/smart-watch-strap.png",
+        "/images/watch-strap.png",
+        "/images/phone-case.png"
+      ],
+      "colors": [
+        { "name": "black", "value": "#000000" },
+        { "name": "silver", "value": "#9CA3AF" },
+        { "name": "rose-gold", "value": "#F59E0B" }
+      ],
+      "sizes": ["38mm", "42mm", "44mm"],
+      "inStock": true,
+      "rating": 4.7,
+      "reviews": 289,
+      "features": [
+        "Health Monitoring",
+        "GPS Tracking",
+        "Water Resistant",
+        "ECG Function",
+        "Sleep Tracking",
+        "Fitness Apps"
+      ],
+      "specifications": {
+        "display": "1.9 inch AMOLED",
+        "battery": "Up to 18 hours",
+        "water resistance": "50m",
+        "sensors": "Heart rate, GPS, Accelerometer"
+      },
+      "tags": ["smartwatch", "fitness", "health", "gps"],
+      "bestseller": true,
+      "featured": true
+    },
+    {
+      "id": 6,
+      "name": "Premium Watch Strap",
+      "price": 39.99,
+      "originalPrice": 59.99,
+      "description": "Premium leather watch strap with stainless steel buckle. Compatible with most smartwatches and traditional timepieces.",
+      "category": "Wearables",
+      "categoryId": "wearables",
+      "images": [
+        "/images/watch-strap.png",
+        "/images/smart-watch-strap.png",
+        "/images/usb-cable.png"
+      ],
+      "colors": [
+        { "name": "brown", "value": "#92400E" },
+        { "name": "black", "value": "#000000" },
+        { "name": "navy", "value": "#1E40AF" }
+      ],
+      "sizes": ["38mm", "42mm", "44mm"],
+      "inStock": true,
+      "rating": 4.2,
+      "reviews": 78,
+      "features": [
+        "Genuine Leather",
+        "Stainless Steel Buckle",
+        "Universal Compatibility",
+        "Comfortable Fit"
+      ],
+      "specifications": {
+        "material": "Genuine leather with steel buckle",
+        "compatibility": "Most 38mm-44mm watches",
+        "length": "Adjustable 150-200mm"
+      },
+      "tags": ["leather", "strap", "premium", "universal"],
+      "bestseller": false,
+      "featured": false
+    },
+    {
+      "id": 7,
+      "name": "Sport Watch Strap",
+      "price": 24.99,
+      "originalPrice": 34.99,
+      "description": "Durable sport band perfect for workouts and daily activities. Sweat-resistant and comfortable for all-day wear.",
+      "category": "Wearables",
+      "categoryId": "wearables",
+      "images": [
+        "/images/smart-watch-strap.png",
+        "/images/watch-strap.png",
+        "/images/charger-cable.png"
+      ],
+      "colors": [
+        { "name": "black", "value": "#000000" },
+        { "name": "blue", "value": "#3B82F6" },
+        { "name": "red", "value": "#EF4444" },
+        { "name": "green", "value": "#10B981" }
+      ],
+      "sizes": ["38mm", "42mm", "44mm"],
+      "inStock": true,
+      "rating": 4.4,
+      "reviews": 156,
+      "features": [
+        "Sweat Resistant",
+        "Comfortable Silicone",
+        "Secure Fit",
+        "Easy Installation"
+      ],
+      "specifications": {
+        "material": "High-grade silicone",
+        "compatibility": "38mm-44mm watches",
+        "water resistance": "Sweat and splash proof"
+      },
+      "tags": ["sport", "silicone", "workout", "durable"],
+      "bestseller": false,
+      "featured": false
+    },
+    {
+      "id": 8,
+      "name": "Premium Phone Case",
+      "price": 49.99,
+      "originalPrice": 69.99,
+      "description": "Protect your device with this premium phone case featuring military-grade protection, wireless charging compatibility, and elegant design.",
+      "category": "Accessories",
+      "categoryId": "accessories",
+      "images": [
+        "/images/phone-case.png",
+        "/images/smart-watch-strap.png",
+        "/images/charger-cable.png"
+      ],
+      "colors": [
+        { "name": "black", "value": "#000000" },
+        { "name": "blue", "value": "#3B82F6" },
+        { "name": "clear", "value": "#F3F4F6" },
+        { "name": "red", "value": "#EF4444" }
+      ],
+      "sizes": ["iPhone 14", "iPhone 14 Pro", "iPhone 15", "iPhone 15 Pro", "Samsung S24", "Samsung S24+"],
+      "inStock": true,
+      "rating": 4.4,
+      "reviews": 167,
+      "features": [
+        "Military-Grade Protection",
+        "Wireless Charging Compatible",
+        "Raised Edges",
+        "Anti-Scratch",
+        "Easy Installation"
+      ],
+      "specifications": {
+        "material": "TPU + PC hybrid",
+        "protection": "Drop tested up to 10ft",
+        "compatibility": "Wireless charging compatible"
+      },
+      "tags": ["protection", "wireless-compatible", "durable"],
+      "bestseller": false,
+      "featured": false
+    },
+    {
+      "id": 9,
+      "name": "USB-C Fast Charging Cable",
+      "price": 19.99,
+      "originalPrice": 29.99,
+      "description": "High-speed USB-C cable with reinforced connectors for reliable data transfer and fast charging. Available in multiple lengths.",
+      "category": "Accessories",
+      "categoryId": "accessories",
+      "images": [
+        "/images/usb-cable.png",
+        "/images/charger-cable.png",
+        "/images/three-device-wireless-charger.png"
+      ],
+      "colors": [
+        { "name": "black", "value": "#000000" },
+        { "name": "white", "value": "#FFFFFF" },
+        { "name": "red", "value": "#EF4444" }
+      ],
+      "sizes": ["1m", "2m", "3m"],
+      "inStock": true,
+      "rating": 4.1,
+      "reviews": 156,
+      "features": [
+        "USB-C to USB-C",
+        "Fast Charging Support",
+        "Data Transfer",
+        "Reinforced Connectors",
+        "Tangle-Free Design"
+      ],
+      "specifications": {
+        "charging": "Up to 100W PD",
+        "data transfer": "Up to 480Mbps",
+        "material": "Braided nylon exterior"
+      },
+      "tags": ["usb-c", "fast-charging", "data-transfer"],
+      "bestseller": false,
+      "featured": false
+    },
+    {
+      "id": 10,
+      "name": "Lightning Charging Cable",
+      "price": 24.99,
+      "originalPrice": 34.99,
+      "description": "Fast charging Lightning cable with durable braided design. Supports quick charge protocols and data sync for all your Apple devices.",
+      "category": "Accessories",
+      "categoryId": "accessories",
+      "images": [
+        "/images/charger-cable.png",
+        "/images/usb-cable.png",
+        "/images/two-device-wireless-charger.png"
+      ],
+      "colors": [
+        { "name": "black", "value": "#000000" },
+        { "name": "white", "value": "#FFFFFF" },
+        { "name": "red", "value": "#EF4444" }
+      ],
+      "sizes": ["1m", "2m"],
+      "inStock": true,
+      "rating": 4.3,
+      "reviews": 203,
+      "features": [
+        "MFi Certified",
+        "Fast Charging",
+        "Data Sync",
+        "Braided Design",
+        "Reinforced Connectors"
+      ],
+      "specifications": {
+        "charging": "Up to 20W fast charging",
+        "data transfer": "Up to 480Mbps",
+        "certification": "Apple MFi Certified"
+      },
+      "tags": ["lightning", "mfi-certified", "apple", "fast-charging"],
+      "bestseller": false,
+      "featured": false
+    }
+  ]
+}
+    

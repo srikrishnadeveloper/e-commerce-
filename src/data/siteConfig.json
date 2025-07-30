@@ -1,0 +1,774 @@
+{
+  "//": "=================================================================",
+  "_comment_header": "SITE CONFIGURATION FILE - SINGLE SOURCE OF TRUTH",
+  "_comment_purpose": "This file contains ALL site content, branding, and UI text",
+  "_comment_backend": "When moving to backend, this becomes API endpoint: GET /api/config",
+  "_comment_dynamic": "All content marked with RED text/borders in UI comes from this file",
+  "_comment_usage": "Import via dataService.js - DO NOT import directly in components",
+  "//": "=================================================================",
+  
+  "//": "--- BRANDING & IDENTITY ---",
+  "_comment_branding": "Company name, logo, tagline - used in header, footer, SEO",
+  "branding": {
+    "name": "TechCart",
+    "tagline": "Your Technology Destination",
+    "logo": {
+      "light": "/logo.svg",
+      "dark": "/logo.png",
+      "alt": "TechCart Logo"
+    },
+    "favicon": "/favicon.ico"
+  },
+  
+  "//": "--- ANNOUNCEMENT BAR ---",
+  "_comment_announcements": "Top banner messages - rotates automatically",
+  "announcementBar": {
+    "isActive": true,
+    "announcements": [
+      "Welcome to our store - Free shipping on orders over $50!",
+      "Summer Sale - Up to 50% off selected items!",
+      "New arrivals just landed - Shop the latest trends!",
+      "Limited time offer - Buy 2 get 1 free on accessories!",
+      "Join our newsletter for exclusive deals and updates!",
+      "24/7 Customer support - We're here to help!"
+    ]
+  },
+  
+  "//": "--- HERO CAROUSEL ---",
+  "_comment_hero": "Main hero section slides - supports multiple slides with images and CTAs",
+  "hero": {
+    "slides": [
+      {
+        "id": 1,
+        "heading": "Mix. Match.\nMagSafe",
+        "subheading": "Snap on a case, wallet, wireless charger, or battery pack.",
+        "button": "Shop collection",
+        "buttonLink": "/products",
+        "image": "/images/IMAGE_11.png"
+      },
+      {
+        "id": 2,
+        "heading": "Wireless\nFreedom",
+        "subheading": "Experience the power of wireless charging with our premium collection.",
+        "button": "Explore now",
+        "buttonLink": "/products",
+        "image": "/images/IMAGE_12.png"
+      },
+      {
+        "id": 3,
+        "heading": "Perfect\nProtection",
+        "subheading": "Keep your device safe with our durable and stylish cases.",
+        "button": "Shop cases",
+        "buttonLink": "/products",
+        "image": "/images/IMAGE_9.png"
+      },
+      {
+        "id": 4,
+        "heading": "Smart\nAccessories",
+        "subheading": "Enhance your mobile experience with our innovative accessories.",
+        "button": "Discover more",
+        "buttonLink": "/products",
+        "image": "/images/IMAGE_10.png"
+      }
+    ]
+  },
+  
+  "//": "--- MAIN NAVIGATION ---",
+  "_comment_navigation": "Header navigation menu, search, cart, user actions",
+  "navigation": {
+    "mainMenu": [
+      {
+        "name": "Home",
+        "link": "/",
+        "hasSubmenu": false
+      },
+      {
+        "name": "Products",
+        "link": "/products",
+        "hasSubmenu": true,
+        "submenu": [
+          { "name": "All Products", "link": "/products" },
+          { "name": "Charging Solutions", "link": "/products?category=charging" },
+          { "name": "Audio Devices", "link": "/products?category=audio" },
+          { "name": "Wearables", "link": "/products?category=wearables" },
+          { "name": "Accessories", "link": "/products?category=accessories" }
+        ]
+      },
+      {
+        "name": "About",
+        "link": "/about",
+        "hasSubmenu": false
+      },
+      {
+        "name": "Contact",
+        "link": "/contact",
+        "hasSubmenu": false
+      }
+    ],
+    "userActions": {
+      "search": {
+        "placeholder": "Search products...",
+        "buttonText": "Search",
+        "ariaLabel": "Search products"
+      },
+      "wishlist": {
+        "text": "Wishlist",
+        "ariaLabel": "View wishlist"
+      },
+      "cart": {
+        "text": "Cart",
+        "ariaLabel": "View shopping cart",
+        "emptyText": "Your cart is empty"
+      },
+      "account": {
+        "text": "Account",
+        "ariaLabel": "User account"
+      }
+    }
+  },
+  
+  "//": "--- HOMEPAGE SECTIONS ---",
+  "_comment_homepage": "All homepage content sections - features, collections, testimonials",
+  "homePage": {
+    "featuresSection": {
+      "_comment": "Service features (shipping, support, returns, warranty)",
+      "title": "Why Choose Us",
+      "subtitle": "Experience the difference with our premium services",
+      "features": [
+        {
+          "title": "Free Shipping",
+          "description": "Free shipping on orders over $50",
+          "icon": "truck",
+          "image": "/images/feature-shipping.png"
+        },
+        {
+          "title": "24/7 Support",
+          "description": "Dedicated customer support",
+          "icon": "headphones",
+          "image": "/images/feature-support.png"
+        },
+        {
+          "title": "Easy Returns",
+          "description": "30-day return policy",
+          "icon": "refresh",
+          "image": "/images/feature-returns.png"
+        },
+        {
+          "title": "Warranty",
+          "description": "1-year manufacturer warranty",
+          "icon": "shield",
+          "image": "/images/feature-warranty.png"
+        }
+      ]
+    },
+    "featuredCollections": {
+      "_comment": "Two-box feature section - product collections showcase",
+      "title": "Featured Collections",
+      "collections": [
+        {
+          "id": 1,
+          "title": "UV Charger",
+          "subtitle": "Every piece is made to last beyond the season",
+          "description": "Explore our curated selection of premium products designed for the discerning customer.",
+          "image": "/images/feturedcollection.png",
+          "buttonText": "Shop Collection",
+          "buttonLink": "/products?category=charging",
+          "gradient": "from-black/60 to-black/20"
+        },
+        {
+          "id": 2,
+          "title": "Nest Heat",
+          "subtitle": "Every piece is made to last beyond the season", 
+          "description": "Be the first to discover our latest products and trending styles.",
+          "image": "/images/feturedcollection.png",
+          "buttonText": "Shop Collection",
+          "buttonLink": "/products?category=smart-home",
+          "gradient": "from-black/60 to-black/20"
+        }
+      ]
+    },
+    "hotDealsSection": {
+      "_comment": "Hot deals carousel - products with originalPrice > price are shown",
+      "title": "Hot Deals",
+      "subtitle": "Limited time offers on premium products",
+      "viewAllText": "View All Deals",
+      "viewAllLink": "/products?sale=true",
+      "dealBadge": "Sale",
+      "originalPriceLabel": "Was",
+      "currentPriceLabel": "Now",
+      "buttonText": "Shop Now"
+    },
+    "bestSellerSection": {
+      "_comment": "Best sellers - products with bestseller: true are shown",
+      "title": "Best Sellers",
+      "subtitle": "Most popular products loved by our customers",
+      "viewAllText": "View All Products",
+      "viewAllLink": "/products?bestseller=true",
+      "ratingText": "stars",
+      "reviewsText": "reviews",
+      "addToCartText": "Add to Cart",
+      "quickViewText": "Quick View"
+    },
+    "testimonialSection": {
+      "_comment": "Customer reviews and testimonials carousel",
+      "title": "What Our Customers Say",
+      "subtitle": "Real reviews from satisfied customers",
+      "testimonials": [
+        {
+          "name": "Sarah Johnson",
+          "role": "Verified Customer",
+          "rating": 5,
+          "text": "Absolutely love the quality and fast shipping! The wireless charger works perfectly with all my devices.",
+          "image": "/images/customer-1.jpg"
+        },
+        {
+          "name": "Mike Chen",
+          "role": "Tech Enthusiast",
+          "rating": 5,
+          "text": "Great customer service and premium products. The earbuds have amazing sound quality.",
+          "image": "/images/customer-2.jpg"
+        },
+        {
+          "name": "Emily Davis",
+          "role": "Happy Customer",
+          "rating": 5,
+          "text": "Perfect shopping experience from start to finish. Highly recommend TechCart!",
+          "image": "/images/customer-3.jpg"
+        }
+      ],
+      "navigationLabels": {
+        "previous": "Previous testimonial",
+        "next": "Next testimonial"
+      }
+    },
+    "ctaSection": {
+      "_comment": "Call-to-action section at bottom of homepage",
+      "title": "Ready to Upgrade Your Tech?",
+      "subtitle": "Join thousands of satisfied customers and discover premium technology accessories",
+      "primaryButton": {
+        "text": "Shop Now",
+        "link": "/products"
+      },
+      "secondaryButton": {
+        "text": "Learn More",
+        "link": "/about"
+      },
+      "backgroundImage": "/images/cta-background.jpg"
+    }
+  },
+  
+  "//": "--- PRODUCT PAGES CONFIGURATION ---",
+  "_comment_products": "Product listing and detail page configurations",
+  "productPages": {
+    "listing": {
+      "_comment": "Product listing page - filters, sorting, pagination",
+      "title": "Latest Electronics",
+      "description": "Discover cutting-edge technology and premium electronics at unbeatable prices",
+      "heroTitle": "Premium Technology Collection",
+      "heroSubtitle": "Enhance your digital lifestyle with our curated selection",
+      "filters": {
+        "title": "Filters",
+        "categories": {
+          "title": "Product categories",
+          "allLabel": "All"
+        },
+        "priceRange": {
+          "title": "Price Range",
+          "minPlaceholder": "Min",
+          "maxPlaceholder": "Max",
+          "applyButtonText": "Apply Filter"
+        },
+        "sorting": {
+          "defaultText": "Default Sorting",
+          "priceLowHigh": "Price: Low to High",
+          "priceHighLow": "Price: High to Low",
+          "nameAZ": "Name: A to Z",
+          "newest": "Newest First",
+          "popular": "Most Popular"
+        }
+      },
+      "productCard": {
+        "addToCartText": "Add to Cart",
+        "quickViewText": "Quick View",
+        "wishlistText": "Add to Wishlist",
+        "compareText": "Compare",
+        "saleText": "Sale",
+        "newText": "New",
+        "outOfStockText": "Out of Stock"
+      },
+      "pagination": {
+        "previousText": "Previous",
+        "nextText": "Next",
+        "resultsText": "products found",
+        "showingText": "Showing",
+        "ofText": "of"
+      },
+      "noResults": {
+        "title": "No products found",
+        "message": "Try adjusting your filters or search criteria.",
+        "clearFiltersText": "Clear all filters"
+      },
+      "sidebarSections": {
+        "saleProducts": {
+          "title": "Sale products"
+        },
+        "shipping": {
+          "title": "Shipping & Delivery",
+          "items": [
+            {
+              "title": "Free shipping",
+              "description": "Free shipping for all US orders",
+              "icon": "truck"
+            },
+            {
+              "title": "Premium Support",
+              "description": "Support 24 hours a day",
+              "icon": "headphones"
+            },
+            {
+              "title": "30 Days Return",
+              "description": "You have 30 days to return",
+              "icon": "refresh"
+            }
+          ]
+        },
+        "gallery": {
+          "title": "Gallery",
+          "images": [
+            "/images/gallery-1.png",
+            "/images/gallery-2.png",
+            "/images/gallery-3.png",
+            "/images/gallery-4.png",
+            "/images/gallery-5.png",
+            "/images/gallery-6.png"
+          ]
+        },
+        "socialMedia": {
+          "title": "Follow us",
+          "platforms": [
+            {
+              "name": "Facebook",
+              "link": "https://facebook.com/techcart",
+              "icon": "facebook"
+            },
+            {
+              "name": "Twitter",
+              "link": "https://twitter.com/techcart",
+              "icon": "twitter"
+            },
+            {
+              "name": "Instagram",
+              "link": "https://instagram.com/techcart",
+              "icon": "instagram"
+            },
+            {
+              "name": "TikTok",
+              "link": "https://tiktok.com/@techcart",
+              "icon": "tiktok"
+            },
+            {
+              "name": "Pinterest",
+              "link": "https://pinterest.com/techcart",
+              "icon": "pinterest"
+            }
+          ]
+        }
+      }
+    },
+    "detail": {
+      "_comment": "Product detail page - labels, tabs, related products",
+      "labels": {
+        "price": "Price",
+        "originalPrice": "Original Price",
+        "saveAmount": "You Save",
+        "inStock": "In Stock",
+        "outOfStock": "Out of Stock",
+        "quantity": "Quantity",
+        "addToCart": "Add to Cart",
+        "buyNow": "Buy Now",
+        "addToWishlist": "Add to Wishlist",
+        "compare": "Compare",
+        "share": "Share",
+        "colors": "Colors",
+        "sizes": "Sizes",
+        "sku": "SKU",
+        "category": "Category",
+        "tags": "Tags",
+        "rating": "Rating",
+        "reviews": "Reviews",
+        "writeReview": "Write a Review"
+      },
+      "tabs": {
+        "description": "Description",
+        "specifications": "Specifications",
+        "reviews": "Reviews",
+        "shipping": "Shipping & Returns"
+      },
+      "relatedProducts": {
+        "title": "People Also Bought",
+        "viewAllText": "View All"
+      },
+      "imageZoom": {
+        "zoomInText": "Click to zoom in",
+        "zoomOutText": "Click to zoom out"
+      },
+      "shareOptions": {
+        "title": "Share this product",
+        "copyLinkText": "Copy link",
+        "copiedText": "Link copied!"
+      },
+      "notifications": {
+        "addedToCart": "Product added to cart!",
+        "addedToWishlist": "Product added to wishlist!",
+        "removedFromWishlist": "Product removed from wishlist!",
+        "outOfStock": "Sorry, this product is out of stock",
+        "selectOptions": "Please select all options"
+      }
+    }
+  },
+  
+  "//": "--- STATIC PAGES CONTENT ---",
+  "_comment_pages": "About, Contact, FAQ, and other static page content",
+  "pages": {
+    "home": {
+      "title": "TechCart - Premium Technology Accessories",
+      "description": "Discover premium technology accessories including wireless chargers, earbuds, smartwatches, and more.",
+      "keywords": "technology, accessories, wireless chargers, earbuds, smartwatch"
+    },
+    "about": {
+      "title": "About TechCart",
+      "description": "Learn more about our mission to provide premium technology accessories",
+      "heroTitle": "About TechCart",
+      "heroSubtitle": "Your trusted partner for premium technology accessories",
+      "content": {
+        "ourStory": {
+          "title": "Our Story",
+          "text": "Founded in 2020, TechCart has been dedicated to providing high-quality technology accessories that enhance your digital lifestyle. We believe in combining functionality with style to create products that truly make a difference.",
+          "image": "/images/about-story.jpg"
+        },
+        "ourMission": {
+          "title": "Our Mission",
+          "text": "To democratize access to premium technology accessories by offering carefully curated products at competitive prices, backed by exceptional customer service.",
+          "image": "/images/about-mission.jpg"
+        },
+        "ourValues": {
+          "title": "Our Values",
+          "values": [
+            {
+              "title": "Quality First",
+              "description": "We carefully select products that meet our high standards for quality and durability."
+            },
+            {
+              "title": "Customer Focused",
+              "description": "Your satisfaction is our top priority. We're here to help every step of the way."
+            },
+            {
+              "title": "Innovation",
+              "description": "We stay ahead of technology trends to bring you the latest and greatest products."
+            }
+          ]
+        }
+      }
+    },
+    "contact": {
+      "title": "Contact Us",
+      "description": "Get in touch with our customer support team",
+      "heroTitle": "Contact TechCart",
+      "heroSubtitle": "We're here to help with any questions or concerns",
+      "form": {
+        "nameLabel": "Full Name",
+        "namePlaceholder": "Enter your full name",
+        "emailLabel": "Email Address",
+        "emailPlaceholder": "Enter your email address",
+        "subjectLabel": "Subject",
+        "subjectPlaceholder": "What is this regarding?",
+        "messageLabel": "Message",
+        "messagePlaceholder": "Tell us how we can help you...",
+        "submitText": "Send Message",
+        "successMessage": "Thank you! Your message has been sent successfully.",
+        "errorMessage": "Sorry, there was an error sending your message. Please try again."
+      },
+      "contactInfo": {
+        "title": "Get in Touch",
+        "address": {
+          "title": "Visit Our Store",
+          "lines": [
+            "1234 Technology Street",
+            "Suite 567",
+            "San Francisco, CA 94105"
+          ]
+        },
+        "phone": {
+          "title": "Call Us",
+          "number": "(415) 555-1234",
+          "hours": "Mon-Fri: 9AM-6PM PST"
+        },
+        "email": {
+          "title": "Email Us",
+          "address": "support@techcart.com",
+          "response": "We respond within 24 hours"
+        }
+      }
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "description": "Find answers to common questions about our products and services",
+      "heroTitle": "How Can We Help?",
+      "heroSubtitle": "Find quick answers to common questions",
+      "searchPlaceholder": "Search for answers...",
+      "categories": [
+        {
+          "title": "Orders & Shipping",
+          "questions": [
+            {
+              "question": "How long does shipping take?",
+              "answer": "Standard shipping takes 3-5 business days. Express shipping is available for 1-2 business days delivery."
+            },
+            {
+              "question": "Do you offer free shipping?",
+              "answer": "Yes! We offer free standard shipping on all orders over $50 within the United States."
+            }
+          ]
+        },
+        {
+          "title": "Returns & Exchanges",
+          "questions": [
+            {
+              "question": "What is your return policy?",
+              "answer": "We offer a 30-day return policy for all products in original condition with original packaging."
+            }
+          ]
+        }
+      ]
+    }
+  },
+  
+  "//": "--- COMPANY INFORMATION ---",
+  "_comment_company": "Business details, contact info, social media links",
+  "company": {
+    "name": "TechCart Inc.",
+    "address": {
+      "street": "1234 Technology Street, Suite 567",
+      "city": "San Francisco",
+      "state": "CA",
+      "zip": "94105",
+      "country": "USA"
+    },
+    "contact": {
+      "email": "info@techcart.com",
+      "phone": "(415) 555-1234",
+      "support": "support@techcart.com",
+      "hours": "Mon-Fri: 9AM-6PM PST"
+    },
+    "social": {
+      "facebook": "https://facebook.com/techcart",
+      "twitter": "https://twitter.com/techcart",
+      "instagram": "https://instagram.com/techcart",
+      "linkedin": "https://linkedin.com/company/techcart",
+      "youtube": "https://youtube.com/techcart",
+      "tiktok": "https://tiktok.com/@techcart",
+      "pinterest": "https://pinterest.com/techcart"
+    }
+  },
+  
+  "//": "--- FOOTER CONFIGURATION ---",
+  "_comment_footer": "Footer links, newsletter, social media, company info",
+  "footer": {
+    "sections": [
+      {
+        "title": "Shop",
+        "links": [
+          { "name": "All Products", "link": "/products" },
+          { "name": "Charging Solutions", "link": "/products?category=charging" },
+          { "name": "Audio Devices", "link": "/products?category=audio" },
+          { "name": "Wearables", "link": "/products?category=wearables" },
+          { "name": "Accessories", "link": "/products?category=accessories" },
+          { "name": "New Arrivals", "link": "/products?sort=newest" },
+          { "name": "Best Sellers", "link": "/products?featured=true" }
+        ]
+      },
+      {
+        "title": "Help",
+        "links": [
+          { "name": "Contact Us", "link": "/contact" },
+          { "name": "FAQs", "link": "/faq" },
+          { "name": "Size Guide", "link": "/size-guide" },
+          { "name": "Shipping Info", "link": "/shipping" },
+          { "name": "Returns", "link": "/returns" },
+          { "name": "Track Your Order", "link": "/track-order" }
+        ]
+      },
+      {
+        "title": "About",
+        "links": [
+          { "name": "Our Story", "link": "/about" },
+          { "name": "Careers", "link": "/careers" },
+          { "name": "Press", "link": "/press" },
+          { "name": "Sustainability", "link": "/sustainability" },
+          { "name": "Affiliates", "link": "/affiliates" }
+        ]
+      }
+    ],
+    "newsletter": {
+      "title": "Subscribe to our emails",
+      "description": "Be the first to know about new collections and exclusive offers.",
+      "placeholder": "Enter your email",
+      "buttonText": "Subscribe"
+    },
+    "bottomLinks": [
+      { "name": "Privacy Policy", "link": "/privacy" },
+      { "name": "Terms of Service", "link": "/terms" },
+      { "name": "Cookie Policy", "link": "/cookies" }
+    ],
+    "copyright": "© 2025 TechCart Inc. All rights reserved.",
+    "getDirectionText": "Get direction →",
+    "getDirectionLink": "https://maps.google.com",
+    "socialMedia": {
+      "title": "Follow us",
+      "platforms": [
+        {
+          "name": "Facebook",
+          "link": "https://facebook.com/techcart",
+          "ariaLabel": "Follow us on Facebook"
+        },
+        {
+          "name": "Twitter", 
+          "link": "https://twitter.com/techcart",
+          "ariaLabel": "Follow us on Twitter"
+        },
+        {
+          "name": "Instagram",
+          "link": "https://instagram.com/techcart", 
+          "ariaLabel": "Follow us on Instagram"
+        },
+        {
+          "name": "TikTok",
+          "link": "https://tiktok.com/@techcart",
+          "ariaLabel": "Follow us on TikTok"
+        },
+        {
+          "name": "Pinterest",
+          "link": "https://pinterest.com/techcart",
+          "ariaLabel": "Follow us on Pinterest"
+        }
+      ]
+    }
+  },
+  
+  "//": "--- E-COMMERCE FUNCTIONALITY ---",
+  "_comment_ecommerce": "Cart, checkout, and shopping-related configurations",
+  "cart": {
+    "title": "Shopping Cart",
+    "emptyTitle": "Your cart is empty",
+    "emptyMessage": "Looks like you haven't added any items to your cart yet.",
+    "continueShopping": "Continue Shopping",
+    "labels": {
+      "product": "Product",
+      "price": "Price", 
+      "quantity": "Quantity",
+      "total": "Total",
+      "subtotal": "Subtotal",
+      "shipping": "Shipping",
+      "tax": "Tax",
+      "grandTotal": "Grand Total",
+      "remove": "Remove",
+      "update": "Update Cart",
+      "checkout": "Proceed to Checkout",
+      "couponCode": "Coupon Code",
+      "applyCoupon": "Apply Coupon",
+      "freeShipping": "Free Shipping",
+      "estimatedTotal": "Estimated Total"
+    },
+    "notifications": {
+      "itemRemoved": "Item removed from cart",
+      "cartUpdated": "Cart updated successfully",
+      "invalidCoupon": "Invalid coupon code",
+      "couponApplied": "Coupon applied successfully"
+    }
+  },
+  "checkout": {
+    "title": "Checkout",
+    "steps": {
+      "shipping": "Shipping",
+      "payment": "Payment", 
+      "review": "Review"
+    },
+    "shippingForm": {
+      "title": "Shipping Information",
+      "firstName": "First Name",
+      "lastName": "Last Name", 
+      "email": "Email Address",
+      "phone": "Phone Number",
+      "address": "Street Address",
+      "city": "City",
+      "state": "State/Province",
+      "zipCode": "ZIP/Postal Code",
+      "country": "Country"
+    },
+    "paymentForm": {
+      "title": "Payment Information",
+      "cardNumber": "Card Number",
+      "expiryDate": "Expiry Date",
+      "cvv": "CVV",
+      "nameOnCard": "Name on Card"
+    },
+    "orderSummary": {
+      "title": "Order Summary",
+      "subtotal": "Subtotal",
+      "shipping": "Shipping",
+      "tax": "Tax", 
+      "total": "Total",
+      "placeOrder": "Place Order"
+    }
+  },
+  
+  "//": "--- UI/UX CONFIGURATIONS ---",
+  "_comment_ui": "Error messages, loading states, accessibility settings",
+  "errors": {
+    "pageNotFound": {
+      "title": "Page Not Found",
+      "message": "The page you're looking for doesn't exist.",
+      "backHome": "Back to Home"
+    },
+    "serverError": {
+      "title": "Something went wrong",
+      "message": "We're experiencing technical difficulties. Please try again later.",
+      "retry": "Try Again"
+    },
+    "networkError": {
+      "title": "Connection Error",
+      "message": "Please check your internet connection and try again.",
+      "retry": "Retry"
+    }
+  },
+  "loading": {
+    "default": "Loading...",
+    "products": "Loading products...",
+    "page": "Loading page...",
+    "cart": "Loading cart...",
+    "checkout": "Processing order..."
+  },
+  "accessibility": {
+    "skipToContent": "Skip to main content",
+    "closeModal": "Close modal",
+    "openMenu": "Open menu", 
+    "closeMenu": "Close menu",
+    "previousImage": "Previous image",
+    "nextImage": "Next image",
+    "increaseQuantity": "Increase quantity",
+    "decreaseQuantity": "Decrease quantity"
+  },
+  
+  "//": "--- SEO & METADATA ---",
+  "_comment_seo": "Search engine optimization and social media metadata",
+  "seo": {
+    "defaultTitle": "TechCart - Premium Technology Accessories",
+    "titleTemplate": "%s | TechCart",
+    "defaultDescription": "Discover premium technology accessories including wireless chargers, earbuds, smartwatches, and more at TechCart.",
+    "keywords": "technology, accessories, wireless chargers, earbuds, smartwatch, phone cases, cables",
+    "author": "TechCart Inc.",
+    "twitterHandle": "@techcart",
+    "ogImage": "/images/og-image.png",
+    "siteName": "TechCart"
+  }
+}
