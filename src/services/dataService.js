@@ -2,7 +2,7 @@
 // This service handles all data operations for the e-commerce platform
 // Updated to use backend API endpoints instead of static JSON files
 
-const API_BASE_URL = 'http://localhost:3001/api/v1';
+const API_BASE_URL = 'http://localhost:5001/api';
 
 // Generic API request function with error handling
 const apiRequest = async (endpoint, options = {}) => {
@@ -42,12 +42,12 @@ export const getProducts = async (params = {}) => {
     const endpoint = queryString ? `/products?${queryString}` : '/products';
     const response = await apiRequest(endpoint);
     
+    console.log('✅ Products fetched from backend:', response.data?.length || 0, 'products');
     // Return just the products array for backward compatibility
     return response.data || [];
   } catch (error) {
-    console.error('Error fetching products:', error);
-    // Fallback to empty array if API fails
-    return [];
+    console.error('❌ Error fetching products from backend:', error);
+    throw error; // Don't fallback to static data, let the error propagate
   }
 };
 
@@ -90,10 +90,11 @@ export const getRelatedProducts = async (productId, limit = 4) => {
 export const getFeaturedProducts = async (limit = 8) => {
   try {
     const response = await apiRequest(`/products/featured?limit=${limit}`);
+    console.log('✅ Featured products fetched from backend:', response.data?.length || 0, 'products');
     return response.data || [];
   } catch (error) {
-    console.error('Error fetching featured products:', error);
-    return [];
+    console.error('❌ Error fetching featured products from backend:', error);
+    throw error; // Don't fallback to static data, let the error propagate
   }
 };
 
@@ -104,11 +105,17 @@ export const getFeaturedProducts = async (limit = 8) => {
  */
 export const getOnSaleProducts = async (limit = 8) => {
   try {
-    const response = await apiRequest(`/products/on-sale?limit=${limit}`);
-    return response.data || [];
+    // Get all products and filter for those on sale
+    const response = await apiRequest(`/products`);
+    const allProducts = response.data || response || [];
+    const productsWithDeals = allProducts.filter(product => 
+      product.originalPrice && product.originalPrice > product.price
+    );
+    console.log('✅ Sale products fetched from backend:', productsWithDeals.length, 'products');
+    return productsWithDeals.slice(0, limit);
   } catch (error) {
-    console.error('Error fetching sale products:', error);
-    return [];
+    console.error('❌ Error fetching sale products from backend:', error);
+    throw error; // Don't fallback to static data, let the error propagate
   }
 };
 
@@ -119,11 +126,12 @@ export const getOnSaleProducts = async (limit = 8) => {
  */
 export const getProductsByCategory = async (categoryId) => {
   try {
-    const response = await getProducts({ category: categoryId });
-    return response || [];
+    const response = await apiRequest(`/products/category/${categoryId}`);
+    console.log('✅ Category products fetched from backend:', response.data?.length || 0, 'products');
+    return response.data || response || [];
   } catch (error) {
-    console.error(`Error fetching products for category ${categoryId}:`, error);
-    return [];
+    console.error(`❌ Error fetching products for category ${categoryId} from backend:`, error);
+    throw error; // Don't fallback to static data, let the error propagate
   }
 };
 
@@ -134,11 +142,12 @@ export const getProductsByCategory = async (categoryId) => {
  */
 export const getBestsellerProducts = async (limit = 8) => {
   try {
-    const response = await getProducts({ bestseller: 'true', limit });
-    return response || [];
+    const response = await apiRequest(`/products/bestsellers?limit=${limit}`);
+    console.log('✅ Bestseller products fetched from backend:', response.data?.length || 0, 'products');
+    return response.data || response || [];
   } catch (error) {
-    console.error('Error fetching bestseller products:', error);
-    return [];
+    console.error('❌ Error fetching bestseller products from backend:', error);
+    throw error; // Don't fallback to static data, let the error propagate
   }
 };
 
@@ -153,10 +162,11 @@ export const getBestsellerProducts = async (limit = 8) => {
 export const getCategories = async () => {
   try {
     const response = await apiRequest('/categories');
+    console.log('✅ Categories fetched from backend:', response.data?.length || 0, 'categories');
     return response.data || [];
   } catch (error) {
-    console.error('Error fetching categories:', error);
-    return [];
+    console.error('❌ Error fetching categories from backend:', error);
+    throw error; // Don't fallback to static data, let the error propagate
   }
 };
 
@@ -186,26 +196,27 @@ export const getCategoryById = async (categoryId) => {
  */
 export const getSiteConfig = async (businessType = null) => {
   try {
-    const endpoint = businessType ? `/config?businessType=${businessType}` : '/config';
+    const endpoint = businessType ? `/siteconfig?businessType=${businessType}` : '/siteconfig';
     const response = await apiRequest(endpoint);
-    return response.data || {};
+    
+    console.log('✅ Site config fetched from backend');
+    
+    // Handle the backend response format
+    if (response.data && response.data.main && response.data.main.data) {
+      // Return the main config data
+      return response.data.main.data;
+    } else if (response.data) {
+      // If no main config, return the first available config
+      const configKeys = Object.keys(response.data);
+      if (configKeys.length > 0) {
+        return response.data[configKeys[0]].data || response.data[configKeys[0]];
+      }
+    }
+    
+    return response.data || response || {};
   } catch (error) {
-    console.error('Error fetching site configuration:', error);
-    // Return minimal fallback configuration
-    return {
-      branding: {
-        name: 'E-Commerce Store',
-        tagline: 'Your Online Store',
-        logo: { light: '/logo.svg', dark: '/logo.png', alt: 'Store Logo' }
-      },
-      navigation: { menu: [] },
-      hero: { slides: [] },
-      footer: {},
-      featuredCollections: {},
-      hotDealsSection: {},
-      productListing: {},
-      productDetail: {}
-    };
+    console.error('❌ Error fetching site configuration from backend:', error);
+    throw error; // Don't fallback to static data, let the error propagate
   }
 };
 

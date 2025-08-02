@@ -52,11 +52,11 @@ const ActiveDealBadge = ({ product, onClose, dealId }) => {
 // Deal Card Component
 const DealCard = ({ deal, onColorSelect, onCloseDeal }) => {
   return (
-    <div className="relative transition-transform duration-300 hover:scale-[1.02] hover:shadow-lg rounded-lg overflow-hidden flex-shrink-0 mr-8" style={{ 
-      width: 'clamp(220px, 20vw, 300px)',
-      height: 'clamp(400px, 35vw, 480px)',
-      backgroundColor: '#f8f8f8' 
-    }}>
+         <div className="relative transition-transform duration-300 hover:scale-[1.02] hover:shadow-lg rounded-lg overflow-hidden flex-shrink-0" style={{ 
+       width: '280px',
+       height: '420px',
+       backgroundColor: '#f8f8f8' 
+     }}>
       {/* Active Deal Badge */}
       {deal.originalPrice && deal.originalPrice > deal.price && (
         <ActiveDealBadge 
@@ -66,18 +66,17 @@ const DealCard = ({ deal, onColorSelect, onCloseDeal }) => {
         />
       )}
       
-      {/* Product Image */}
-      <div className="w-full flex items-center justify-center bg-gray-50 overflow-hidden relative" style={{ 
-        height: 'clamp(240px, 21vw, 288px)'
-      }}>
-        <img
-          src={deal.images?.[0] || deal.image}
-          alt={deal.name}
-          className="w-full h-full object-cover border-2 border-red-400"
-          style={{ 
-            fontFamily: "'Albert Sans', sans-serif",
-            boxShadow: '0 0 10px rgba(239, 68, 68, 0.5)'
-          }}
+             {/* Product Image */}
+       <div className="w-full flex items-center justify-center bg-gray-50 overflow-hidden relative" style={{ 
+         height: '280px'
+       }}>
+                 <img
+           src={deal.images?.[0] || deal.image}
+           alt={deal.name}
+           className="w-full h-full object-cover"
+           style={{ 
+             fontFamily: "'Albert Sans', sans-serif"
+           }}
           onError={(e) => {
             console.log('Image failed to load:', deal.images?.[0] || deal.image);
             e.target.style.display = 'block';
@@ -92,36 +91,36 @@ const DealCard = ({ deal, onColorSelect, onCloseDeal }) => {
       
       {/* Content Section */}
       <div className="w-full text-center px-3" style={{ paddingTop: '10px', display: 'grid', gap: '8px' }}>
-        {/* Product Name */}
-        <h3 
-          className="text-red-500 leading-tight flex items-center justify-center" 
-          style={{ 
-            fontSize: '16px', 
-            fontFamily: "'Albert Sans', sans-serif", 
-            fontWeight: 'normal',
-            height: 'clamp(40px, 8vw, 50px)',
-            minHeight: 'clamp(40px, 8vw, 50px)',
-            maxHeight: 'clamp(40px, 8vw, 50px)',
-            overflow: 'hidden',
-            display: 'flex',
-            alignItems: 'center',
-            textAlign: 'center'
-          }}
-        >
-          {deal.name}
-        </h3>
-        
-        {/* Price */}
-        <div>
-          <span className="text-red-500" style={{ fontSize: '16px', fontFamily: "'Albert Sans', sans-serif", fontWeight: '600' }}>
-            ${deal.price}
-          </span>
-          {deal.originalPrice && (
-            <span className="text-red-400 line-through ml-2" style={{ fontSize: '16px', fontFamily: "'Albert Sans', sans-serif", fontWeight: '600' }}>
-              ${deal.originalPrice}
-            </span>
-          )}
-        </div>
+                 {/* Product Name */}
+         <h3 
+           className="text-black leading-tight flex items-center justify-center" 
+           style={{ 
+             fontSize: '16px', 
+             fontFamily: "'Albert Sans', sans-serif", 
+             fontWeight: 'normal',
+             height: 'clamp(40px, 8vw, 50px)',
+             minHeight: 'clamp(40px, 8vw, 50px)',
+             maxHeight: 'clamp(40px, 8vw, 50px)',
+             overflow: 'hidden',
+             display: 'flex',
+             alignItems: 'center',
+             textAlign: 'center'
+           }}
+         >
+           {deal.name}
+         </h3>
+         
+         {/* Price */}
+         <div>
+           <span className="text-black" style={{ fontSize: '16px', fontFamily: "'Albert Sans', sans-serif", fontWeight: '600' }}>
+             ${deal.price}
+           </span>
+           {deal.originalPrice && (
+             <span className="text-gray-500 line-through ml-2" style={{ fontSize: '16px', fontFamily: "'Albert Sans', sans-serif", fontWeight: '600' }}>
+               ${deal.originalPrice}
+             </span>
+           )}
+         </div>
         
         {/* Color Swatches */}
         <div className="flex justify-center gap-2">
@@ -144,41 +143,41 @@ const DealCard = ({ deal, onColorSelect, onCloseDeal }) => {
   );
 };
 
-// Deals Carousel Component
-const DealsCarousel = ({ deals, currentIndex, onColorSelect, onCloseDeal, onPrevious, onNext, isTransitioning }) => {
-  const getVisibleCards = () => {
-    if (typeof window !== 'undefined') {
-      const vw = window.innerWidth;
-      if (vw >= 1280) return 4;
-      if (vw >= 1024) return 3;
-      if (vw >= 694) return 2;
-      return 1;
-    }
-    return 4;
-  };
+ // Deals Carousel Component
+ const DealsCarousel = ({ deals, currentIndex, onColorSelect, onCloseDeal, onPrevious, onNext, isTransitioning }) => {
+   const getVisibleCards = () => {
+     if (typeof window !== 'undefined') {
+       const vw = window.innerWidth;
+       if (vw >= 1280) return 4;
+       if (vw >= 1024) return 3;
+       if (vw >= 768) return 2;
+       return 1;
+     }
+     return 4;
+   };
 
-  const visibleCards = getVisibleCards();
-  const cardWidth = Math.max(220, Math.min((typeof window !== 'undefined' ? window.innerWidth : 1200) * 0.20, 300));
-  const GAP = 32;
-  const containerWidth = (cardWidth * visibleCards) + (GAP * (visibleCards - 1));
+   const visibleCards = getVisibleCards();
+   const cardWidth = 280; // Fixed card width for consistent layout
+   const GAP = 24; // Reduced gap for better spacing
+   const containerWidth = (cardWidth * visibleCards) + (GAP * (visibleCards - 1));
 
-  // Create infinite array
-  const infiniteDeals = [...deals, ...deals, ...deals, ...deals, ...deals];
+   // Create infinite array
+   const infiniteDeals = [...deals, ...deals, ...deals, ...deals, ...deals];
 
-  return (
-    <div className="relative flex justify-center items-start w-full px-4 sm:px-8 md:px-12 lg:px-16">
-      {/* Left Arrow */}
-      <button
-        onClick={onPrevious}
-        disabled={isTransitioning}
-        className="absolute left-2 sm:left-4 md:left-6 lg:left-8 top-1/2 -translate-y-1/2 z-30 bg-white hover:bg-black text-black hover:text-white transition-all duration-300 rounded-full shadow-lg w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 flex items-center justify-center group disabled:opacity-50"
-        aria-label="Previous deals"
-      >
-        <ArrowLeftIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-      </button>
-      
-      {/* Carousel Container */}
-      <div className="overflow-hidden mx-auto" style={{ width: `${containerWidth}px` }}>
+     return (
+     <div className="relative flex justify-center items-start w-full">
+       {/* Left Arrow */}
+       <button
+         onClick={onPrevious}
+         disabled={isTransitioning}
+         className="absolute left-4 top-1/2 -translate-y-1/2 z-30 bg-white hover:bg-black text-black hover:text-white transition-all duration-300 rounded-full shadow-lg w-12 h-12 flex items-center justify-center group disabled:opacity-50"
+         aria-label="Previous deals"
+       >
+         <ArrowLeftIcon className="w-5 h-5" />
+       </button>
+       
+       {/* Carousel Container */}
+       <div className="overflow-hidden mx-auto" style={{ width: `${containerWidth}px` }}>
         <div 
           className={`flex ${isTransitioning ? 'transition-transform duration-500 ease-in-out' : ''}`}
           style={{
@@ -197,15 +196,15 @@ const DealsCarousel = ({ deals, currentIndex, onColorSelect, onCloseDeal, onPrev
         </div>
       </div>
       
-      {/* Right Arrow */}
-      <button
-        onClick={onNext}
-        disabled={isTransitioning}
-        className="absolute right-2 sm:right-4 md:right-6 lg:right-8 top-1/2 -translate-y-1/2 z-30 bg-white hover:bg-black text-black hover:text-white transition-all duration-300 rounded-full shadow-lg w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 flex items-center justify-center group disabled:opacity-50"
-        aria-label="Next deals"
-      >
-        <ArrowRightIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-      </button>
+             {/* Right Arrow */}
+       <button
+         onClick={onNext}
+         disabled={isTransitioning}
+         className="absolute right-4 top-1/2 -translate-y-1/2 z-30 bg-white hover:bg-black text-black hover:text-white transition-all duration-300 rounded-full shadow-lg w-12 h-12 flex items-center justify-center group disabled:opacity-50"
+         aria-label="Next deals"
+       >
+         <ArrowRightIcon className="w-5 h-5" />
+       </button>
     </div>
   );
 };
@@ -308,22 +307,48 @@ function HotDealsSection() {
 
   if (isLoading) return <div className="py-16 text-center">Loading...</div>;
   if (!config) return <div className="py-16 text-center">Loading...</div>;
-  if (!products.length) return null; // Don't show section if no deals
+  if (!products.length) {
+    // Show a placeholder section when no deals are available
+    return (
+      <section className="py-16 bg-white" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                     <div className="text-center mb-12">
+             <h2 className="text-3xl font-bold text-black mb-4" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
+               Hot Deals
+             </h2>
+             <p className="text-lg text-black max-w-2xl mx-auto" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
+               Check back soon for amazing deals and offers!
+             </p>
+           </div>
+          <div className="text-center">
+            <p className="text-gray-500">No deals available at the moment.</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   const { hotDealsSection } = config.homePage;
 
   return (
     <section className="py-16 bg-white" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-red-500 mb-4" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
-            {hotDealsSection.title}
-          </h2>
-          <p className="text-lg text-red-500 max-w-2xl mx-auto" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
-            {hotDealsSection.subtitle}
-          </p>
-        </div>
+                 {/* Header */}
+         <div className="text-center mb-12">
+           <h2 className="text-3xl font-bold text-black mb-4" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
+             {hotDealsSection.title}
+           </h2>
+           <p className="text-lg text-black max-w-2xl mx-auto mb-4" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
+             {hotDealsSection.subtitle}
+           </p>
+           <button
+             onClick={() => window.location.reload()}
+             className="text-sm bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors"
+             title="Refresh data from MongoDB"
+           >
+             🔄 Refresh Deals
+           </button>
+         </div>
 
         {/* Deals Carousel */}
         <DealsCarousel

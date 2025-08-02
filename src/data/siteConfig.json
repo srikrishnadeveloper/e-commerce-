@@ -581,18 +581,6 @@
   "footer": {
     "sections": [
       {
-        "title": "Shop",
-        "links": [
-          { "name": "All Products", "link": "/products" },
-          { "name": "Charging Solutions", "link": "/products?category=charging" },
-          { "name": "Audio Devices", "link": "/products?category=audio" },
-          { "name": "Wearables", "link": "/products?category=wearables" },
-          { "name": "Accessories", "link": "/products?category=accessories" },
-          { "name": "New Arrivals", "link": "/products?sort=newest" },
-          { "name": "Best Sellers", "link": "/products?featured=true" }
-        ]
-      },
-      {
         "title": "Help",
         "links": [
           { "name": "Contact Us", "link": "/contact" },

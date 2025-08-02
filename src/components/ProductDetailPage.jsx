@@ -1,59 +1,32 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-// CENTRALIZED DATA SERVICE - Single source for all product data
-import { 
-  getProducts,
-  getProductById, 
-  getRelatedProducts, 
-  getSiteConfig,
-  calculateDiscountPercentage 
-} from '../services/dataService';
+import { getProductById, getRelatedProducts } from '../services/dataService';
 
-// Arrow Icon Components for Carousel
+// Arrow Icons for carousel navigation
 const ArrowLeftIcon = ({ className }) => (
-  <svg 
-    width="16" 
-    height="16" 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2.5" 
-    strokeLinecap="round" 
-    strokeLinejoin="round"
-    className={className}
-  >
-    <path d="m15 18-6-6 6-6"/>
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
   </svg>
 );
 
 const ArrowRightIcon = ({ className }) => (
-  <svg 
-    width="16" 
-    height="16" 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2.5" 
-    strokeLinecap="round" 
-    strokeLinejoin="round"
-    className={className}
-  >
-    <path d="m9 18 6-6-6-6"/>
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
   </svg>
 );
 
 const ProductDetailPage = () => {
   const { id } = useParams();
   
-  // CENTRALIZED DATA FETCHING - Get current product data
-  const currentProduct = getProductById(id) || getProducts()[0];
-  
-  // CENTRALIZED DATA FETCHING - Get related products (exclude current product)
-  const relatedProducts = getRelatedProducts(parseInt(id), currentProduct?.categoryId, 4);
+  // State for async data
+  const [currentProduct, setCurrentProduct] = useState(null);
+  const [relatedProducts, setRelatedProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   
   const [selectedImage, setSelectedImage] = useState(0);
-  const [selectedColor, setSelectedColor] = useState(currentProduct?.colors?.[0]?.name || 'black');
-  const [selectedSize, setSelectedSize] = useState(currentProduct?.sizes?.[0] || 'M');
+  const [selectedColor, setSelectedColor] = useState('black');
+  const [selectedSize, setSelectedSize] = useState('M');
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('description');
   const [isZoomed, setIsZoomed] = useState(false);
@@ -61,6 +34,45 @@ const ProductDetailPage = () => {
   const [isDesktop, setIsDesktop] = useState(false);
   
   const imageRef = useRef(null);
+
+  // Fetch product data
+  useEffect(() => {
+    const fetchProductData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Fetch current product
+        const product = await getProductById(id);
+        if (!product) {
+          throw new Error('Product not found');
+        }
+        setCurrentProduct(product);
+        
+        // Set initial color and size
+        if (product.colors && product.colors.length > 0) {
+          setSelectedColor(product.colors[0].name || 'black');
+        }
+        if (product.sizes && product.sizes.length > 0) {
+          setSelectedSize(product.sizes[0] || 'M');
+        }
+        
+        // Fetch related products
+        const related = await getRelatedProducts(id, 4);
+        setRelatedProducts(related);
+        
+      } catch (err) {
+        console.error('Error fetching product data:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchProductData();
+    }
+  }, [id]);
 
   // Check if device is desktop
   useEffect(() => {
@@ -75,7 +87,7 @@ const ProductDetailPage = () => {
   }, []);
 
   // Carousel state - initialized after relatedProducts is defined
-  const [currentIndex, setCurrentIndex] = useState(relatedProducts.length); // Start from middle of infinite array
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
   const handleQuantityChange = (change) => {
@@ -84,7 +96,7 @@ const ProductDetailPage = () => {
 
   // Carousel navigation handlers
   const handlePrevious = () => {
-    if (isTransitioning) return;
+    if (isTransitioning || relatedProducts.length === 0) return;
     
     setIsTransitioning(true);
     setCurrentIndex(prev => prev - 1);
@@ -102,7 +114,7 @@ const ProductDetailPage = () => {
   };
   
   const handleNext = () => {
-    if (isTransitioning) return;
+    if (isTransitioning || relatedProducts.length === 0) return;
     
     setIsTransitioning(true);
     setCurrentIndex(prev => prev + 1);
@@ -143,16 +155,60 @@ const ProductDetailPage = () => {
     setIsZoomed(false);
   };
 
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-gray-500 text-lg">Loading product details...</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error || !currentProduct) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 text-lg mb-4">Error loading product</div>
+          <div className="text-gray-500">{error || 'Product not found'}</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Ensure currentProduct has required properties
+  const product = {
+    ...currentProduct,
+    images: currentProduct.images || [currentProduct.image || '/images/placeholder.png'],
+    colors: currentProduct.colors || [{ name: 'black', hex: '#000000' }],
+    sizes: currentProduct.sizes || ['M'],
+    price: currentProduct.price || 0,
+    originalPrice: currentProduct.originalPrice || currentProduct.price || 0
+  };
+
   return (
-    <div className="min-h-screen bg-white" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
-      {/* Main Product Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="min-h-screen bg-white">
+      {/* Breadcrumb Navigation */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <nav className="flex items-center space-x-2 text-sm text-gray-500">
+          <a href="/" className="hover:text-gray-700">Home</a>
+          <span>/</span>
+          <a href="/products" className="hover:text-gray-700">Products</a>
+          <span>/</span>
+          <span className="text-gray-900">{product.name}</span>
+        </nav>
+      </div>
+
+      {/* Main Product Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="lg:grid lg:grid-cols-2 lg:gap-16 xl:gap-20">
           {/* Left Column - Image Gallery */}
           <div className="flex flex-col lg:flex-row gap-4 mb-8 lg:mb-0">
             {/* Thumbnails */}
             <div className="flex lg:flex-col gap-3 order-2 lg:order-1">
-              {currentProduct.images.map((image, index) => (
+              {product.images.map((image, index) => (
                 <button
                   key={index}
                   onClick={() => setSelectedImage(index)}
@@ -163,8 +219,7 @@ const ProductDetailPage = () => {
                   <img
                     src={image}
                     alt={`Product view ${index + 1}`}
-                    className="w-full h-full object-cover border-2 border-red-400"
-                    style={{ boxShadow: '0 0 5px rgba(239, 68, 68, 0.5)' }}
+                    className="w-full h-full object-cover"
                   />
                 </button>
               ))}
@@ -175,10 +230,9 @@ const ProductDetailPage = () => {
               <div className="w-full aspect-square bg-gray-50 rounded-lg overflow-hidden shadow-lg relative">
                 <img
                   ref={imageRef}
-                  src={currentProduct.images[selectedImage]}
+                  src={product.images[selectedImage]}
                   alt="Product main view"
-                  className={`w-full h-full object-cover border-2 border-red-400 ${isDesktop ? 'cursor-crosshair' : ''}`}
-                  style={{ boxShadow: '0 0 10px rgba(239, 68, 68, 0.5)' }}
+                  className={`w-full h-full object-cover ${isDesktop ? 'cursor-crosshair' : ''}`}
                   onMouseMove={isDesktop ? handleMouseMove : undefined}
                   onMouseEnter={isDesktop ? handleMouseEnter : undefined}
                   onMouseLeave={isDesktop ? handleMouseLeave : undefined}
@@ -207,7 +261,7 @@ const ProductDetailPage = () => {
                   <div
                     className="w-full h-full"
                     style={{
-                      backgroundImage: `url(${currentProduct.images[selectedImage]})`,
+                      backgroundImage: `url(${product.images[selectedImage]})`,
                       backgroundSize: '300% 300%',
                       backgroundPosition: `${zoomPosition.x}% ${zoomPosition.y}%`,
                       backgroundRepeat: 'no-repeat',
@@ -224,17 +278,21 @@ const ProductDetailPage = () => {
           {/* Right Column - Product Information */}
           <div className="space-y-8">
             {/* Product Title */}
-            <h1 className="text-3xl lg:text-4xl font-bold text-red-500 leading-tight" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
-              {currentProduct.name}
+            <h1 className="text-3xl lg:text-4xl font-bold text-black leading-tight" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
+              {product.name}
             </h1>
 
             {/* Pricing Row */}
             <div className="flex items-center gap-4">
-              <span className="text-2xl lg:text-3xl font-bold text-red-500" style={{ fontFamily: "'Albert Sans', sans-serif" }}>${currentProduct.price}</span>
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
-                25% OFF
-              </span>
-              <span className="text-lg text-red-400 line-through" style={{ fontFamily: "'Albert Sans', sans-serif" }}>${currentProduct.originalPrice}</span>
+              <span className="text-2xl lg:text-3xl font-bold text-black" style={{ fontFamily: "'Albert Sans', sans-serif" }}>${product.price}</span>
+              {product.originalPrice > product.price && (
+                <>
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
+                    {Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}% OFF
+                  </span>
+                  <span className="text-lg text-gray-500 line-through" style={{ fontFamily: "'Albert Sans', sans-serif" }}>${product.originalPrice}</span>
+                </>
+              )}
             </div>
 
             {/* Sales & Urgency Prompts */}
@@ -250,57 +308,60 @@ const ProductDetailPage = () => {
               </div>
             </div>
 
-            {/* Color Selector */}
-            <div className="space-y-3">
-              <h3 className="text-base font-medium text-black" style={{ fontFamily: "'Albert Sans', sans-serif" }}>Color: <span className="font-normal capitalize">{selectedColor}</span></h3>
-              <div className="flex gap-2">
-                {currentProduct.colors.map((color) => (
-                  <button
-                    key={color.name}
-                    onClick={() => setSelectedColor(color.name)}
-                    className={`w-8 h-8 rounded-full border-2 transition-all duration-200 ${
-                      selectedColor === color.name ? 'border-black' : 'border-gray-300 hover:border-gray-400'
-                    }`}
-                    style={{ backgroundColor: color.value }}
-                    title={color.name}
-                  >
-                    {color.value === '#FFFFFF' && (
-                      <div className="w-full h-full rounded-full border border-gray-200"></div>
-                    )}
-                  </button>
-                ))}
+            {/* Color Selection */}
+            {product.colors && product.colors.length > 1 && (
+              <div className="space-y-3">
+                <h3 className="text-base font-medium text-black" style={{ fontFamily: "'Albert Sans', sans-serif" }}>Color: <span className="font-normal capitalize">{selectedColor}</span></h3>
+                <div className="flex gap-2">
+                  {product.colors.map((color) => (
+                    <button
+                      key={color.name}
+                      onClick={() => setSelectedColor(color.name)}
+                      className={`w-8 h-8 rounded-full border-2 transition-all duration-200 ${
+                        selectedColor === color.name ? 'border-black' : 'border-gray-300 hover:border-gray-400'
+                      }`}
+                      style={{ backgroundColor: color.hex }}
+                      title={color.name}
+                    >
+                      {color.hex === '#FFFFFF' && (
+                        <div className="w-full h-full rounded-full border border-gray-200"></div>
+                      )}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* Size Selector */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="text-base font-medium text-black" style={{ fontFamily: "'Albert Sans', sans-serif" }}>Size: <span className="font-normal">{selectedSize}</span></h3>
-                <button className="text-sm text-gray-600 hover:text-black underline" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
-                  Find your size
-                </button>
-              </div>
-              <div className="flex gap-2">
-                {currentProduct.sizes.map((size) => (
-                  <button
-                    key={size}
-                    onClick={() => setSelectedSize(size)}
-                    className={`px-3 py-2 border text-sm font-medium transition-all duration-200 ${
-                      selectedSize === size
-                        ? 'border-black bg-black text-white'
-                        : 'border-gray-300 hover:border-gray-400 text-gray-700'
-                    }`}
-                    style={{ fontFamily: "'Albert Sans', sans-serif" }}
-                  >
-                    {size}
+            {/* Size Selection */}
+            {product.sizes && product.sizes.length > 1 && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-base font-medium text-black" style={{ fontFamily: "'Albert Sans', sans-serif" }}>Size: <span className="font-normal">{selectedSize}</span></h3>
+                  <button className="text-sm text-gray-600 hover:text-black underline" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
+                    Find your size
                   </button>
-                ))}
+                </div>
+                <div className="flex gap-2">
+                  {product.sizes.map((size) => (
+                    <button
+                      key={size}
+                      onClick={() => setSelectedSize(size)}
+                      className={`px-3 py-2 border text-sm font-medium transition-all duration-200 ${
+                        selectedSize === size
+                          ? 'border-black bg-black text-white'
+                          : 'border-gray-300 hover:border-gray-400 text-gray-700'
+                      }`}
+                      style={{ fontFamily: "'Albert Sans', sans-serif" }}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* Quantity & Actions */}
+            {/* Quantity Selection */}
             <div className="space-y-4">
-              {/* Quantity Stepper */}
               <div className="flex items-center gap-4">
                 <span className="text-base font-medium text-black" style={{ fontFamily: "'Albert Sans', sans-serif" }}>Quantity</span>
                 <div className="flex items-center border border-gray-300">
@@ -327,7 +388,7 @@ const ProductDetailPage = () => {
               {/* Action Buttons */}
               <div className="space-y-4">
                 <button className="w-full bg-black text-white py-4 px-6 rounded-lg font-bold text-lg hover:bg-gray-800 transition-colors" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
-                  Add to Cart - ${(currentProduct.price * quantity).toFixed(2)}
+                  Add to Cart - ${(product.price * quantity).toFixed(2)}
                 </button>
                 <button className="w-full bg-yellow-400 text-black py-4 px-6 rounded-lg font-bold text-lg hover:bg-yellow-500 transition-colors" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
                   Buy with PayPal
@@ -337,43 +398,33 @@ const ProductDetailPage = () => {
                 </button>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Info Cards */}
-        <div className="grid md:grid-cols-3 gap-6 mt-16 mb-16">
-          <div className="flex items-center gap-4 p-6 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
-            <svg className="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-            </svg>
-            <div>
-              <h4 className="font-semibold text-black mb-1" style={{ fontFamily: "'Albert Sans', sans-serif" }}>Delivery Time</h4>
-              <p className="text-sm text-gray-600" style={{ fontFamily: "'Albert Sans', sans-serif" }}>12–26 days international, 3–6 USA</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4 p-6 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
-            <svg className="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-            </svg>
-            <div>
-              <h4 className="font-semibold text-black mb-1" style={{ fontFamily: "'Albert Sans', sans-serif" }}>Return Policy</h4>
-              <p className="text-sm text-gray-600" style={{ fontFamily: "'Albert Sans', sans-serif" }}>Return within 30 days of purchase</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4 p-6 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
-            <svg className="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.031 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-            </svg>
-            <div>
-              <h4 className="font-semibold text-black mb-1" style={{ fontFamily: "'Albert Sans', sans-serif" }}>Guarantee Safe Checkout</h4>
-              <p className="text-sm text-gray-600" style={{ fontFamily: "'Albert Sans', sans-serif" }}>Secure payment processing</p>
+            {/* Additional Info */}
+            <div className="space-y-4 pt-6 border-t border-gray-200">
+              <div className="flex items-center gap-2">
+                <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                <span className="text-sm text-gray-600">Free shipping on orders over $50</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                <span className="text-sm text-gray-600">30-day return policy</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                <span className="text-sm text-gray-600">1-year warranty</span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Tabbed Information Section */}
-        <div className="border-t border-gray-200 pt-8 lg:pt-16">
-          {/* Tabs */}
+        {/* Product Tabs */}
+        <div className="mt-16">
           <div className="w-full overflow-x-auto border-b border-gray-200 mb-6 lg:mb-12 scrollbar-hide">
             <div className="flex min-w-max">
               {['description', 'review', 'shipping'].map((tab) => (

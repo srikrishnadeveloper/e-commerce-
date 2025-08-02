@@ -1,12 +1,14 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import siteConfig from '../data/siteConfig.json';
+import { useNavigation, useBranding } from '../hooks/useSiteConfig';
 
 const Navbar = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [openAccordion, setOpenAccordion] = useState(null);
   
-  const { branding, navigation } = siteConfig;
+  // Use real-time site configuration
+  const { data: navigation, loading: navLoading, error: navError } = useNavigation();
+  const { data: branding, loading: brandLoading, error: brandError } = useBranding();
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -15,6 +17,29 @@ const Navbar = () => {
   const toggleAccordion = (section) => {
     setOpenAccordion(openAccordion === section ? null : section);
   };
+
+  // Show loading state if data is not ready
+  if (navLoading || brandLoading) {
+    return (
+      <nav className="w-full h-[74px] md:h-[74px] sm:h-[40px] h-[32px] bg-white flex items-center justify-center px-2 sm:px-3 md:px-6 relative z-50">
+        <div className="text-gray-500">Loading...</div>
+      </nav>
+    );
+  }
+
+  // Show error state if there's an error
+  if (navError || brandError) {
+    console.error('Navbar config error:', navError || brandError);
+    return (
+      <nav className="w-full h-[74px] md:h-[74px] sm:h-[40px] h-[32px] bg-white flex items-center justify-center px-2 sm:px-3 md:px-6 relative z-50">
+        <div className="text-red-500">Error loading navigation</div>
+      </nav>
+    );
+  }
+
+  // Use fallback data if config is not available
+  const navData = navigation || { mainMenu: [] };
+  const brandData = branding || { logo: { light: "/logo.svg", dark: "/logo.png", alt: "Logo" } };
 
   return (
     <>
@@ -45,23 +70,29 @@ const Navbar = () => {
         {/* Logo - Centered on mobile, left on desktop */}
         <div className="flex items-center lg:justify-start justify-center flex-1 lg:flex-none">
           <img 
-            src={branding.logo.light} 
-            alt={branding.logo.alt} 
+            src={brandData.logo.light} 
+            alt={brandData.logo.alt} 
             className="h-4 sm:h-5 md:h-6 w-auto border-2 border-red-400 rounded"
           />
         </div>
 
         {/* Desktop Navigation - Hidden on mobile */}
         <div className="hidden lg:flex items-center space-x-8 flex-1 justify-center">
-          {navigation.mainMenu.map((item, index) => (
+          {navData.mainMenu && navData.mainMenu.map((item, index) => (
             <Link 
               key={index}
               to={item.link} 
-              className="text-red-500 hover:text-red-700 font-medium transition-colors"
+              className="text-black hover:text-gray-700 font-medium transition-colors"
             >
               {item.name}
             </Link>
           ))}
+          <Link 
+              to="/account"
+              className="text-black hover:text-gray-700 font-medium transition-colors"
+            >
+              Account
+            </Link>
         </div>
       
         {/* Right Icons */}
@@ -84,27 +115,6 @@ const Navbar = () => {
             >
               <circle cx="11" cy="11" r="8"/>
               <path d="m21 21-4.35-4.35"/>
-            </svg>
-          </button>
-
-          {/* Account Icon - Hidden on mobile */}
-          <button 
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200 hidden lg:block" 
-            aria-label="Account"
-          >
-            <svg 
-              width="20" 
-              height="20" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="2.5" 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              className="text-gray-700 hover:text-gray-900"
-            >
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-              <circle cx="12" cy="7" r="4"/>
             </svg>
           </button>
 
@@ -199,8 +209,8 @@ const Navbar = () => {
         {/* Sidebar Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <img 
-            src={branding.logo.dark} 
-            alt={branding.logo.alt} 
+            src={brandData.logo.dark} 
+            alt={brandData.logo.alt} 
             className="h-6 w-auto border-2 border-red-400 rounded"
           />
           <button 
@@ -287,6 +297,16 @@ const Navbar = () => {
               </Link>
             </div>
 
+            <div className="mb-6">
+              <Link 
+                to="/account" 
+                className="block py-3 text-left font-medium text-gray-900 hover:text-red-500 transition-colors"
+                onClick={() => setIsSidebarOpen(false)}
+              >
+                Account
+              </Link>
+            </div>
+
             {/* Quick Actions */}
             <div className="flex gap-4 mb-6">
               <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
@@ -362,97 +382,5 @@ const Navbar = () => {
     </>
   );
 };
-        <button 
-          className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200" 
-          aria-label="Account"
-        >
-          <svg 
-            width="20" 
-            height="20" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            strokeWidth="2.5" 
-            strokeLinecap="round" 
-            strokeLinejoin="round" 
-            className="text-gray-700 hover:text-gray-900"
-          >
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-            <circle cx="12" cy="7" r="4"/>
-          </svg>
-        </button>
 
-        {/* Compare Icon */}
-        <button 
-          className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200 hidden sm:block" 
-          aria-label="Compare"
-        >
-          <svg 
-            width="20" 
-            height="20" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            strokeWidth="2.5" 
-            strokeLinecap="round" 
-            strokeLinejoin="round" 
-            className="text-gray-700 hover:text-gray-900"
-          >
-            <path d="M9 12l2 2 4-4"/>
-            <path d="M21 12c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1z"/>
-            <path d="M3 12c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1z"/>
-            <path d="M12 21c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1z"/>
-            <path d="M12 3c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1z"/>
-          </svg>
-        </button>
-
-        {/* Heart Icon */}
-        <button 
-          className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200 relative" 
-          aria-label="Wishlist"
-        >
-          <svg 
-            width="20" 
-            height="20" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            strokeWidth="2.5" 
-            strokeLinecap="round" 
-            strokeLinejoin="round" 
-            className="text-gray-700 hover:text-gray-900"
-          >
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-          </svg>
-          {/* Wishlist count badge */}
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
-            2
-          </span>
-        </button>
-
-        {/* Bag Icon */}
-        <button 
-          className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200 relative" 
-          aria-label="Shopping Cart"
-        >
-          <svg 
-            width="20" 
-            height="20" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            strokeWidth="2.5" 
-            strokeLinecap="round" 
-            strokeLinejoin="round" 
-            className="text-gray-700 hover:text-gray-900"
-          >
-            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
-            <line x1="3" y1="6" x2="21" y2="6"/>
-            <path d="M16 10a4 4 0 0 1-8 0"/>
-          </svg>
-          {/* Cart count badge */}
-          <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
-            3
-          </span>
-        </button>
 export default Navbar;

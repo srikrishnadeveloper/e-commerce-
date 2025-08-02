@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 // CENTRALIZED DATA SERVICE - Single source for all product data
 import { 
@@ -17,31 +17,59 @@ const ProductListingPage = () => {
   const [sortBy, setSortBy] = useState('default');
   const [priceRange, setPriceRange] = useState([0, 100]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const itemsPerPage = 12;
-
-  // CENTRALIZED DATA FETCHING - All product data from single source
-  const products = getProducts();
-  
-  // Use dynamic page content with fallback
-  const pageContent = getSiteConfig().productPages?.listing || {
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [saleProducts, setSaleProducts] = useState([]);
+  const [pageContent, setPageContent] = useState({
     title: "Latest Electronics",
     description: "Discover cutting-edge technology and premium electronics at unbeatable prices"
-  };
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const itemsPerPage = 12;
 
-  // CENTRALIZED SALE PRODUCTS - Dynamic deals from data service
-  const saleProducts = getDealsProducts().slice(0, 3); // Get first 3 deals for sidebar
+  // Load data on component mount
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [productsData, categoriesData, siteConfigData, dealsData] = await Promise.all([
+          getProducts(),
+          getCategories(),
+          getSiteConfig(),
+          getDealsProducts()
+        ]);
 
-  // CENTRALIZED CATEGORIES - Dynamic categories from data service
-  const categories = [
-    { name: 'All', count: products.length },
-    ...getCategories().map(category => ({
-      name: category.name,
-      count: products.filter(product => product.categoryId === category.id).length
-    }))
-  ];
+        setProducts(productsData);
+        setCategories(categoriesData);
+        setSaleProducts(dealsData.slice(0, 3)); // Get first 3 deals for sidebar
+        setPageContent(siteConfigData.productPages?.listing || {
+          title: "Latest Electronics",
+          description: "Discover cutting-edge technology and premium electronics at unbeatable prices"
+        });
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error loading data:', error);
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  // Create categories array with counts
+  const categoriesWithCounts = useMemo(() => {
+    return [
+      { name: 'All', count: products.length },
+      ...categories.map(category => ({
+        name: category.name,
+        count: products.filter(product => product.categoryId === category.id).length
+      }))
+    ];
+  }, [products, categories]);
 
   // Filter and sort products
   const filteredAndSortedProducts = useMemo(() => {
+    if (!products.length) return [];
+    
     let filtered = products.filter(product => {
       const categoryMatch = selectedCategory === 'All' || product.category === selectedCategory;
       const priceMatch = product.price >= priceRange[0] && product.price <= priceRange[1];
@@ -65,7 +93,7 @@ const ProductListingPage = () => {
     }
 
     return filtered;
-  }, [selectedCategory, priceRange, sortBy]);
+  }, [products, selectedCategory, priceRange, sortBy]);
 
   // Pagination
   const totalPages = Math.ceil(filteredAndSortedProducts.length / itemsPerPage);
@@ -101,26 +129,25 @@ const ProductListingPage = () => {
     if (viewMode === 'list') {
       return (
         <Link to={`/product/${product.id}`} className="flex flex-col sm:flex-row gap-3 sm:gap-4 p-3 sm:p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow group block">
-          <div className="w-full sm:w-20 md:w-24 h-48 sm:h-20 md:h-24 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-            <img
-              src={product.images[0]}
-              alt={product.name}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 border-2 border-red-400"
-              style={{ boxShadow: '0 0 10px rgba(239, 68, 68, 0.5)' }}
-            />
-          </div>
+                     <div className="w-full sm:w-20 md:w-24 h-48 sm:h-20 md:h-24 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+             <img
+               src={product.images[0]}
+               alt={product.name}
+               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+             />
+           </div>
           
           <div className="flex-1 flex flex-col justify-between gap-3 sm:gap-0">
-            <div>
-              <h3 className="text-base sm:text-lg font-medium text-red-500 mb-1 sm:mb-2 group-hover:text-red-700 transition-colors line-clamp-2">
-                {product.name}
-              </h3>
-              <p className="text-xs sm:text-sm text-red-500 mb-2">Category: {product.category}</p>
-            </div>
+                         <div>
+               <h3 className="text-base sm:text-lg font-medium text-black mb-1 sm:mb-2 group-hover:text-gray-700 transition-colors line-clamp-2">
+                 {product.name}
+               </h3>
+               <p className="text-xs sm:text-sm text-black mb-2">Category: {product.category}</p>
+             </div>
             
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                <p className="text-lg sm:text-xl font-semibold text-red-500">${product.price}</p>
+                             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                 <p className="text-lg sm:text-xl font-semibold text-black">${product.price}</p>
                 <div className="flex gap-1">
                   {product.colors.map((color, index) => (
                     <button
@@ -158,13 +185,12 @@ const ProductListingPage = () => {
     // Grid view (default)
     return (
       <Link to={`/product/${product.id}`} className="group cursor-pointer w-full block">
-        <div className="relative overflow-hidden rounded-lg bg-gray-100 mb-2 sm:mb-3 aspect-square">
-          <img
-            src={product.images[0]}
-            alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 border-2 border-red-400"
-            style={{ boxShadow: '0 0 10px rgba(239, 68, 68, 0.5)' }}
-          />
+                 <div className="relative overflow-hidden rounded-lg bg-gray-100 mb-2 sm:mb-3 aspect-square">
+           <img
+             src={product.images[0]}
+             alt={product.name}
+             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+           />
           <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
             <button 
               onClick={(e) => e.preventDefault()}
@@ -185,11 +211,11 @@ const ProductListingPage = () => {
           </div>
         </div>
         
-        <div className="text-center px-1">
-          <h3 className="text-xs sm:text-sm font-medium text-red-500 mb-1 group-hover:text-red-700 transition-colors line-clamp-2 min-h-[2.5rem] sm:min-h-[2.8rem]">
-            {product.name}
-          </h3>
-          <p className="text-sm sm:text-base font-semibold text-red-500 mb-2">${product.price}</p>
+                 <div className="text-center px-1">
+           <h3 className="text-xs sm:text-sm font-medium text-black mb-1 group-hover:text-gray-700 transition-colors line-clamp-2 min-h-[2.5rem] sm:min-h-[2.8rem]">
+             {product.name}
+           </h3>
+           <p className="text-sm sm:text-base font-semibold text-black mb-2">${product.price}</p>
           
           {/* Color Swatches */}
           <div className="flex justify-center gap-1">
@@ -223,15 +249,15 @@ const ProductListingPage = () => {
       <div>
         <h3 className="text-base font-semibold text-black mb-4">Product categories</h3>
         <div className="space-y-2">
-          {categories.map((category) => (
+          {categoriesWithCounts.map((category) => (
             <button
               key={category.name}
               onClick={() => setSelectedCategory(category.name)}
-              className={`w-full flex items-center justify-between p-2 text-left rounded transition-colors ${
-                selectedCategory === category.name
-                  ? 'bg-gray-100 text-red-500 font-medium'
-                  : 'text-gray-700 hover:bg-gray-50'
-              }`}
+                             className={`w-full flex items-center justify-between p-2 text-left rounded transition-colors ${
+                 selectedCategory === category.name
+                   ? 'bg-gray-100 text-black font-medium'
+                   : 'text-gray-700 hover:bg-gray-50'
+               }`}
             >
               <span className="text-sm">{category.name}</span>
               <span className="text-xs text-gray-500">({category.count})</span>
@@ -275,24 +301,23 @@ const ProductListingPage = () => {
 
       {/* Sale Products */}
       <div>
-        <h3 className="text-base font-semibold text-red-500 mb-4">Sale products</h3>
+                 <h3 className="text-base font-semibold text-black mb-4">Sale products</h3>
         <div className="space-y-4">
           {saleProducts.map((product) => (
             <div key={product.id} className="flex gap-3 group cursor-pointer">
-              <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                <img
-                  src={product.images ? product.images[0] : product.image}
-                  alt={product.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform border-2 border-red-400"
-                  style={{ boxShadow: '0 0 5px rgba(239, 68, 68, 0.5)' }}
-                />
-              </div>
-              <div className="flex-1">
-                <h4 className="text-sm text-red-500 group-hover:text-red-700 transition-colors line-clamp-2">
-                  {product.name}
-                </h4>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-sm font-semibold text-red-500">${product.price}</span>
+                             <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                 <img
+                   src={product.images ? product.images[0] : product.image}
+                   alt={product.name}
+                   className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                 />
+               </div>
+                             <div className="flex-1">
+                 <h4 className="text-sm text-black group-hover:text-gray-700 transition-colors line-clamp-2">
+                   {product.name}
+                 </h4>
+                 <div className="flex items-center gap-2 mt-1">
+                   <span className="text-sm font-semibold text-black">${product.price}</span>
                   {product.originalPrice && (
                     <span className="text-xs text-gray-500 line-through">${product.originalPrice}</span>
                   )}
@@ -394,13 +419,25 @@ const ProductListingPage = () => {
     </div>
   );
 
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading products...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
-      {/* Hero Section */}
-      <div className="text-center py-6 sm:py-8 lg:py-12 px-4">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-red-500 mb-2">{pageContent.title}</h1>
-        <p className="text-sm sm:text-base text-red-500 max-w-2xl mx-auto">{pageContent.description}</p>
-      </div>
+             {/* Hero Section */}
+       <div className="text-center py-6 sm:py-8 lg:py-12 px-4">
+         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-black mb-2">{pageContent.title}</h1>
+         <p className="text-sm sm:text-base text-black max-w-2xl mx-auto">{pageContent.description}</p>
+       </div>
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 sm:pb-12 lg:pb-16">
@@ -453,10 +490,42 @@ const ProductListingPage = () => {
                 </div>
               </div>
 
-              <div className="flex flex-col xs:flex-row items-start xs:items-center gap-2 xs:gap-4">
-                <span className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">
-                  {filteredAndSortedProducts.length} products found
-                </span>
+                             <div className="flex flex-col xs:flex-row items-start xs:items-center gap-2 xs:gap-4">
+                 <span className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">
+                   {filteredAndSortedProducts.length} products found
+                 </span>
+                 <button
+                   onClick={() => {
+                     setIsLoading(true);
+                     const refreshData = async () => {
+                       try {
+                         const [productsData, categoriesData, siteConfigData, dealsData] = await Promise.all([
+                           getProducts(),
+                           getCategories(),
+                           getSiteConfig(),
+                           getDealsProducts()
+                         ]);
+
+                         setProducts(productsData);
+                         setCategories(categoriesData);
+                         setSaleProducts(dealsData.slice(0, 3));
+                         setPageContent(siteConfigData.productPages?.listing || {
+                           title: "Latest Electronics",
+                           description: "Discover cutting-edge technology and premium electronics at unbeatable prices"
+                         });
+                         setIsLoading(false);
+                       } catch (error) {
+                         console.error('Error refreshing data:', error);
+                         setIsLoading(false);
+                       }
+                     };
+                     refreshData();
+                   }}
+                   className="text-xs sm:text-sm bg-black text-white px-3 py-1 rounded hover:bg-gray-800 transition-colors"
+                   title="Refresh data from MongoDB"
+                 >
+                   🔄 Refresh
+                 </button>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}

@@ -127,6 +127,10 @@
   animation: scrollLeft 25s linear infinite;
 }
 
+.animate-scroll {
+  animation: scrollLeft 25s linear infinite;
+}
+
 /* Testimonial Container Width - 3px extra at each end compared to divider */
 .testimonial-container {
   width: calc(75% + 6px);

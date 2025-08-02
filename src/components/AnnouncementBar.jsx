@@ -1,41 +1,61 @@
-import React from 'react';
-import siteConfig from '../data/siteConfig.json';
+import React, { useState, useEffect } from 'react';
+import { useAnnouncementBar } from '../hooks/useSiteConfig';
 
 const AnnouncementBar = () => {
-  const { announcementBar } = siteConfig;
-  
-  // Don't render if announcement bar is disabled
-  if (!announcementBar.isActive) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const { data: announcementData, loading, error } = useAnnouncementBar();
+
+  // Use fallback data if config is not available
+  const announcements = announcementData?.announcements || [
+    "Welcome to our store - Free shipping on orders over $50!",
+    "Summer Sale - Up to 50% off selected items!",
+    "New arrivals just landed - Shop the latest trends!"
+  ];
+
+  const isActive = announcementData?.isActive ?? true;
+
+  useEffect(() => {
+    if (!isActive || announcements.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % announcements.length);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [announcements.length, isActive]);
+
+  // Don't render if not active or loading
+  if (!isActive || loading) {
     return null;
   }
 
-  const announcements = announcementBar.announcements;
+  // Show error state - but still display with fallback data
+  if (error) {
+    console.error('AnnouncementBar config error:', error);
+    // Continue with fallback data instead of returning null
+  }
 
   return (
-    <div className="w-full bg-announcement text-white h-12 flex items-center relative overflow-hidden" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
-      
-      {/* Left gradient fade */}
-      <div className="absolute left-0 top-0 w-20 h-full bg-gradient-to-r from-announcement to-transparent z-10"></div>
-      
-      {/* Right gradient fade */}
-      <div className="absolute right-0 top-0 w-20 h-full bg-gradient-to-l from-announcement to-transparent z-10"></div>
-      
-      {/* Infinite scrolling container */}
-      <div className="absolute inset-0 flex items-center">
-        <div className="animate-scroll-left flex items-center space-x-16 whitespace-nowrap pl-16">
-          {/* First set of announcements */}
-          {announcements.map((announcement, index) => (
-            <span key={`first-${index}`} className="text-sm font-medium text-red-400">
-              {announcement}
-            </span>
-          ))}
-          {/* Duplicate set for seamless loop */}
-          {announcements.map((announcement, index) => (
-            <span key={`second-${index}`} className="text-sm font-medium text-red-400">
-              {announcement}
-            </span>
-          ))}
-        </div>
+    <div className="bg-black text-white py-3 overflow-hidden relative">
+      <div className="flex items-center justify-center animate-scroll-left whitespace-nowrap">
+        {/* First set of announcements */}
+        {announcements.map((announcement, index) => (
+          <span 
+            key={`first-${index}`} 
+            className="text-sm font-medium text-white mx-8 flex-shrink-0"
+          >
+            {announcement}
+          </span>
+        ))}
+        {/* Duplicate set for seamless loop */}
+        {announcements.map((announcement, index) => (
+          <span 
+            key={`second-${index}`} 
+            className="text-sm font-medium text-white mx-8 flex-shrink-0"
+          >
+            {announcement}
+          </span>
+        ))}
       </div>
     </div>
   );
