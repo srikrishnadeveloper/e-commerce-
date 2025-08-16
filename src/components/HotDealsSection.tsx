@@ -1,12 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { gsap } from 'gsap';
-import { Product, SiteConfig } from '../types';
-// CENTRALIZED DATA SERVICE - Single source for all product and config data
-import { 
-  getDealsProducts, 
-  getSiteConfig,
-  calculateDiscountPercentage 
-} from '../services/dataService';
+import { Product } from '../types';
+import { getDealsProducts, calculateDiscountPercentage } from '../services/dataService';
+import siteConfigService from '../services/siteConfigService';
 
 // Icon Props interface
 interface IconProps {
@@ -36,8 +32,8 @@ const CloseIcon: React.FC<IconProps> = ({ className }) => (
 // Active Deal Badge Component Props
 interface ActiveDealBadgeProps {
   product: Product;
-  onClose: (dealId: number) => void;
-  dealId: number;
+  onClose: (dealId: string) => void;
+  dealId: string;
 }
 
 const ActiveDealBadge: React.FC<ActiveDealBadgeProps> = ({ product, onClose, dealId }) => {
@@ -64,8 +60,8 @@ const ActiveDealBadge: React.FC<ActiveDealBadgeProps> = ({ product, onClose, dea
 // Deal Card Component Props
 interface DealCardProps {
   deal: Product;
-  onColorSelect: (dealId: number, colorIndex: number) => void;
-  onCloseDeal: (dealId: number) => void;
+  onColorSelect: (dealId: string, colorIndex: number) => void;
+  onCloseDeal: (dealId: string) => void;
 }
 
 const DealCard: React.FC<DealCardProps> = ({ deal, onColorSelect, onCloseDeal }) => {
@@ -92,7 +88,7 @@ const DealCard: React.FC<DealCardProps> = ({ deal, onColorSelect, onCloseDeal })
         <ActiveDealBadge 
           product={deal}
           onClose={onCloseDeal}
-          dealId={deal.id}
+          dealId={String(deal.id)}
         />
       )}
       
@@ -150,8 +146,8 @@ const DealCard: React.FC<DealCardProps> = ({ deal, onColorSelect, onCloseDeal })
         <div className="flex justify-center gap-2">
           {deal.colors && deal.colors.slice(0, 2).map((color, index) => (
             <button
-              key={`${deal.id}-${color.name}-${index}`}
-              onClick={() => onColorSelect(deal.id, index)}
+               key={`${deal.id}-${color.name}-${index}`}
+               onClick={() => onColorSelect(String(deal.id), index)}
               className={`w-6 h-6 rounded-full border-2 transition-all duration-200 hover:scale-110 ${
                 color.selected 
                   ? 'border-black shadow-md scale-110' 
@@ -171,8 +167,8 @@ const DealCard: React.FC<DealCardProps> = ({ deal, onColorSelect, onCloseDeal })
 interface DealsCarouselProps {
   deals: Product[];
   currentIndex: number;
-  onColorSelect: (dealId: number, colorIndex: number) => void;
-  onCloseDeal: (dealId: number) => void;
+  onColorSelect: (dealId: string, colorIndex: number) => void;
+  onCloseDeal: (dealId: string) => void;
   onPrevious: () => void;
   onNext: () => void;
   isTransitioning: boolean;
@@ -252,7 +248,7 @@ const DealsCarousel: React.FC<DealsCarouselProps> = ({
 };
 
 const HotDealsSection: React.FC = () => {
-  const [config, setConfig] = useState<SiteConfig | null>(null);
+  const [homepage, setHomepage] = useState<any | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
@@ -263,12 +259,11 @@ const HotDealsSection: React.FC = () => {
     // CENTRALIZED DATA LOADING - Load all data from single service
     const loadData = async () => {
       try {
-        const [siteData, dealsProducts] = await Promise.all([
-          getSiteConfig(),
+        const [homepageConfig, dealsProducts] = await Promise.all([
+          siteConfigService.getHomepage(),
           getDealsProducts()
         ]);
-        
-        setConfig(siteData);
+        setHomepage(homepageConfig);
         setProducts(dealsProducts);
         setIsLoading(false);
       } catch (error) {
@@ -312,10 +307,10 @@ const HotDealsSection: React.FC = () => {
     }, 500);
   };
 
-  const handleColorSelect = (dealId: number, colorIndex: number): void => {
+  const handleColorSelect = (dealId: string, colorIndex: number): void => {
     setProducts(prevProducts =>
       prevProducts.map(product =>
-        product.id === dealId
+        String(product.id) === String(dealId)
           ? {
               ...product,
               colors: product.colors?.map((color, index) => ({
@@ -328,10 +323,10 @@ const HotDealsSection: React.FC = () => {
     );
   };
 
-  const handleCloseDeal = (dealId: number): void => {
+  const handleCloseDeal = (dealId: string): void => {
     setProducts(prevProducts =>
       prevProducts.map(product =>
-        product.id === dealId
+        String(product.id) === String(dealId)
           ? { ...product, onSale: false, dealText: "" }
           : product
       )
@@ -348,10 +343,10 @@ const HotDealsSection: React.FC = () => {
   }, [currentIndex, isTransitioning, products.length]);
 
   if (isLoading) return <div className="py-16 text-center">Loading...</div>;
-  if (!config) return <div className="py-16 text-center">Loading...</div>;
+  if (!homepage) return <div className="py-16 text-center">Loading...</div>;
   if (!products.length) return null; // Don't show section if no deals
 
-  const { hotDealsSection } = config.homePage;
+  const hotDealsSection = homepage?.hotDealsSection || { title: 'Hot Deals', subtitle: '', viewAllText: 'View All', viewAllLink: '/products' };
 
   return (
     <section className="py-16 bg-white" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
@@ -382,11 +377,11 @@ const HotDealsSection: React.FC = () => {
         {/* View All Button */}
         <div className="text-center mt-12">
           <a
-            href={hotDealsSection.viewAllLink}
+            href={hotDealsSection.viewAllLink || '/products'}
             className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-black hover:bg-gray-800 transition-all duration-300"
             style={{ fontFamily: "'Albert Sans', sans-serif" }}
           >
-            {hotDealsSection.viewAllText}
+            {hotDealsSection.viewAllText || 'View All'}
             <ArrowRightIcon className="ml-2 w-5 h-5" />
           </a>
         </div>

@@ -20,13 +20,37 @@ export default function FeatureSection(): React.ReactElement {
 
   if (!config) return <div>Loading...</div>;
 
-  const featuresSection: FeaturesSection = config.homePage.featuresSection;
+  // Add fallback data if featuresSection doesn't exist
+  const featuresSection: FeaturesSection = config.homePage?.featuresSection || {
+    title: "Featured Collections",
+    subtitle: "Discover our latest collections",
+    features: [
+      {
+        icon: "feature1",
+        title: "Electronics",
+        description: "Latest gadgets and technology",
+        image: "/images/IMAGE_11.png"
+      },
+      {
+        icon: "feature2",
+        title: "Fashion",
+        description: "Trendy clothing and accessories",
+        image: "/images/IMAGE_11.png"
+      },
+      {
+        icon: "feature3",
+        title: "Home & Living",
+        description: "Comfort and style for your home",
+        image: "/images/IMAGE_11.png"
+      }
+    ]
+  };
 
   return (
     <section className="pt-8 pb-20 bg-white">
       <div className="max-w-[1800px] mx-auto px-2 sm:px-4 lg:px-6">
         <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
-          {featuresSection.features.slice(0, 3).map((feature, idx) => (
+          {(featuresSection.features || []).slice(0, 3).map((feature, idx) => (
             <div
               key={idx}
               className="flex-1 relative rounded-sm overflow-hidden shadow-xl flex items-end min-h-[500px] sm:min-h-[550px] lg:min-h-[600px] bg-center bg-cover group cursor-pointer transition-transform duration-300 hover:scale-[1.02]"

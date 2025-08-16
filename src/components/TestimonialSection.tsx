@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getSiteConfig } from '../services/dataService';
 import { SiteConfig } from '../types';
 
 interface Testimonial {
@@ -13,17 +14,47 @@ const TestimonialSection: React.FC = () => {
   const [currentTestimonial, setCurrentTestimonial] = useState<number>(0);
 
   useEffect(() => {
-    // Load site configuration
-    fetch('/src/data/siteConfig.json')
-      .then(response => response.json())
-      .then((data: SiteConfig) => setConfig(data))
-      .catch(error => console.error('Error loading site config:', error));
+    // Load site configuration using the proper API service
+    const loadSiteConfig = async () => {
+      try {
+        const siteConfig = await getSiteConfig();
+        setConfig(siteConfig);
+      } catch (error) {
+        console.error('Error loading site config:', error);
+      }
+    };
+    
+    loadSiteConfig();
   }, []);
 
   if (!config) return <div>Loading...</div>;
 
-  const { testimonialSection } = config.homePage;
-  const testimonials = testimonialSection.testimonials;
+  // Add fallback data if testimonialSection doesn't exist
+  const testimonialSection = config.homePage?.testimonialSection || {
+    title: "Customer Testimonials",
+    testimonials: [
+      {
+        name: "John Doe",
+        role: "Customer",
+        text: "Great service and fast delivery!",
+        rating: 5
+      },
+      {
+        name: "Jane Smith",
+        role: "Customer",
+        text: "Excellent quality products.",
+        rating: 5
+      },
+      {
+        name: "Mike Johnson",
+        role: "Customer",
+        text: "Highly recommended!",
+        rating: 5
+      }
+    ]
+  };
+  
+  const testimonials = testimonialSection.testimonials || [];
 
   const nextTestimonial = (): void => {
     setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
@@ -33,7 +64,7 @@ const TestimonialSection: React.FC = () => {
     setCurrentTestimonial((prev) => (prev - 1 + testimonials.length) % testimonials.length);
   };
 
-  const current: Testimonial = testimonials[currentTestimonial];
+  const current: Testimonial = testimonials[currentTestimonial] || testimonials[0];
 
   return (
     <section className="py-6 sm:py-8 md:py-12 lg:py-16 xl:py-20 bg-gray-50">
@@ -99,23 +130,24 @@ const TestimonialSection: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Navigation Buttons - Fixed at bottom */}
-                <div className="flex gap-2 sm:gap-3 mt-auto justify-center">
+                {/* Navigation Arrows */}
+                <div className="flex justify-center items-center gap-4">
                   <button
                     onClick={prevTestimonial}
-                    aria-label={testimonialSection.navigationLabels.previous}
-                    className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 lg:w-10 lg:h-10 xl:w-11 xl:h-11 rounded-full border-2 border-white/30 flex items-center justify-center hover:bg-white hover:text-[#35374a] transition-all duration-300 group"
+                    className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors duration-200"
+                    aria-label="Previous testimonial"
                   >
-                    <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-3.5 md:h-3.5 lg:w-4 lg:h-4 xl:w-5 xl:h-5 text-white group-hover:text-[#35374a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
                   </button>
+                  
                   <button
                     onClick={nextTestimonial}
-                    aria-label={testimonialSection.navigationLabels.next}
-                    className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 lg:w-10 lg:h-10 xl:w-11 xl:h-11 rounded-full border-2 border-white/30 flex items-center justify-center hover:bg-white hover:text-[#35374a] transition-all duration-300 group"
+                    className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors duration-200"
+                    aria-label="Next testimonial"
                   >
-                    <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-3.5 md:h-3.5 lg:w-4 lg:h-4 xl:w-5 xl:h-5 text-white group-hover:text-[#35374a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </button>

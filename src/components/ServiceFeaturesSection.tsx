@@ -25,8 +25,35 @@ const ServiceFeaturesSection: React.FC = () => {
 
   if (!config) return <div>Loading...</div>;
 
-  const featuresSection: FeaturesSection = config.homePage.featuresSection;
-  const features: FeatureItem[] = featuresSection.features;
+  // Add fallback data if featuresSection doesn't exist
+  const featuresSection: FeaturesSection = config.homePage?.featuresSection || {
+    title: "Our Services",
+    subtitle: "Discover what makes us special",
+    features: [
+      {
+        icon: "truck",
+        title: "Free Shipping",
+        description: "Free shipping on all orders over $50"
+      },
+      {
+        icon: "headphones",
+        title: "24/7 Support",
+        description: "Get help anytime with our customer service"
+      },
+      {
+        icon: "refresh",
+        title: "Easy Returns",
+        description: "30-day return policy for all products"
+      },
+      {
+        icon: "shield",
+        title: "Secure Payment",
+        description: "Your payment information is secure with us"
+      }
+    ]
+  };
+  
+  const features: FeatureItem[] = featuresSection.features || [];
 
   // Icon mapping - replace with your preferred icons
   const iconMap: IconMap = {
@@ -72,18 +99,18 @@ const ServiceFeaturesSection: React.FC = () => {
             {/* Icon */}
             <div className="bg-gray-100 rounded-full flex items-center justify-center w-20 h-20 mb-6">
               <div className="text-black">
-                {iconMap[features[currentSlide].icon] || <div className="w-10 h-10 bg-gray-400 rounded" />}
+                {iconMap[features[currentSlide]?.icon] || <div className="w-10 h-10 bg-gray-400 rounded" />}
               </div>
             </div>
             
             {/* Title */}
             <h3 className="text-xl font-semibold text-black mb-3 leading-tight" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
-              {features[currentSlide].title}
+              {features[currentSlide]?.title || 'Feature'}
             </h3>
             
             {/* Description */}
             <p className="text-base text-black leading-relaxed" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
-              {features[currentSlide].description}
+              {features[currentSlide]?.description || 'Feature description'}
             </p>
           </div>
 
@@ -103,39 +130,27 @@ const ServiceFeaturesSection: React.FC = () => {
         </div>
 
         {/* Desktop Grid View */}
-        <div className="hidden sm:block">
-          {/* Features Grid - Matches divider width */}
-          <div className="w-3/4 sm:w-4/5 lg:w-5/6 mx-auto">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
-              {features.map((feature, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center gap-3 group"
-                  style={{ fontFamily: "'Albert Sans', sans-serif" }}
-                >
-                  {/* Icon Container on the Left */}
-                  <div className="bg-gray-100 rounded-full flex items-center justify-center w-16 h-16 flex-shrink-0 group-hover:bg-gray-200 transition-colors duration-300">
-                    <div className="text-black">
-                      {iconMap[feature.icon] || <div className="w-8 h-8 bg-gray-400 rounded" />}
-                    </div>
-                  </div>
-                  
-                  {/* Text Content on the Right */}
-                  <div className="flex-1">
-                    {/* Title */}
-                    <h3 className="text-lg font-semibold text-black mb-1 leading-tight">
-                      {feature.title}
-                    </h3>
-                    
-                    {/* Description */}
-                    <p className="text-sm text-black leading-relaxed">
-                      {feature.description}
-                    </p>
-                  </div>
+        <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          {features.map((feature, index) => (
+            <div key={index} className="flex flex-col items-center text-center">
+              {/* Icon */}
+              <div className="bg-gray-100 rounded-full flex items-center justify-center w-16 h-16 mb-4">
+                <div className="text-black">
+                  {iconMap[feature.icon] || <div className="w-8 h-8 bg-gray-400 rounded" />}
                 </div>
-              ))}
+              </div>
+              
+              {/* Title */}
+              <h3 className="text-lg font-semibold text-black mb-2" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
+                {feature.title}
+              </h3>
+              
+              {/* Description */}
+              <p className="text-sm text-gray-600 leading-relaxed" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
+                {feature.description}
+              </p>
             </div>
-          </div>
+          ))}
         </div>
       </div>
     </section>

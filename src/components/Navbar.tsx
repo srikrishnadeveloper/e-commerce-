@@ -1,38 +1,122 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { SiteConfig } from '../types';
-import { getSiteConfig } from '../services/dataService';
+import { useNavigation, useBranding } from '../hooks/useSiteConfig';
+import authService from '../services/authService';
+import wishlistService from '../services/wishlistService';
+import cartService from '../services/cartService';
+import LoginModal from './LoginModal';
+import RegisterModal from './RegisterModal';
 
 const Navbar: React.FC = () => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [openAccordion, setOpenAccordion] = useState<string | null>(null);
-  const [siteConfig, setSiteConfig] = useState<SiteConfig | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [wishlistCount, setWishlistCount] = useState(0);
+  const [cartCount, setCartCount] = useState(0);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
   
-  useEffect(() => {
-    const loadSiteConfig = async () => {
-      try {
-        const config = await getSiteConfig();
-        setSiteConfig(config);
-      } catch (error) {
-        console.error('Error loading site config:', error);
-      }
-    };
-    
-    loadSiteConfig();
-  }, []);
-  
-  if (!siteConfig) {
-    return <div>Loading...</div>; // Loading state
-  }
-  
-  const { branding, navigation } = siteConfig;
+  // Use real-time site configuration
+  const { data: navigation, loading: navLoading, error: navError } = useNavigation();
+  const { data: branding, loading: brandLoading, error: brandError } = useBranding();
 
-  const toggleSidebar = (): void => {
+  const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  const toggleAccordion = (section: string): void => {
+  const toggleAccordion = (section: string) => {
     setOpenAccordion(openAccordion === section ? null : section);
+  };
+
+  // Check authentication status and load user data
+  useEffect(() => {
+    const checkAuth = () => {
+      const authenticated = authService.isAuthenticated();
+      setIsAuthenticated(authenticated);
+      
+      if (authenticated) {
+        const userData = authService.getCurrentUserFromStorage();
+        setUser(userData);
+        
+        // Load wishlist and cart counts
+        loadWishlistCount();
+        loadCartCount();
+      }
+    };
+
+    const loadWishlistCount = async () => {
+      try {
+        const response = await wishlistService.getWishlist();
+        if (response.success) {
+          setWishlistCount(response.count || 0);
+        }
+      } catch (error) {
+        console.error('Failed to load wishlist count:', error);
+      }
+    };
+
+    const loadCartCount = async () => {
+      try {
+        const count = await cartService.getCartCount();
+        setCartCount(count);
+      } catch (error) {
+        console.error('Failed to load cart count:', error);
+      }
+    };
+
+    checkAuth();
+    
+    // Listen for storage changes (login/logout)
+    const handleStorageChange = () => {
+      checkAuth();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    // Also listen to a custom login event to update navbar immediately after login
+    const handleAuthEvent = () => checkAuth();
+    window.addEventListener('auth:changed', handleAuthEvent);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('auth:changed', handleAuthEvent);
+    };
+  }, []);
+
+  // Show loading state if data is not ready
+  if (navLoading || brandLoading) {
+    return (
+      <nav className="w-full h-[74px] md:h-[74px] sm:h-[40px] h-[32px] bg-white flex items-center justify-center px-2 sm:px-3 md:px-6 relative z-50">
+        <div className="text-gray-500">Loading...</div>
+      </nav>
+    );
+  }
+
+  // Show error state if there's an error
+  if (navError || brandError) {
+    console.error('Navbar config error:', navError || brandError);
+    return (
+      <nav className="w-full h-[74px] md:h-[74px] sm:h-[40px] h-[32px] bg-white flex items-center justify-center px-2 sm:px-3 md:px-6 relative z-50">
+        <div className="text-red-500">Error loading navigation</div>
+      </nav>
+    );
+  }
+
+  // Use fallback data if config is not available
+  const navData = navigation || {
+    mainMenu: [
+      { name: "Home", link: "/" },
+      { name: "Products", link: "/products" },
+      { name: "About", link: "/about" },
+      { name: "Contact", link: "/contact" }
+    ]
+  };
+
+  const brandData = branding || {
+    logo: {
+      light: "/images/placeholder.svg",
+      dark: "/images/placeholder.svg",
+      alt: "Logo"
+    }
   };
 
   return (
@@ -63,20 +147,22 @@ const Navbar: React.FC = () => {
 
         {/* Logo - Centered on mobile, left on desktop */}
         <div className="flex items-center lg:justify-start justify-center flex-1 lg:flex-none">
-          <img 
-            src={branding.logo.light} 
-            alt={branding.logo.alt} 
-            className="h-4 sm:h-5 md:h-6 w-auto border-2 border-gray-400 rounded"
-          />
+          <Link to="/">
+            <img 
+              src={brandData.logo.light} 
+              alt={brandData.logo.alt} 
+              className="h-4 sm:h-5 md:h-6 w-auto border-2 border-red-400 rounded"
+            />
+          </Link>
         </div>
 
         {/* Desktop Navigation - Hidden on mobile */}
         <div className="hidden lg:flex items-center space-x-8 flex-1 justify-center">
-          {navigation.mainMenu.map((item, index) => (
+          {navData.mainMenu.map((item, index) => (
             <Link 
               key={index}
               to={item.link} 
-              className="text-black hover:text-gray-700 font-medium transition-colors"
+              className="text-red-500 hover:text-red-700 font-medium transition-colors"
             >
               {item.name}
             </Link>
@@ -107,26 +193,49 @@ const Navbar: React.FC = () => {
           </button>
 
           {/* Account Icon - Hidden on mobile */}
-          <Link 
-            to="/account"
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200 hidden lg:block" 
-            aria-label="Account"
-          >
-            <svg 
-              width="20" 
-              height="20" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="2.5" 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              className="text-gray-700 hover:text-gray-900"
+          {isAuthenticated ? (
+            <Link 
+              to="/account"
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200 hidden lg:block" 
+              aria-label="Account"
             >
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-              <circle cx="12" cy="7" r="4"/>
-            </svg>
-          </Link>
+              <svg 
+                width="20" 
+                height="20" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2.5" 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                className="text-gray-700 hover:text-gray-900"
+              >
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </Link>
+          ) : (
+            <button 
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200 hidden lg:block" 
+              aria-label="Account"
+              onClick={() => setShowLoginModal(true)}
+            >
+              <svg 
+                width="20" 
+                height="20" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2.5" 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                className="text-gray-700 hover:text-gray-900"
+              >
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </button>
+          )}
 
           {/* Compare Icon - Hidden on mobile and tablet */}
           <button 
@@ -153,54 +262,106 @@ const Navbar: React.FC = () => {
           </button>
 
           {/* Heart Icon - Hidden on mobile */}
-          <button 
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200 relative hidden lg:block" 
-            aria-label="Wishlist"
-          >
-            <svg 
-              width="20" 
-              height="20" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="2.5" 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              className="text-gray-700 hover:text-gray-900"
+          {isAuthenticated ? (
+            <Link 
+              to="/wishlist"
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200 relative hidden lg:block" 
+              aria-label="Wishlist"
             >
-              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-            </svg>
-            {/* Wishlist count badge */}
-            <span className="absolute -top-1 -right-1 bg-black text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
-              2
-            </span>
-          </button>
+              <svg 
+                width="20" 
+                height="20" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2.5" 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                className="text-gray-700 hover:text-gray-900"
+              >
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+              {/* Wishlist count badge */}
+              {wishlistCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                  {wishlistCount}
+                </span>
+              )}
+            </Link>
+          ) : (
+            <button 
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200 relative hidden lg:block" 
+              aria-label="Wishlist"
+              onClick={() => setShowLoginModal(true)}
+            >
+              <svg 
+                width="20" 
+                height="20" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2.5" 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                className="text-gray-700 hover:text-gray-900"
+              >
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+            </button>
+          )}
 
           {/* Bag Icon */}
-          <button 
-            className="p-1 sm:p-1.5 hover:bg-gray-100 rounded-full transition-colors duration-200 relative" 
-            aria-label="Shopping Cart"
-          >
-            <svg 
-              width="16" 
-              height="16" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="2.5" 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              className="text-gray-700 hover:text-gray-900 sm:w-[18px] sm:h-[18px]"
+          {isAuthenticated ? (
+            <Link 
+              to="/cart"
+              className="p-1 sm:p-1.5 hover:bg-gray-100 rounded-full transition-colors duration-200 relative" 
+              aria-label="Shopping Cart"
             >
-              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
-              <line x1="3" y1="6" x2="21" y2="6"/>
-              <path d="M16 10a4 4 0 0 1-8 0"/>
-            </svg>
-            {/* Cart count badge */}
-            <span className="absolute -top-0.5 -right-0.5 bg-blue-500 text-white text-xs rounded-full h-3.5 w-3.5 sm:h-4 sm:w-4 flex items-center justify-center font-bold text-[9px] sm:text-[10px]">
-              0
-            </span>
-          </button>
+              <svg 
+                width="16" 
+                height="16" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2.5" 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                className="text-gray-700 hover:text-gray-900 sm:w-[18px] sm:h-[18px]"
+              >
+                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                <line x1="3" y1="6" x2="21" y2="6"/>
+                <path d="M16 10a4 4 0 0 1-8 0"/>
+              </svg>
+              {/* Cart count badge */}
+              {cartCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 bg-blue-500 text-white text-xs rounded-full h-3.5 w-3.5 sm:h-4 sm:w-4 flex items-center justify-center font-bold text-[9px] sm:text-[10px]">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
+          ) : (
+            <button 
+              className="p-1 sm:p-1.5 hover:bg-gray-100 rounded-full transition-colors duration-200 relative" 
+              aria-label="Shopping Cart"
+              onClick={() => setShowLoginModal(true)}
+            >
+              <svg 
+                width="16" 
+                height="16" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2.5" 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                className="text-gray-700 hover:text-gray-900 sm:w-[18px] sm:h-[18px]"
+              >
+                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                <line x1="3" y1="6" x2="21" y2="6"/>
+                <path d="M16 10a4 4 0 0 1-8 0"/>
+              </svg>
+            </button>
+          )}
         </div>
       </nav>
 
@@ -219,9 +380,9 @@ const Navbar: React.FC = () => {
         {/* Sidebar Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <img 
-            src={branding.logo.dark} 
-            alt={branding.logo.alt} 
-            className="h-6 w-auto border-2 border-gray-400 rounded"
+            src={brandData.logo.dark} 
+            alt={brandData.logo.alt} 
+            className="h-6 w-auto border-2 border-red-400 rounded"
           />
           <button 
             onClick={toggleSidebar}
@@ -253,9 +414,9 @@ const Navbar: React.FC = () => {
             <div className="mb-4">
               <button 
                 onClick={() => toggleAccordion('home')}
-                className="w-full flex items-center justify-between py-3 text-left font-medium text-gray-900 hover:text-gray-700 transition-colors"
+                className="w-full flex items-center justify-between py-3 text-left font-medium text-gray-900 hover:text-red-500 transition-colors"
               >
-                <span className="text-black">Home</span>
+                <span className="text-red-500">Home</span>
                 <svg 
                   className={`w-5 h-5 transform transition-transform ${openAccordion === 'home' ? 'rotate-180' : ''}`}
                   fill="none" 
@@ -271,7 +432,7 @@ const Navbar: React.FC = () => {
             <div className="mb-4">
               <Link 
                 to="/products"
-                className="w-full flex items-center justify-between py-3 text-left font-medium text-gray-900 hover:text-gray-700 transition-colors"
+                className="w-full flex items-center justify-between py-3 text-left font-medium text-gray-900 hover:text-red-500 transition-colors"
                 onClick={() => setIsSidebarOpen(false)}
               >
                 <span>Products</span>
@@ -290,7 +451,7 @@ const Navbar: React.FC = () => {
             <div className="mb-4">
               <a 
                 href="#" 
-                className="block py-3 text-left font-medium text-gray-900 hover:text-gray-700 transition-colors"
+                className="block py-3 text-left font-medium text-gray-900 hover:text-red-500 transition-colors"
               >
                 About
               </a>
@@ -300,7 +461,7 @@ const Navbar: React.FC = () => {
             <div className="mb-6">
               <Link 
                 to="/contact" 
-                className="block py-3 text-left font-medium text-gray-900 hover:text-gray-700 transition-colors"
+                className="block py-3 text-left font-medium text-gray-900 hover:text-red-500 transition-colors"
                 onClick={() => setIsSidebarOpen(false)}
               >
                 Contact
@@ -355,18 +516,34 @@ const Navbar: React.FC = () => {
 
         {/* Sidebar Footer */}
         <div className="border-t border-gray-200 p-4">
-          {/* Login Button */}
-          <Link 
-            to="/account"
-            onClick={() => setIsSidebarOpen(false)}
-            className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors mb-4"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-              <circle cx="12" cy="7" r="4"/>
-            </svg>
-            <span className="font-medium">Account</span>
-          </Link>
+          {/* Login/Account Button */}
+          {isAuthenticated ? (
+            <Link 
+              to="/account"
+              className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors mb-4"
+              onClick={() => setIsSidebarOpen(false)}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              <span className="font-medium">My Account</span>
+            </Link>
+          ) : (
+            <button 
+              className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors mb-4"
+              onClick={() => {
+                setShowLoginModal(true);
+                setIsSidebarOpen(false);
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              <span className="font-medium">Login</span>
+            </button>
+          )}
 
           {/* Language and Currency */}
           <div className="flex gap-4">
@@ -383,6 +560,34 @@ const Navbar: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Login Modal */}
+      <LoginModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        onSuccess={(response) => {
+          console.log('Login successful:', response);
+          // The auth:changed event will automatically update the navbar
+        }}
+        onSwitchToRegister={() => {
+          setShowLoginModal(false);
+          setShowRegisterModal(true);
+        }}
+      />
+
+      {/* Register Modal */}
+      <RegisterModal
+        isOpen={showRegisterModal}
+        onClose={() => setShowRegisterModal(false)}
+        onSuccess={(response) => {
+          console.log('Registration successful:', response);
+          // The auth:changed event will automatically update the navbar
+        }}
+        onSwitchToLogin={() => {
+          setShowRegisterModal(false);
+          setShowLoginModal(true);
+        }}
+      />
     </>
   );
 };

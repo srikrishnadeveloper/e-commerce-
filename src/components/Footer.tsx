@@ -1,11 +1,16 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import siteConfig from '../data/siteConfig.json';
+import { useBranding } from '../hooks/useSiteConfig';
 
 const Footer = () => {
   const [email, setEmail] = useState('');
   
-  const { branding, company, footer } = siteConfig;
+  const { data: branding, loading: brandLoading, error: brandError } = useBranding();
+  
+  // Use default values if data is not loaded yet
+  const brandData = branding?.data || {};
+  const companyData = brandData.company || {};
+  const footerData = brandData.footer || {};
 
   const handleSubscribe = (e) => {
     e.preventDefault();
@@ -24,26 +29,26 @@ const Footer = () => {
             {/* Logo */}
             <div className="mb-4 sm:mb-5 md:mb-6">
               <img 
-                src={branding.logo.light} 
-                alt={branding.logo.alt} 
+                src={brandData.logo?.light || '/images/placeholder.svg'} 
+                alt={brandData.logo?.alt || 'Logo'} 
                 className="h-4 sm:h-5 md:h-6 lg:h-6 xl:h-7 w-auto border-2 border-red-400 rounded"
               />
             </div>
             
             {/* Address */}
             <div className="mb-3 sm:mb-4 md:mb-4 text-xs sm:text-sm md:text-base lg:text-base text-black leading-relaxed">
-              <p className="mb-1">Address: {company.address.street},</p>
-              <p className="mb-1">{company.address.city}, {company.address.state} {company.address.zip}</p>
-              <p className="mb-1">Email: {company.contact.email}</p>
-              <p className="mb-3 sm:mb-4">Phone: {company.contact.phone}</p>
+              <p className="mb-1">Address: {companyData.address?.street || '123 Main St'},</p>
+              <p className="mb-1">{companyData.address?.city || 'City'}, {companyData.address?.state || 'State'} {companyData.address?.zip || '12345'}</p>
+              <p className="mb-1">Email: {companyData.contact?.email || 'info@example.com'}</p>
+              <p className="mb-3 sm:mb-4">Phone: {companyData.contact?.phone || '(555) 123-4567'}</p>
             </div>
             
             {/* Get Direction Link */}
             <a 
-              href={footer.getDirectionLink} 
+              href={footerData.getDirectionLink || '#'} 
               className="text-xs sm:text-sm md:text-base lg:text-base text-black underline hover:no-underline mb-4 sm:mb-5 md:mb-6 inline-block transition-colors hover:text-gray-700"
             >
-              {footer.getDirectionText}
+              {footerData.getDirectionText || 'Get Directions'}
             </a>
             
             {/* Social Media Icons */}
@@ -106,7 +111,7 @@ const Footer = () => {
           </div>
           
           {/* Dynamic Footer Sections */}
-          {footer.sections.filter(section => section.title.toLowerCase() !== 'shop').map((section, index) => (
+          {footerData.sections?.filter(section => section.title.toLowerCase() !== 'shop').map((section, index) => (
             <div key={index} className="flex flex-col">
               <h3 className="text-sm sm:text-base md:text-lg lg:text-lg xl:text-xl font-semibold text-black mb-2 sm:mb-3 md:mb-4">
                 {section.title}
@@ -128,10 +133,10 @@ const Footer = () => {
           {/* Newsletter Section */}
           <div className="flex flex-col sm:col-span-2 lg:col-span-1">
             <h3 className="text-sm sm:text-base md:text-lg lg:text-lg xl:text-xl font-semibold text-black mb-2 sm:mb-3 md:mb-4">
-              {footer.newsletter.title}
+              {footerData.newsletter?.title || 'Newsletter'}
             </h3>
             <p className="text-xs sm:text-sm md:text-base lg:text-base text-black mb-3 sm:mb-4 leading-relaxed">
-              {footer.newsletter.description}
+              {footerData.newsletter?.description || 'Subscribe to our newsletter for updates and exclusive offers.'}
             </p>
             
             {/* Newsletter Form */}
@@ -140,7 +145,7 @@ const Footer = () => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder={footer.newsletter.placeholder}
+                placeholder={footerData.newsletter?.placeholder || 'Enter your email'}
                 className="w-full px-3 sm:px-4 md:px-4 py-2 sm:py-3 md:py-3 pr-24 sm:pr-28 md:pr-32 text-xs sm:text-sm md:text-base border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-all duration-200"
                 required
               />
@@ -148,7 +153,7 @@ const Footer = () => {
                 type="submit"
                 className="absolute right-1 top-1 bottom-1 bg-black text-white px-3 sm:px-4 md:px-6 text-xs sm:text-sm md:text-sm font-medium rounded-full hover:bg-gray-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
               >
-                {footer.newsletter.buttonText}
+                {footerData.newsletter?.buttonText || 'Subscribe'}
               </button>
             </form>
           </div>
@@ -161,7 +166,7 @@ const Footer = () => {
         <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4 md:gap-6">
           {/* Copyright */}
           <p className="text-xs sm:text-sm md:text-base lg:text-base text-gray-600 text-center sm:text-left">
-            {footer.copyright}
+            {footerData.copyright || '© 2024 All rights reserved.'}
           </p>
           
           {/* Payment Methods */}

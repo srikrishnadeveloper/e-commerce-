@@ -173,11 +173,11 @@ export const searchProducts = async (query: string): Promise<Product[]> => {
 
 /**
  * Get complete site configuration
- * Backend: API call to GET /api/siteconfig/main
+ * Backend: API call to GET /api/siteconfig
  */
 export const getSiteConfig = async (): Promise<SiteConfig> => {
   try {
-    const response = await apiRequest('/siteconfig/main');
+    const response = await apiRequest('/siteconfig');
     return response.data || {} as SiteConfig;
   } catch (error) {
     console.error('Error fetching site config:', error);

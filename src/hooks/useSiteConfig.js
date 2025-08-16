@@ -23,10 +23,10 @@ export const useSiteConfig = (configKey = null) => {
 
       setData(result);
       setLastUpdated(new Date());
-      console.log(`✅ Site config loaded: ${configKey || 'all'}`);
+      console.log(`[useSiteConfig] ✅ Loaded: ${configKey || 'all'}`);
     } catch (err) {
-      console.error(`❌ Failed to load site config: ${configKey || 'all'}`, err);
-      setError(err.message);
+      console.error(`[useSiteConfig] ❌ Load failed: ${configKey || 'all'}`, err?.message || err);
+      setError(err?.message || 'Unknown error');
     } finally {
       setLoading(false);
     }
