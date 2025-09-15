@@ -26,7 +26,8 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      // Open login modal instead of redirecting to a page
+      window.dispatchEvent(new Event('auth:openLogin'));
     }
     return Promise.reject(error);
   }
@@ -145,8 +146,9 @@ class AuthService {
     // Clear remember me data on logout
     localStorage.removeItem('rememberMe');
     localStorage.removeItem('rememberedEmail');
-    window.dispatchEvent(new Event('auth:changed'));
-    window.location.href = '/login';
+  window.dispatchEvent(new Event('auth:changed'));
+  // Open login modal (no page redirects)
+  window.dispatchEvent(new Event('auth:openLogin'));
   }
 
   // Check if user is authenticated

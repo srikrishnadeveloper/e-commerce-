@@ -27,9 +27,27 @@
  */
 
 // Backend API configuration
-const API_BASE_URL = 'http://localhost:5001/api';
+export const API_BASE_URL = 'http://localhost:5001/api';
 
 import type { Product, Category, ProductsData, SiteConfig } from '../types';
+
+// Helper to normalize image URLs coming from DB/data
+const normalizeImageUrl = (img?: string): string | undefined => {
+  if (!img) return img;
+  // If already absolute (http/https), leave as-is
+  if (/^https?:\/\//i.test(img)) return img;
+  // Map "/images/..." to backend static mount at "/api/images/..."
+  if (img.startsWith('/images/')) return `${API_BASE_URL}${img.replace(/^\/images\//, '/images/')}`;
+  // For any other relative path, serve via backend images as best-effort
+  return `${API_BASE_URL}/images/${img.replace(/^\/?/, '')}`;
+};
+
+const normalizeProduct = (p: Product): Product => ({
+  ...p,
+  images: Array.isArray(p.images) ? p.images.map((i) => normalizeImageUrl(i) as string) : [],
+});
+
+const normalizeProducts = (arr: Product[] = []): Product[] => arr.map(normalizeProduct);
 
 // API helper function for making HTTP requests
 const apiRequest = async (endpoint: string): Promise<any> => {
@@ -58,7 +76,7 @@ const apiRequest = async (endpoint: string): Promise<any> => {
 export const getProducts = async (): Promise<Product[]> => {
   try {
     const response = await apiRequest('/products');
-    return response.data || [];
+  return normalizeProducts(response.data || []);
   } catch (error) {
     console.error('Error fetching products:', error);
     return [];
@@ -69,10 +87,10 @@ export const getProducts = async (): Promise<Product[]> => {
  * Get single product by ID
  * Backend: API call to GET /api/products/:id
  */
-export const getProductById = async (id: number): Promise<Product | null> => {
+export const getProductById = async (id: string): Promise<Product | null> => {
   try {
     const response = await apiRequest(`/products/${id}`);
-    return response.data || null;
+  return response.data ? normalizeProduct(response.data) : null;
   } catch (error) {
     console.error('Error fetching product by ID:', error);
     return null;
@@ -87,7 +105,7 @@ export const getProductsByCategory = async (categoryId: string): Promise<Product
   try {
     const endpoint = categoryId ? `/products?category=${categoryId}` : '/products';
     const response = await apiRequest(endpoint);
-    return response.data || [];
+  return normalizeProducts(response.data || []);
   } catch (error) {
     console.error('Error fetching products by category:', error);
     return [];
@@ -101,7 +119,7 @@ export const getProductsByCategory = async (categoryId: string): Promise<Product
 export const getFeaturedProducts = async (): Promise<Product[]> => {
   try {
     const response = await apiRequest('/products?featured=true');
-    return response.data || [];
+  return normalizeProducts(response.data || []);
   } catch (error) {
     console.error('Error fetching featured products:', error);
     return [];
@@ -115,7 +133,7 @@ export const getFeaturedProducts = async (): Promise<Product[]> => {
 export const getDealsProducts = async (): Promise<Product[]> => {
   try {
     const response = await apiRequest('/products?onSale=true');
-    return response.data || [];
+  return normalizeProducts(response.data || []);
   } catch (error) {
     console.error('Error fetching deals products:', error);
     return [];
@@ -129,7 +147,7 @@ export const getDealsProducts = async (): Promise<Product[]> => {
 export const getBestSellerProducts = async (): Promise<Product[]> => {
   try {
     const response = await apiRequest('/products?bestseller=true');
-    return response.data || [];
+  return normalizeProducts(response.data || []);
   } catch (error) {
     console.error('Error fetching bestseller products:', error);
     return [];
@@ -158,7 +176,7 @@ export const searchProducts = async (query: string): Promise<Product[]> => {
   try {
     const endpoint = query ? `/products?search=${encodeURIComponent(query)}` : '/products';
     const response = await apiRequest(endpoint);
-    return response.data || [];
+  return normalizeProducts(response.data || []);
   } catch (error) {
     console.error('Error searching products:', error);
     return [];
@@ -250,7 +268,7 @@ export const getFooterConfig = async () => {
 /**
  * Get related products (exclude current product)
  */
-export const getRelatedProducts = async (currentProductId: number, categoryId: string | null = null, limit: number = 8): Promise<Product[]> => {
+export const getRelatedProducts = async (currentProductId: string, categoryId: string | null = null, limit: number = 8): Promise<Product[]> => {
   try {
     // Get products from the same category if specified, otherwise get all products
     const products = categoryId ? 
@@ -258,7 +276,10 @@ export const getRelatedProducts = async (currentProductId: number, categoryId: s
       await getProducts();
     
     // Filter out the current product
-    const relatedProducts = products.filter(product => product.id !== parseInt(currentProductId.toString()));
+    const relatedProducts = products.filter(product => {
+      const pid = product._id || product.id || '';
+      return pid !== currentProductId;
+    });
     
     return relatedProducts.slice(0, limit);
   } catch (error) {
@@ -301,7 +322,11 @@ export const sortProducts = (products: Product[], sortBy: string): Product[] => 
     case 'name-z-a':
       return sortedProducts.sort((a, b) => b.name.localeCompare(a.name));
     case 'newest':
-      return sortedProducts.sort((a, b) => b.id - a.id); // Assuming higher ID = newer
+      return sortedProducts.sort((a, b) => {
+        const ad = Date.parse((a as any).createdAt || '');
+        const bd = Date.parse((b as any).createdAt || '');
+        return (isNaN(bd) ? 0 : bd) - (isNaN(ad) ? 0 : ad);
+      });
     case 'popular':
       return sortedProducts.sort((a, b) => (b.reviews || 0) - (a.reviews || 0));
     case 'rating':

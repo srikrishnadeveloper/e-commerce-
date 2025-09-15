@@ -10,7 +10,9 @@ export interface Specifications {
 }
 
 export interface Product {
-  id: number;
+  // MongoDB document id; backend may return both `_id` and `id` as strings
+  _id?: string;
+  id?: string;
   name: string;
   price: number;
   originalPrice?: number;

@@ -12,7 +12,8 @@ const CartPage = () => {
 
   useEffect(() => {
     if (!authService.isAuthenticated() && !authService.autoLogin()) {
-      window.location.href = '/login';
+      window.dispatchEvent(new Event('auth:openLogin'));
+      setLoading(false);
       return;
     }
     fetchCart();

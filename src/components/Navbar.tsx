@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useNavigation, useBranding } from '../hooks/useSiteConfig';
 import authService from '../services/authService';
 import wishlistService from '../services/wishlistService';
 import cartService from '../services/cartService';
-import LoginModal from './LoginModal';
-import RegisterModal from './RegisterModal';
+import LoginModal from './LoginModal.tsx';
+import RegisterModal from './RegisterModal.tsx';
 
 const Navbar: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -16,14 +16,18 @@ const Navbar: React.FC = () => {
   const [cartCount, setCartCount] = useState(0);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const sidebarRef = useRef<HTMLDivElement | null>(null);
+  const toggleButtonRef = useRef<HTMLButtonElement | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
   
   // Use real-time site configuration
   const { data: navigation, loading: navLoading, error: navError } = useNavigation();
   const { data: branding, loading: brandLoading, error: brandError } = useBranding();
 
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
+  const toggleSidebar = useCallback(() => {
+    setIsSidebarOpen((prev) => !prev);
+  }, []);
 
   const toggleAccordion = (section: string) => {
     setOpenAccordion(openAccordion === section ? null : section);
@@ -76,11 +80,79 @@ const Navbar: React.FC = () => {
     // Also listen to a custom login event to update navbar immediately after login
     const handleAuthEvent = () => checkAuth();
     window.addEventListener('auth:changed', handleAuthEvent);
+    // Listen for global requests to open auth modals
+    const openLoginHandler = () => {
+      setShowRegisterModal(false);
+      setShowLoginModal(true);
+    };
+    const openRegisterHandler = () => {
+      setShowLoginModal(false);
+      setShowRegisterModal(true);
+    };
+    window.addEventListener('auth:openLogin', openLoginHandler);
+    window.addEventListener('auth:openRegister', openRegisterHandler);
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('auth:changed', handleAuthEvent);
+      window.removeEventListener('auth:openLogin', openLoginHandler);
+      window.removeEventListener('auth:openRegister', openRegisterHandler);
     };
   }, []);
+
+  // Accessibility: Close on Escape, trap focus inside when open, and lock body scroll
+  useEffect(() => {
+    if (isSidebarOpen) {
+      // Save focus and lock scroll
+      previousFocusRef.current = (document.activeElement as HTMLElement) ?? null;
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+
+      // Focus the close button or first focusable element
+      const focusableSelectors = [
+        'button', 'a[href]', 'input', 'select', 'textarea', '[tabindex]:not([tabindex="-1"])'
+      ].join(',');
+      const sidebar = sidebarRef.current;
+      setTimeout(() => {
+        (closeButtonRef.current || sidebar?.querySelector(focusableSelectors) as HTMLElement)?.focus();
+      }, 0);
+
+      const onKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          setIsSidebarOpen(false);
+          return;
+        }
+        if (e.key === 'Tab' && sidebar) {
+          const focusables = Array.from(sidebar.querySelectorAll<HTMLElement>(focusableSelectors))
+            .filter(el => !el.hasAttribute('disabled') && el.tabIndex !== -1 && el.offsetParent !== null);
+          if (focusables.length === 0) return;
+          const first = focusables[0];
+          const last = focusables[focusables.length - 1];
+          const current = document.activeElement as HTMLElement | null;
+          if (e.shiftKey) {
+            if (current === first || !sidebar.contains(current)) {
+              e.preventDefault();
+              last.focus();
+            }
+          } else {
+            if (current === last || !sidebar.contains(current)) {
+              e.preventDefault();
+              first.focus();
+            }
+          }
+        }
+      };
+
+      document.addEventListener('keydown', onKeyDown);
+      return () => {
+        document.removeEventListener('keydown', onKeyDown);
+        document.body.style.overflow = originalOverflow;
+      };
+    } else {
+      // Restore focus to toggle button
+      previousFocusRef.current?.focus?.();
+    }
+  }, [isSidebarOpen]);
 
   // Show loading state if data is not ready
   if (navLoading || brandLoading) {
@@ -126,7 +198,9 @@ const Navbar: React.FC = () => {
         <button 
           className="lg:hidden p-1 sm:p-1.5 hover:bg-gray-100 rounded-full transition-colors duration-200"
           onClick={toggleSidebar}
+          ref={toggleButtonRef}
           aria-label="Open menu"
+          aria-expanded={isSidebarOpen}
         >
           <svg 
             width="18" 
@@ -151,7 +225,7 @@ const Navbar: React.FC = () => {
             <img 
               src={brandData.logo.light} 
               alt={brandData.logo.alt} 
-              className="h-4 sm:h-5 md:h-6 w-auto border-2 border-red-400 rounded"
+              className="h-4 sm:h-5 md:h-6 w-auto"
             />
           </Link>
         </div>
@@ -162,7 +236,7 @@ const Navbar: React.FC = () => {
             <Link 
               key={index}
               to={item.link} 
-              className="text-red-500 hover:text-red-700 font-medium transition-colors"
+              className="text-black hover:text-gray-700 font-medium transition-colors"
             >
               {item.name}
             </Link>
@@ -283,7 +357,7 @@ const Navbar: React.FC = () => {
               </svg>
               {/* Wishlist count badge */}
               {wishlistCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                <span className="absolute -top-1 -right-1 bg-black text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
                   {wishlistCount}
                 </span>
               )}
@@ -374,7 +448,7 @@ const Navbar: React.FC = () => {
       )}
 
       {/* Mobile Sidebar */}
-      <div className={`fixed top-0 left-0 h-full w-80 bg-white z-50 transform transition-transform duration-300 ease-in-out lg:hidden ${
+      <div ref={sidebarRef} role="dialog" aria-modal="true" aria-label="Mobile menu" className={`fixed top-0 left-0 h-full w-80 bg-white z-50 transform transition-transform duration-300 ease-in-out lg:hidden ${
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`} style={{ fontFamily: "'Albert Sans', sans-serif" }}>
         {/* Sidebar Header */}
@@ -382,12 +456,13 @@ const Navbar: React.FC = () => {
           <img 
             src={brandData.logo.dark} 
             alt={brandData.logo.alt} 
-            className="h-6 w-auto border-2 border-red-400 rounded"
+            className="h-6 w-auto"
           />
           <button 
             onClick={toggleSidebar}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
             aria-label="Close menu"
+            ref={closeButtonRef}
           >
             <svg 
               width="24" 
@@ -414,9 +489,9 @@ const Navbar: React.FC = () => {
             <div className="mb-4">
               <button 
                 onClick={() => toggleAccordion('home')}
-                className="w-full flex items-center justify-between py-3 text-left font-medium text-gray-900 hover:text-red-500 transition-colors"
+                className="w-full flex items-center justify-between py-3 text-left font-medium text-gray-900 hover:text-black transition-colors"
               >
-                <span className="text-red-500">Home</span>
+                <span className="text-black">Home</span>
                 <svg 
                   className={`w-5 h-5 transform transition-transform ${openAccordion === 'home' ? 'rotate-180' : ''}`}
                   fill="none" 
@@ -432,7 +507,7 @@ const Navbar: React.FC = () => {
             <div className="mb-4">
               <Link 
                 to="/products"
-                className="w-full flex items-center justify-between py-3 text-left font-medium text-gray-900 hover:text-red-500 transition-colors"
+                className="w-full flex items-center justify-between py-3 text-left font-medium text-gray-900 hover:text-black transition-colors"
                 onClick={() => setIsSidebarOpen(false)}
               >
                 <span>Products</span>
@@ -451,7 +526,7 @@ const Navbar: React.FC = () => {
             <div className="mb-4">
               <a 
                 href="#" 
-                className="block py-3 text-left font-medium text-gray-900 hover:text-red-500 transition-colors"
+                className="block py-3 text-left font-medium text-gray-900 hover:text-black transition-colors"
               >
                 About
               </a>
@@ -461,7 +536,7 @@ const Navbar: React.FC = () => {
             <div className="mb-6">
               <Link 
                 to="/contact" 
-                className="block py-3 text-left font-medium text-gray-900 hover:text-red-500 transition-colors"
+                className="block py-3 text-left font-medium text-gray-900 hover:text-black transition-colors"
                 onClick={() => setIsSidebarOpen(false)}
               >
                 Contact
@@ -547,12 +622,12 @@ const Navbar: React.FC = () => {
 
           {/* Language and Currency */}
           <div className="flex gap-4">
-            <select className="flex-1 py-2 px-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
+            <select className="flex-1 py-2 px-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black">
               <option value="USD">🇺🇸 USD</option>
               <option value="EUR">🇪🇺 EUR</option>
               <option value="GBP">🇬🇧 GBP</option>
             </select>
-            <select className="flex-1 py-2 px-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
+            <select className="flex-1 py-2 px-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black">
               <option value="English">English</option>
               <option value="Spanish">Español</option>
               <option value="French">Français</option>
@@ -568,6 +643,7 @@ const Navbar: React.FC = () => {
         onSuccess={(response) => {
           console.log('Login successful:', response);
           // The auth:changed event will automatically update the navbar
+          setShowLoginModal(false);
         }}
         onSwitchToRegister={() => {
           setShowLoginModal(false);
@@ -582,6 +658,7 @@ const Navbar: React.FC = () => {
         onSuccess={(response) => {
           console.log('Registration successful:', response);
           // The auth:changed event will automatically update the navbar
+          setShowRegisterModal(false);
         }}
         onSwitchToLogin={() => {
           setShowRegisterModal(false);

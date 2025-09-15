@@ -1,66 +1,51 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
-import { SiteConfig } from '../types';
-import { getSiteConfig } from '../services/dataService';
+import siteConfig from '../data/siteConfig.json';
+// TypeScript: JSON import typed as any for hero config
+const staticConfig: any = siteConfig;
+import siteConfigService from '../services/siteConfigService';
 
-interface VisibleSlide {
-  slide: any;
-  index: number;
-  position: 'left' | 'center' | 'right';
-}
+const HeroCarousel = () => {
+  const [slides, setSlides] = useState<any[]>(staticConfig.hero?.slides || []);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
+  const slidesRef = useRef([]);
+  const contentRef = useRef([]);
+  const imageRef = useRef([]);
+  const buttonRef = useRef(null);
 
-const HeroCarousel: React.FC = () => {
-  const [siteConfig, setSiteConfig] = useState<SiteConfig | null>(null);
-  const [activeIndex, setActiveIndex] = useState<number>(0);
-  const [windowWidth, setWindowWidth] = useState<number>(typeof window !== 'undefined' ? window.innerWidth : 1200);
-  const slidesRef = useRef<(HTMLDivElement | null)[]>([]);
-  const contentRef = useRef<(HTMLDivElement | null)[]>([]);
-  const imageRef = useRef<(HTMLImageElement | null)[]>([]);
-  const buttonRef = useRef<HTMLButtonElement | null>(null);
-  const tl = useRef<gsap.core.Timeline | null>(null);
+  // GSAP Timeline for animations
+  const tl = useRef(null);
 
   useEffect(() => {
-    const loadSiteConfig = async () => {
-      try {
-        const config = await getSiteConfig();
-        setSiteConfig(config);
-      } catch (error) {
-        console.error('Error loading site config:', error);
-      }
-    };
-    
-    loadSiteConfig();
-  }, []);
-
-  useEffect(() => {
-    const handleResize = (): void => {
+    const handleResize = () => {
       setWindowWidth(window.innerWidth);
     };
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+  
+  // Fetch hero slides from backend on mount
+  useEffect(() => {
+    siteConfigService.getHero()
+      .then(config => {
+        if (config.slides && Array.isArray(config.slides)) {
+          setSlides(config.slides);
+        }
+      })
+      .catch(err => console.error('Error fetching hero config:', err));
+  }, []);
 
   useEffect(() => {
-    // Guard against running animations until the config is loaded
-    if (!siteConfig || !siteConfig.hero?.slides) {
-      return;
-    }
-
     // Initialize GSAP timeline
     tl.current = gsap.timeline();
     
     // Animate active slide content
     animateActiveSlide();
-  }, [activeIndex, windowWidth, siteConfig]);
+  }, [activeIndex, windowWidth]);
 
-  if (!siteConfig || !siteConfig.hero?.slides) {
-    return <div>Loading...</div>; // Loading state
-  }
-
-  const slides = siteConfig.hero.slides;
-
-  const animateActiveSlide = (): void => {
+  const animateActiveSlide = () => {
     if (tl.current) {
       tl.current.clear();
       
@@ -135,7 +120,7 @@ const HeroCarousel: React.FC = () => {
     }
   };
 
-  const prevSlide = (): void => {
+  const prevSlide = () => {
     // Add a smooth transition animation before changing slides
     const visibleSlides = getVisibleSlides();
     const visibleElements = visibleSlides.map(({ index }) => slidesRef.current[index]).filter(Boolean);
@@ -155,7 +140,7 @@ const HeroCarousel: React.FC = () => {
     });
   };
 
-  const nextSlide = (): void => {
+  const nextSlide = () => {
     // Add a smooth transition animation before changing slides
     const visibleSlides = getVisibleSlides();
     const visibleElements = visibleSlides.map(({ index }) => slidesRef.current[index]).filter(Boolean);
@@ -175,7 +160,7 @@ const HeroCarousel: React.FC = () => {
     });
   };
 
-  const getSlideClass = (index: number): string => {
+  const getSlideClass = (index) => {
     const baseClass = "relative flex flex-col items-center justify-center bg-[#f5f5f7] rounded-2xl";
     const sizeClass = index === activeIndex ? "carousel-card-active" : "carousel-card-inactive";
     
@@ -186,57 +171,66 @@ const HeroCarousel: React.FC = () => {
     }
   };
 
-  const getSlideStyle = (index: number): React.CSSProperties => {
+  const getSlideStyle = (index) => {
     const isMobile = windowWidth <= 768;
     const isTablet = windowWidth > 768 && windowWidth <= 1024;
     
-    let marginValue = '-1100px'; // Show only ~200px of side cards
-    if (isMobile) {
-      marginValue = '-280px'; // Show only ~70px of side cards on mobile
-    } else if (isTablet) {
-      marginValue = '-500px'; // Show only ~100px of side cards on tablet
-    }
+    // Base styles for all cards
+    const baseStyle = {
+      fontFamily: "'Albert Sans', sans-serif",
+      boxSizing: 'border-box' as const,
+      transition: 'all 0.3s ease'
+    };
 
-    // For active card, no margins
+    // For active card, full size and centered
     if (index === activeIndex) {
       return {
-        fontFamily: "'Albert Sans', sans-serif",
-        boxSizing: 'border-box',
+        ...baseStyle,
+        width: isMobile ? '300px' : isTablet ? '450px' : '600px',
+        height: isMobile ? '350px' : isTablet ? '450px' : '500px',
+        zIndex: 20,
         marginLeft: '0',
         marginRight: '0'
       };
     }
 
-    // For inactive cards, position them so only edges are visible
+    // For inactive cards, show only tips with negative margins
     const visibleSlides = getVisibleSlides();
     const currentSlide = visibleSlides.find(slide => slide.index === index);
     
     if (currentSlide?.position === 'left') {
-      // Left card: show only right edge
+      // Left card: show only right tip
       return {
-        fontFamily: "'Albert Sans', sans-serif",
-        boxSizing: 'border-box',
-        marginLeft: marginValue,
-        marginRight: '0'
+        ...baseStyle,
+        width: isMobile ? '300px' : isTablet ? '450px' : '600px',
+        height: isMobile ? '350px' : isTablet ? '450px' : '500px',
+        zIndex: 10,
+        marginLeft: isMobile ? '-220px' : isTablet ? '-350px' : '-480px',
+        marginRight: isMobile ? '20px' : isTablet ? '30px' : '40px'
       };
     } else if (currentSlide?.position === 'right') {
-      // Right card: show only left edge  
+      // Right card: show only left tip
       return {
-        fontFamily: "'Albert Sans', sans-serif",
-        boxSizing: 'border-box',
-        marginLeft: '0',
-        marginRight: marginValue
+        ...baseStyle,
+        width: isMobile ? '300px' : isTablet ? '450px' : '600px',
+        height: isMobile ? '350px' : isTablet ? '450px' : '500px',
+        zIndex: 10,
+        marginLeft: isMobile ? '20px' : isTablet ? '30px' : '40px',
+        marginRight: isMobile ? '-220px' : isTablet ? '-350px' : '-480px'
       };
     }
 
-    return {
-      fontFamily: "'Albert Sans', sans-serif",
-      boxSizing: 'border-box'
-    };
+    return baseStyle;
   };
 
-  const getVisibleSlides = (): VisibleSlide[] => {
+  const getVisibleSlides = () => {
     const total = slides.length;
+    
+    // Return empty array if no slides available
+    if (total === 0) {
+      return [];
+    }
+    
     const prev = (activeIndex - 1 + total) % total;
     const next = (activeIndex + 1) % total;
     
@@ -247,22 +241,15 @@ const HeroCarousel: React.FC = () => {
     ];
   };
 
-  const handlePrevClick = (e: React.MouseEvent<HTMLButtonElement>): void => {
-    prevSlide();
-    gsap.to(e.currentTarget, { scale: 0.9, duration: 0.1, yoyo: true, repeat: 1 });
-  };
-
-  const handleNextClick = (e: React.MouseEvent<HTMLButtonElement>): void => {
-    nextSlide();
-    gsap.to(e.currentTarget, { scale: 0.9, duration: 0.1, yoyo: true, repeat: 1 });
-  };
-
   return (
     <section className="relative flex justify-center items-start w-full overflow-hidden min-h-[500px] sm:min-h-[600px] lg:min-h-[800px] bg-white pt-0 pb-8">
       {/* Left Arrow */}
       <button
         className="absolute left-2 sm:left-8 top-1/2 -translate-y-1/2 z-30 bg-white hover:bg-black text-black hover:text-white transition-all duration-300 rounded-full shadow-lg w-10 h-10 sm:w-14 sm:h-14 flex items-center justify-center group"
-        onClick={handlePrevClick}
+        onClick={(e) => {
+          prevSlide();
+          gsap.to(e.currentTarget, { scale: 0.9, duration: 0.1, yoyo: true, repeat: 1 });
+        }}
         aria-label="Previous slide"
       >
         <svg 
@@ -281,8 +268,13 @@ const HeroCarousel: React.FC = () => {
       </button>
 
       {/* Slides Container */}
-      <div className="flex items-start justify-center relative w-full overflow-hidden">
-        {getVisibleSlides().map(({ slide, index, position }) => (
+      <div className="flex items-start justify-center relative w-full overflow-hidden px-4 sm:px-8">
+        {slides.length === 0 ? (
+          <div className="relative flex flex-col items-center justify-center bg-[#f5f5f7] rounded-2xl min-h-[400px] w-full max-w-4xl">
+            <p className="text-gray-500 text-lg">Loading slides...</p>
+          </div>
+        ) : (
+          getVisibleSlides().map(({ slide, index, position }) => (
           <div
             key={`${slide.id}-${index}-${position}`}
             ref={el => { slidesRef.current[index] = el; }}
@@ -293,7 +285,7 @@ const HeroCarousel: React.FC = () => {
               backgroundSize: 'cover',
               backgroundRepeat: 'no-repeat',
               backgroundPosition: 'center center'
-            }}
+            } as React.CSSProperties}
           >
             {/* Content Section - Overlaid on background */}
             <div 
@@ -306,7 +298,7 @@ const HeroCarousel: React.FC = () => {
                   ? 'text-[32px] sm:text-[48px] lg:text-[68px]' 
                   : 'text-[24px] sm:text-[36px] lg:text-[48px]'
               }`}>
-                {slide.heading.split('\n').map((line: string, lineIndex: number) => (
+                {slide.heading.split('\n').map((line, lineIndex) => (
                   <React.Fragment key={lineIndex}>
                     {line}
                     {lineIndex < slide.heading.split('\n').length - 1 && <br />}
@@ -355,13 +347,17 @@ const HeroCarousel: React.FC = () => {
               className="hidden"
             />
           </div>
-        ))}
+          ))
+        )}
       </div>
 
       {/* Right Arrow */}
       <button
         className="absolute right-2 sm:right-8 top-1/2 -translate-y-1/2 z-30 bg-white hover:bg-black text-black hover:text-white transition-all duration-300 rounded-full shadow-lg w-10 h-10 sm:w-14 sm:h-14 flex items-center justify-center group"
-        onClick={handleNextClick}
+        onClick={(e) => {
+          nextSlide();
+          gsap.to(e.currentTarget, { scale: 0.9, duration: 0.1, yoyo: true, repeat: 1 });
+        }}
         aria-label="Next slide"
       >
         <svg 

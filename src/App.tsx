@@ -14,8 +14,6 @@ import FAQPage from './components/FAQPage.tsx'
 import ProductListingPage from './components/ProductListingPage.tsx'
 import ProductDetailPage from './components/ProductDetailPage.tsx'
 import AccountPage from './components/AccountPage.tsx'
-import LoginPage from './pages/LoginPage'
-import SignupPage from './pages/SignupPage'
 import WishlistPage from './pages/WishlistPage'
 import LogoutPage from './pages/LogoutPage'
 import CartPage from './pages/CartPage'
@@ -39,11 +37,14 @@ const App: React.FC = () => {
   const [showWelcomePopup, setShowWelcomePopup] = useState(false);
   const [welcomeUsername, setWelcomeUsername] = useState('');
 
-  // Check for auto-login on app startup
+  // (Removed legacy login page redirect) Standalone /login page is removed in favor of modal
+
+  // Gracefully handle direct visits to /login or /signup by opening modals
   useEffect(() => {
-    // If user is on login page and has remember me enabled, redirect to home
-    if (window.location.pathname === '/login' && authService.autoLogin()) {
-      window.location.href = '/';
+    const path = window.location.pathname;
+    if (path === '/login' || path === '/signup') {
+      window.history.replaceState(null, '', '/');
+      window.dispatchEvent(new Event(path === '/signup' ? 'auth:openRegister' : 'auth:openLogin'));
     }
   }, []);
 
@@ -81,8 +82,7 @@ const App: React.FC = () => {
           <Route path="/product/:id" element={<ProductDetailPage />} />
           <Route path="/shop" element={<ProductListingPage />} />
           <Route path="/account" element={<AccountPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/signup" element={<SignupPage />} />
+          {/** Removed legacy login/signup routes; authentication handled via modals **/}
           <Route path="/wishlist" element={<WishlistPage />} />
           <Route path="/logout" element={<LogoutPage />} />
           <Route path="/cart" element={<CartPage />} />

@@ -65,16 +65,28 @@ interface DealCardProps {
 }
 
 const DealCard: React.FC<DealCardProps> = ({ deal, onColorSelect, onCloseDeal }) => {
+  // Normalize and sanitize image URL from product data
+  const resolveImageSrc = (raw?: string): string => {
+    const src = (raw || '').trim();
+    if (!src) return '/images/placeholder.svg';
+    // If absolute URL, return as-is
+    if (/^https?:\/\//i.test(src)) return src;
+    // Ensure it starts with /images/
+    if (src.startsWith('/images/')) return src;
+    // Handle values like 'images/...' or filename only
+    return `/images/${src.replace(/^\/?/, '')}`;
+  };
+
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>): void => {
     const target = e.target as HTMLImageElement;
-    console.log('Image failed to load:', deal.images?.[0]);
+    console.log('Image failed to load:', resolveImageSrc(deal.images?.[0]));
     target.style.display = 'block';
     target.style.backgroundColor = '#f3f4f6';
     target.alt = 'Image not found';
   };
 
   const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement, Event>): void => {
-    console.log('Image loaded successfully:', deal.images?.[0]);
+    console.log('Image loaded successfully:', resolveImageSrc(deal.images?.[0]));
   };
 
   return (
@@ -97,7 +109,7 @@ const DealCard: React.FC<DealCardProps> = ({ deal, onColorSelect, onCloseDeal })
         height: 'clamp(240px, 21vw, 288px)'
       }}>
         <img
-          src={deal.images?.[0]}
+          src={resolveImageSrc(deal.images?.[0])}
           alt={deal.name}
           className="w-full h-full object-cover"
           style={{ 

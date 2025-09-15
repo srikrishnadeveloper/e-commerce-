@@ -3,7 +3,6 @@ import { useParams, Link } from 'react-router-dom';
 import { Product, Color } from '../types';
 // CENTRALIZED DATA SERVICE - Single source for all product data
 import { 
-  getProducts,
   getProductById, 
   getRelatedProducts, 
   getSiteConfig,
@@ -56,16 +55,36 @@ const ArrowRightIcon: React.FC<ArrowIconProps> = ({ className }) => (
 
 const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  
-  // CENTRALIZED DATA FETCHING - Get current product data
-  const currentProduct: Product = getProductById(parseInt(id || '1')) || getProducts()[0];
-  
-  // CENTRALIZED DATA FETCHING - Get related products (exclude current product)
-  const relatedProducts: Product[] = getRelatedProducts(parseInt(id || '1'), currentProduct?.categoryId, 4);
+
+  // Async-loaded data
+  const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    let isActive = true;
+    const load = async () => {
+      if (!id) return;
+      try {
+        const prod = await getProductById(id);
+        if (!isActive) return;
+        setCurrentProduct(prod);
+        if (prod) {
+          const rel = await getRelatedProducts((prod._id || prod.id || '').toString(), prod.categoryId, 4);
+          if (!isActive) return;
+          setRelatedProducts(rel);
+        }
+      } finally {
+        if (isActive) setLoading(false);
+      }
+    };
+    load();
+    return () => { isActive = false; };
+  }, [id]);
   
   const [selectedImage, setSelectedImage] = useState<number>(0);
-  const [selectedColor, setSelectedColor] = useState<string>(currentProduct?.colors?.[0]?.name || 'black');
-  const [selectedSize, setSelectedSize] = useState<string>(currentProduct?.sizes?.[0] || 'M');
+  const [selectedColor, setSelectedColor] = useState<string>('black');
+  const [selectedSize, setSelectedSize] = useState<string>('M');
   const [quantity, setQuantity] = useState<number>(1);
   const [activeTab, setActiveTab] = useState<TabType>('description');
   const [isZoomed, setIsZoomed] = useState<boolean>(false);
@@ -73,6 +92,14 @@ const ProductDetailPage: React.FC = () => {
   const [isDesktop, setIsDesktop] = useState<boolean>(false);
   
   const imageRef = useRef<HTMLImageElement>(null);
+
+  // Initialize selected options after product is loaded
+  useEffect(() => {
+    if (currentProduct) {
+      setSelectedColor(currentProduct.colors?.[0]?.name || 'black');
+      setSelectedSize(currentProduct.sizes?.[0] || 'M');
+    }
+  }, [currentProduct]);
 
   // Check if device is desktop
   useEffect(() => {
@@ -87,8 +114,12 @@ const ProductDetailPage: React.FC = () => {
   }, []);
 
   // Carousel state - initialized after relatedProducts is defined
-  const [currentIndex, setCurrentIndex] = useState<number>(relatedProducts.length); // Start from middle of infinite array
+  const [currentIndex, setCurrentIndex] = useState<number>(0); // Will update after relatedProducts load
   const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
+
+  useEffect(() => {
+    setCurrentIndex(relatedProducts.length); // Start from middle of infinite array when items available
+  }, [relatedProducts.length]);
 
   const handleQuantityChange = (change: number): void => {
     setQuantity(Math.max(1, quantity + change));
@@ -130,6 +161,14 @@ const ProductDetailPage: React.FC = () => {
       });
     }, 500);
   };
+
+  // If still loading or product not found
+  if (loading) {
+    return <div className="min-h-[50vh] flex items-center justify-center">Loading...</div>;
+  }
+  if (!currentProduct) {
+    return <div className="min-h-[50vh] flex items-center justify-center">Product not found.</div>;
+  }
 
   const handleMouseMove = (e: React.MouseEvent<HTMLImageElement>): void => {
     if (!imageRef.current || !isDesktop) return;
@@ -594,7 +633,7 @@ const ProductDetailPage: React.FC = () => {
                   }}
                 >
                   {[...relatedProducts, ...relatedProducts, ...relatedProducts, ...relatedProducts, ...relatedProducts].map((product, index) => (
-                    <Link to={`/product/${product.id}`} key={`infinite-${product.id}-${index}`} className="group flex-shrink-0" style={{ width: 'calc(25% - 1.125rem)' }}>
+                    <Link to={`/product/${(product._id || product.id)}`} key={`infinite-${(product._id || product.id)}-${index}`} className="group flex-shrink-0" style={{ width: 'calc(25% - 1.125rem)' }}>
                       <div className="aspect-square bg-gray-50 rounded-lg overflow-hidden mb-4 relative">
                         <img
                           src={product.images[0]}
@@ -737,7 +776,7 @@ const ProductDetailPage: React.FC = () => {
           <div className="block md:hidden">
             <div className="grid grid-cols-2 gap-4">
               {relatedProducts.map((product) => (
-                <div key={product.id} className="group">
+                <div key={(product._id || product.id)} className="group">
                   <div className="aspect-square bg-gray-50 rounded-lg overflow-hidden mb-4 relative">
                     <img
                       src={product.images[0]}

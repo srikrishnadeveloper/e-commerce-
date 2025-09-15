@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Product, Color, SiteConfig, Category } from '../types';
 // CENTRALIZED DATA SERVICE - Single source for all product data
@@ -23,6 +23,155 @@ interface ProductCardProps {
 
 type ViewMode = 'grid' | 'list';
 type SortBy = 'default' | 'price-low' | 'price-high' | 'name';
+
+// Accessible, styled dropdown to replace native <select>
+const SortDropdown: React.FC<{
+  value: SortBy;
+  onChange: (v: SortBy) => void;
+  className?: string;
+}> = ({ value, onChange, className }) => {
+  const options: { value: SortBy; label: string }[] = [
+    { value: 'default', label: 'Default Sorting' },
+    { value: 'price-low', label: 'Price: Low to High' },
+    { value: 'price-high', label: 'Price: High to Low' },
+    { value: 'name', label: 'Name: A to Z' },
+  ];
+
+  const [open, setOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState<number>(() => options.findIndex(o => o.value === value));
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const listRef = useRef<HTMLUListElement | null>(null);
+
+  useEffect(() => {
+    setActiveIndex(options.findIndex(o => o.value === value));
+  }, [value]);
+
+  // Close on outside click
+  useEffect(() => {
+    if (!open) return;
+    const onDocClick = (e: MouseEvent) => {
+      if (!containerRef.current) return;
+      if (!containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onDocClick);
+    return () => document.removeEventListener('mousedown', onDocClick);
+  }, [open]);
+
+  const commitSelection = useCallback((idx: number) => {
+    const opt = options[idx];
+    if (!opt) return;
+    onChange(opt.value);
+    setOpen(false);
+    // return focus to button for good a11y
+    buttonRef.current?.focus();
+  }, [onChange]);
+
+  const onButtonKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      setOpen(true);
+      // focus list soon after open
+      requestAnimationFrame(() => {
+        listRef.current?.focus();
+      });
+    }
+  };
+
+  const onListKeyDown = (e: React.KeyboardEvent<HTMLUListElement>) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      setOpen(false);
+      buttonRef.current?.focus();
+      return;
+    }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setActiveIndex((i) => {
+        const next = (i + 1) % options.length;
+        return next;
+      });
+      return;
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActiveIndex((i) => {
+        const next = (i - 1 + options.length) % options.length;
+        return next;
+      });
+      return;
+    }
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      commitSelection(activeIndex);
+      return;
+    }
+    if (e.key === 'Tab') {
+      setOpen(false);
+    }
+  };
+
+  const selected = options.find(o => o.value === value) ?? options[0];
+  const dropdownId = 'sort-dropdown-listbox';
+
+  return (
+    <div ref={containerRef} className={`relative ${className ?? ''}`}>
+      <button
+        ref={buttonRef}
+        type="button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={dropdownId}
+        onKeyDown={onButtonKeyDown}
+        onClick={() => setOpen(o => !o)}
+        className="inline-flex items-center justify-between gap-2 border border-gray-300 rounded-md px-3 py-2 bg-white text-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black w-full xs:w-auto min-w-[160px]"
+        title="Sort products"
+      >
+        <span className="truncate">{selected.label}</span>
+        <svg className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clipRule="evenodd" />
+        </svg>
+      </button>
+
+      {open && (
+        <ul
+          ref={listRef}
+          id={dropdownId}
+          role="listbox"
+          tabIndex={-1}
+          aria-activedescendant={options[activeIndex]?.value}
+          onKeyDown={onListKeyDown}
+          className="absolute z-20 mt-2 w-full xs:w-64 max-h-64 overflow-auto rounded-md border border-gray-200 bg-white shadow-lg focus:outline-none"
+        >
+          {options.map((opt, idx) => {
+            const selected = opt.value === value;
+            const active = idx === activeIndex;
+            return (
+              <li
+                key={opt.value}
+                id={opt.value}
+                role="option"
+                aria-selected={selected}
+                className={`px-3 py-2 text-sm cursor-pointer flex items-center justify-between ${active ? 'bg-gray-100' : ''}`}
+                onMouseEnter={() => setActiveIndex(idx)}
+                onClick={() => commitSelection(idx)}
+              >
+                <span className={`truncate ${selected ? 'font-medium text-black' : 'text-gray-700'}`}>{opt.label}</span>
+                {selected && (
+                  <svg className="w-4 h-4 text-black" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+                    <path fillRule="evenodd" d="M16.704 5.29a1 1 0 00-1.408-1.42l-7.58 7.52-3.01-2.95a1 1 0 10-1.39 1.44l3.71 3.64a1 1 0 001.4 0l8.28-8.23z" clipRule="evenodd" />
+                  </svg>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+};
 
 const ProductListingPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -141,7 +290,7 @@ const ProductListingPage: React.FC = () => {
   const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) => {
     if (viewMode === 'list') {
       return (
-        <Link to={`/product/${product.id}`} className="flex flex-col sm:flex-row gap-3 sm:gap-4 p-3 sm:p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow group block">
+  <Link to={`/product/${(product._id || product.id)}`} className="flex flex-col sm:flex-row gap-3 sm:gap-4 p-3 sm:p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow group block">
           <div className="w-full sm:w-20 md:w-24 h-48 sm:h-20 md:h-24 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
             <img
               src={product.images[0]}
@@ -198,12 +347,12 @@ const ProductListingPage: React.FC = () => {
 
     // Grid view (default)
     return (
-      <Link to={`/product/${product.id}`} className="group cursor-pointer w-full block">
+  <Link to={`/product/${(product._id || product.id)}`} className="group cursor-pointer w-full block">
         <div className="relative overflow-hidden rounded-lg bg-gray-100 mb-2 sm:mb-3 aspect-square">
           <img
             src={product.images[0]}
             alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 border-2 border-gray-400"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             style={{ boxShadow: '0 0 10px rgba(0, 0, 0, 0.5)' }}
           />
           <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -319,12 +468,12 @@ const ProductListingPage: React.FC = () => {
         <h3 className="text-base font-semibold text-black mb-4">Sale products</h3>
         <div className="space-y-4">
           {saleProducts.map((product) => (
-            <div key={product.id} className="flex gap-3 group cursor-pointer">
+            <div key={(product._id || product.id)} className="flex gap-3 group cursor-pointer">
               <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                 <img
                   src={product.images ? product.images[0] : '/images/placeholder.png'}
                   alt={product.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform border-2 border-gray-400"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                   style={{ boxShadow: '0 0 5px rgba(0, 0, 0, 0.5)' }}
                 />
               </div>
@@ -498,16 +647,11 @@ const ProductListingPage: React.FC = () => {
                 <span className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">
                   {filteredAndSortedProducts.length} products found
                 </span>
-                <select
+                <SortDropdown
                   value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as SortBy)}
-                  className="text-xs sm:text-sm border border-gray-300 rounded-md px-2 sm:px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black w-full xs:w-auto min-w-[140px] sm:min-w-[160px]"
-                >
-                  <option value="default">Default Sorting</option>
-                  <option value="price-low">Price: Low to High</option>
-                  <option value="price-high">Price: High to Low</option>
-                  <option value="name">Name: A to Z</option>
-                </select>
+                  onChange={(v) => setSortBy(v)}
+                  className="w-full xs:w-auto"
+                />
               </div>
             </div>
 
@@ -518,7 +662,7 @@ const ProductListingPage: React.FC = () => {
                 : 'space-y-4'
             }`}>
               {paginatedProducts.map((product) => (
-                <ProductCard key={product.id} product={product} viewMode={viewMode} />
+                <ProductCard key={(product._id || product.id)} product={product} viewMode={viewMode} />
               ))}
             </div>
 

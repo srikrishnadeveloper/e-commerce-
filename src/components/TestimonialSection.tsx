@@ -72,7 +72,7 @@ const TestimonialSection: React.FC = () => {
         {/* Container with 3px extra at each end compared to divider width */}
         <div className="mx-auto testimonial-container">
           <div className="bg-[#35374a] rounded-md sm:rounded-lg md:rounded-lg lg:rounded-xl xl:rounded-xl shadow-lg sm:shadow-xl md:shadow-xl lg:shadow-2xl p-4 sm:p-6 md:p-8 lg:p-12 xl:p-16">
-            <div className="flex flex-col items-center justify-center min-h-[400px] sm:min-h-[450px] md:min-h-[400px] lg:min-h-[400px] xl:min-h-[450px]">
+            <div className="flex flex-col items-center justify-center min-h-[360px] sm:min-h-[400px] md:min-h-[360px] lg:min-h-[360px] xl:min-h-[400px]">
               {/* Testimonial Content */}
               <div className="flex flex-col justify-center max-w-xs sm:max-w-sm md:max-w-md lg:max-w-2xl xl:max-w-3xl h-full w-full">
                 {/* Quote Icon */}
@@ -105,7 +105,7 @@ const TestimonialSection: React.FC = () => {
                 </div>
 
                 {/* Testimonial Text - Fixed height container */}
-                <div className="min-h-[80px] sm:min-h-[100px] md:min-h-[120px] lg:min-h-[140px] xl:min-h-[160px] flex items-center mb-3 sm:mb-4 md:mb-5 lg:mb-6">
+                <div className="min-h-[80px] sm:min-h-[100px] md:min-h-[120px] lg:min-h-[140px] xl:min-h-[160px] flex items-center justify-center mb-3 sm:mb-4 md:mb-5 lg:mb-6">
                   <blockquote 
                     className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl 2xl:text-3xl text-white font-medium leading-relaxed text-center"
                     style={{ fontFamily: "'Albert Sans', sans-serif" }}
