@@ -146,6 +146,12 @@ class AuthService {
     // Clear remember me data on logout
     localStorage.removeItem('rememberMe');
     localStorage.removeItem('rememberedEmail');
+    // Clear any per-user welcome flags
+    try {
+      Object.keys(localStorage)
+        .filter((k) => k.startsWith('welcomeShown:'))
+        .forEach((k) => localStorage.removeItem(k));
+    } catch {}
   window.dispatchEvent(new Event('auth:changed'));
   // Open login modal (no page redirects)
   window.dispatchEvent(new Event('auth:openLogin'));

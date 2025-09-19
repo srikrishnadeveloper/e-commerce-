@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
 import { Product } from '../types';
-import { getDealsProducts, calculateDiscountPercentage } from '../services/dataService';
+import { getDealsProducts, calculateDiscountPercentage, getProducts } from '../services/dataService';
 import siteConfigService from '../services/siteConfigService';
 
 // Icon Props interface
@@ -34,11 +35,14 @@ interface ActiveDealBadgeProps {
   product: Product;
   onClose: (dealId: string) => void;
   dealId: string;
+  // Optional variant-aware active price to compute discount accurately
+  activePrice?: number;
 }
 
-const ActiveDealBadge: React.FC<ActiveDealBadgeProps> = ({ product, onClose, dealId }) => {
-  // CENTRALIZED CALCULATION - Use centralized discount calculation
-  const discountPercent = calculateDiscountPercentage(product.originalPrice || 0, product.price);
+const ActiveDealBadge: React.FC<ActiveDealBadgeProps> = ({ product, onClose, dealId, activePrice }) => {
+  // Use centralized discount calculation; prefer active variant price when provided
+  const effectivePrice = typeof activePrice === 'number' ? activePrice : product.price;
+  const discountPercent = calculateDiscountPercentage(product.originalPrice || 0, effectivePrice);
   
   return (
     <div className="absolute top-2 left-2 z-20 bg-red-500 text-white px-3 py-1 rounded-md text-sm font-semibold flex items-center gap-1">
@@ -65,12 +69,28 @@ interface DealCardProps {
 }
 
 const DealCard: React.FC<DealCardProps> = ({ deal, onColorSelect, onCloseDeal }) => {
+  const navigate = useNavigate();
+  // Unified product id getter to support both `_id` and `id`
+  const getPid = (p: Product) => String((p as any)._id || (p as any).id || '');
+  // Determine currently selected color index; default to 0
+  const selectedColorIndex = Math.max(0, (deal.colors?.findIndex(c => c.selected) ?? 0));
+  // Optional variant-aware pricing (backend may provide an array); fall back to base price
+  const variantPrices = (deal as any).variantPrices as number[] | undefined;
+  const activePrice = Array.isArray(variantPrices) && variantPrices[selectedColorIndex] != null
+    ? variantPrices[selectedColorIndex]
+    : deal.price;
+  const variantOriginalPrices = (deal as any).variantOriginalPrices as number[] | undefined;
+  const activeOriginalPrice = Array.isArray(variantOriginalPrices) && variantOriginalPrices[selectedColorIndex] != null
+    ? variantOriginalPrices[selectedColorIndex]
+    : deal.originalPrice;
   // Normalize and sanitize image URL from product data
   const resolveImageSrc = (raw?: string): string => {
     const src = (raw || '').trim();
     if (!src) return '/images/placeholder.svg';
     // If absolute URL, return as-is
     if (/^https?:\/\//i.test(src)) return src;
+    // If already points to API images or proper root images path, keep
+    if (src.startsWith('/api/images/')) return src;
     // Ensure it starts with /images/
     if (src.startsWith('/images/')) return src;
     // Handle values like 'images/...' or filename only
@@ -79,28 +99,49 @@ const DealCard: React.FC<DealCardProps> = ({ deal, onColorSelect, onCloseDeal })
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>): void => {
     const target = e.target as HTMLImageElement;
-    console.log('Image failed to load:', resolveImageSrc(deal.images?.[0]));
+    console.log('Image failed to load:', resolveImageSrc(activeImage));
     target.style.display = 'block';
     target.style.backgroundColor = '#f3f4f6';
     target.alt = 'Image not found';
   };
 
   const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement, Event>): void => {
-    console.log('Image loaded successfully:', resolveImageSrc(deal.images?.[0]));
+    console.log('Image loaded successfully:', resolveImageSrc(activeImage));
+  };
+
+  // Compute active image: try image per color index; fallback to first image
+  const activeImage = (deal.images && deal.images[selectedColorIndex]) ? deal.images[selectedColorIndex] : (deal.images?.[0]);
+
+  // Card-level navigation handler (click/keyboard)
+  const goToProduct = () => navigate(`/product/${getPid(deal)}`);
+  const onKeyActivate: React.KeyboardEventHandler<HTMLDivElement> = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      goToProduct();
+    }
   };
 
   return (
-    <div className="relative transition-transform duration-300 hover:scale-[1.02] hover:shadow-lg rounded-lg overflow-hidden flex-shrink-0 mr-8" style={{ 
+    <div
+      className="relative transition-transform duration-300 hover:scale-[1.02] hover:shadow-lg rounded-lg overflow-hidden flex-shrink-0 mr-8"
+      style={{ 
       width: 'clamp(220px, 20vw, 300px)',
       height: 'clamp(400px, 35vw, 480px)',
       backgroundColor: '#f8f8f8' 
-    }}>
+    }}
+      role="button"
+      tabIndex={0}
+      aria-label={`${deal.name} details`}
+      onClick={goToProduct}
+      onKeyDown={onKeyActivate}
+    >
       {/* Active Deal Badge */}
-      {deal.originalPrice && deal.originalPrice > deal.price && (
+      {((activeOriginalPrice ?? deal.originalPrice) && (activeOriginalPrice ?? deal.originalPrice)! > activePrice) && (
         <ActiveDealBadge 
           product={deal}
           onClose={onCloseDeal}
-          dealId={String(deal.id)}
+          dealId={getPid(deal)}
+          activePrice={activePrice}
         />
       )}
       
@@ -109,7 +150,7 @@ const DealCard: React.FC<DealCardProps> = ({ deal, onColorSelect, onCloseDeal })
         height: 'clamp(240px, 21vw, 288px)'
       }}>
         <img
-          src={resolveImageSrc(deal.images?.[0])}
+          src={resolveImageSrc(activeImage)}
           alt={deal.name}
           className="w-full h-full object-cover"
           style={{ 
@@ -145,11 +186,11 @@ const DealCard: React.FC<DealCardProps> = ({ deal, onColorSelect, onCloseDeal })
         {/* Price */}
         <div>
           <span className="text-black" style={{ fontSize: '16px', fontFamily: "'Albert Sans', sans-serif", fontWeight: '600' }}>
-            ${deal.price}
+            ${activePrice}
           </span>
-          {deal.originalPrice && (
+          {activeOriginalPrice && (
             <span className="text-gray-600 line-through ml-2" style={{ fontSize: '16px', fontFamily: "'Albert Sans', sans-serif", fontWeight: '600' }}>
-              ${deal.originalPrice}
+              ${activeOriginalPrice}
             </span>
           )}
         </div>
@@ -158,8 +199,13 @@ const DealCard: React.FC<DealCardProps> = ({ deal, onColorSelect, onCloseDeal })
         <div className="flex justify-center gap-2">
           {deal.colors && deal.colors.slice(0, 2).map((color, index) => (
             <button
-               key={`${deal.id}-${color.name}-${index}`}
-               onClick={() => onColorSelect(String(deal.id), index)}
+              type="button"
+               key={`${getPid(deal)}-${color.name}-${index}`}
+               onClick={(e) => { e.stopPropagation(); onColorSelect(getPid(deal), index); }}
+               onKeyDown={(e) => {
+                 // Prevent card activation when navigating with keyboard on swatches
+                 if (e.key === 'Enter' || e.key === ' ') e.stopPropagation();
+               }}
               className={`w-6 h-6 rounded-full border-2 transition-all duration-200 hover:scale-110 ${
                 color.selected 
                   ? 'border-black shadow-md scale-110' 
@@ -167,6 +213,7 @@ const DealCard: React.FC<DealCardProps> = ({ deal, onColorSelect, onCloseDeal })
               }`}
               style={{ backgroundColor: color.value }}
               aria-label={`Select ${color.name} color`}
+              aria-pressed={!!color.selected}
             />
           ))}
         </div>
@@ -237,7 +284,7 @@ const DealsCarousel: React.FC<DealsCarouselProps> = ({
         >
           {infiniteDeals.map((deal, index) => (
             <DealCard
-              key={`infinite-${deal.id}-${index}`}
+              key={`infinite-${(deal as any)._id || (deal as any).id}-${index}`}
               deal={deal}
               onColorSelect={onColorSelect}
               onCloseDeal={onCloseDeal}
@@ -276,7 +323,19 @@ const HotDealsSection: React.FC = () => {
           getDealsProducts()
         ]);
         setHomepage(homepageConfig);
-        setProducts(dealsProducts);
+        let deals = Array.isArray(dealsProducts) ? dealsProducts : [];
+        // Fallback: if API doesn't support onSale filter, derive deals locally
+        if (!deals.length) {
+          const all = await getProducts();
+          deals = (all || []).filter(p => (p as any).originalPrice && (p as any).price && (p as any).originalPrice > (p as any).price);
+          // Optional: sort by highest discount first
+          deals.sort((a: any, b: any) => {
+            const ad = (a.originalPrice || 0) - (a.price || 0);
+            const bd = (b.originalPrice || 0) - (b.price || 0);
+            return bd - ad;
+          });
+        }
+        setProducts(deals);
         setIsLoading(false);
       } catch (error) {
         console.error('Error loading data:', error);
@@ -322,7 +381,7 @@ const HotDealsSection: React.FC = () => {
   const handleColorSelect = (dealId: string, colorIndex: number): void => {
     setProducts(prevProducts =>
       prevProducts.map(product =>
-        String(product.id) === String(dealId)
+        (String((product as any)._id || (product as any).id) === String(dealId))
           ? {
               ...product,
               colors: product.colors?.map((color, index) => ({
@@ -338,7 +397,7 @@ const HotDealsSection: React.FC = () => {
   const handleCloseDeal = (dealId: string): void => {
     setProducts(prevProducts =>
       prevProducts.map(product =>
-        String(product.id) === String(dealId)
+        (String((product as any)._id || (product as any).id) === String(dealId))
           ? { ...product, onSale: false, dealText: "" }
           : product
       )

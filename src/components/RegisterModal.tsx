@@ -78,8 +78,9 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSucces
       setError('Email is required');
       return false;
     }
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
+    // Backend requires minimum 8 characters
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters');
       return false;
     }
     if (formData.password !== formData.confirmPassword) {
@@ -100,8 +101,14 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSucces
     setError('');
 
     try {
-      const { confirmPassword, ...registerData } = formData;
-      const response = await authService.signup(registerData);
+      // Map UI field to API contract: passwordConfirm
+      const payload = {
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        password: formData.password,
+        passwordConfirm: formData.confirmPassword
+      };
+      const response = await authService.signup(payload);
       if (response.success) {
         onSuccess && onSuccess(response);
         onClose();

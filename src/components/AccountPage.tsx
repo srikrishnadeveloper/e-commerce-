@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import authService from '../services/authService';
+import orderService from '../services/orderService';
+import wishlistService from '../services/wishlistService';
 
 const AccountPage = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -13,6 +16,67 @@ const AccountPage = () => {
     { id: 'logout', label: 'Logout' }
   ];
 
+  const [user, setUser] = useState<any>(null);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [wishlist, setWishlist] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  // Form state for account details
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [displayName, setDisplayName] = useState('');
+  const [email, setEmail] = useState('');
+  // Password fields
+  const [passwordCurrent, setPasswordCurrent] = useState('');
+  const [password, setPassword] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
+
+  useEffect(() => {
+    if (!authService.isAuthenticated()) {
+      window.dispatchEvent(new Event('auth:openLogin'));
+      return;
+    }
+    loadUserData();
+  }, []);
+
+  const loadUserData = async () => {
+    try {
+      setLoading(true);
+      const [userData, ordersData, wishlistData] = await Promise.all([
+        authService.getCurrentUser(),
+        orderService.getMyOrders(),
+        wishlistService.getWishlist()
+      ]);
+  setUser(userData.data);
+  // Initialize form fields from user
+  const fullName = userData.data?.name || '';
+  const parts = fullName.split(' ');
+  setFirstName(parts[0] || '');
+  setLastName(parts.slice(1).join(' ') || '');
+  setDisplayName(fullName);
+  setEmail(userData.data?.email || '');
+      setOrders(ordersData.data || []);
+      setWishlist(wishlistData.data || []);
+    } catch (err) {
+      setError('Failed to load account data');
+      console.error('Account data error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRemoveFromWishlist = async (wishlistId: string) => {
+    try {
+      await wishlistService.removeFromWishlist(wishlistId);
+      setWishlist(prev => prev.filter(item => item._id !== wishlistId));
+    } catch (err) {
+      console.error('Failed to remove from wishlist:', err);
+      setError('Failed to remove item from wishlist');
+    }
+  };
+
   const getPageTitle = () => {
     switch (activeTab) {
       case 'dashboard': return 'My Account';
@@ -24,16 +88,56 @@ const AccountPage = () => {
     }
   };
 
+  // Handle logout tab
+  useEffect(() => {
+    if (activeTab === 'logout') {
+      authService.logout();
+      setActiveTab('dashboard');
+    }
+  }, [activeTab]);
+
+  const handleSaveAccount = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    try {
+      // Update profile if name/email changed
+      const newName = displayName?.trim() || `${firstName} ${lastName}`.trim();
+      const profilePayload = {
+        name: newName,
+        email,
+      };
+      await authService.updateProfile(profilePayload);
+
+      // Update password if provided
+      if (passwordCurrent || password || passwordConfirm) {
+        if (!passwordCurrent || !password || !passwordConfirm) {
+          throw { message: 'Please fill all password fields' };
+        }
+        if (password !== passwordConfirm) {
+          throw { message: 'New passwords do not match' };
+        }
+        await authService.updatePassword({ passwordCurrent, password, passwordConfirm });
+      }
+
+      setSuccess('Account updated successfully');
+      await loadUserData();
+    } catch (err) {
+      const msg = err?.message || err?.error || 'Failed to update account';
+      setError(msg);
+    }
+  };
+
   const renderDashboard = () => (
     <div className="text-left">
-      <h2 className="text-2xl font-semibold mb-4">Hello Themesflat</h2>
+      <h2 className="text-2xl font-semibold mb-4">Hello {user?.name || 'User'}</h2>
       <p className="text-gray-600 leading-relaxed">
         From your account dashboard you can view your{' '}
         <button 
           onClick={() => setActiveTab('orders')}
           className="text-red-500 hover:text-red-600 underline"
         >
-          recent orders
+          recent orders ({orders.length})
         </button>
         , manage your{' '}
         <button 
@@ -56,54 +160,41 @@ const AccountPage = () => {
 
   const renderOrders = () => (
     <div>
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="border-b">
-              <th className="text-left py-4 px-0 font-medium text-gray-700">Order</th>
-              <th className="text-left py-4 px-4 font-medium text-gray-700">Date</th>
-              <th className="text-left py-4 px-4 font-medium text-gray-700">Status</th>
-              <th className="text-left py-4 px-4 font-medium text-gray-700">Total</th>
-              <th className="text-left py-4 px-4 font-medium text-gray-700">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr className="border-b hover:bg-gray-50">
-              <td className="py-4 px-0">#123</td>
-              <td className="py-4 px-4">August 1, 2024</td>
-              <td className="py-4 px-4">On hold</td>
-              <td className="py-4 px-4">$200.00 for 1 Items</td>
-              <td className="py-4 px-4">
-                <button className="bg-black text-white px-4 py-2 font-medium hover:bg-gray-800 transition-colors">
-                  View
-                </button>
-              </td>
-            </tr>
-            <tr className="border-b hover:bg-gray-50">
-              <td className="py-4 px-0">#345</td>
-              <td className="py-4 px-4">August 2, 2024</td>
-              <td className="py-4 px-4">On hold</td>
-              <td className="py-4 px-4">$300.00 for 1 Items</td>
-              <td className="py-4 px-4">
-                <button className="bg-black text-white px-4 py-2 font-medium hover:bg-gray-800 transition-colors">
-                  View
-                </button>
-              </td>
-            </tr>
-            <tr className="border-b hover:bg-gray-50">
-              <td className="py-4 px-0">#567</td>
-              <td className="py-4 px-4">August 3, 2024</td>
-              <td className="py-4 px-4">On hold</td>
-              <td className="py-4 px-4">$400.00 for 1 Items</td>
-              <td className="py-4 px-4">
-                <button className="bg-black text-white px-4 py-2 font-medium hover:bg-gray-800 transition-colors">
-                  View
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      {orders.length === 0 ? (
+        <div className="text-center py-12">
+          <h3 className="text-lg font-semibold mb-2">No orders yet</h3>
+          <p className="text-gray-600">You haven't placed any orders yet. Start shopping to see your orders here.</p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="border-b">
+                <th className="text-left py-4 px-0 font-medium text-gray-700">Order</th>
+                <th className="text-left py-4 px-4 font-medium text-gray-700">Date</th>
+                <th className="text-left py-4 px-4 font-medium text-gray-700">Status</th>
+                <th className="text-left py-4 px-4 font-medium text-gray-700">Total</th>
+                <th className="text-left py-4 px-4 font-medium text-gray-700">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {orders.map((order) => (
+                <tr key={order._id} className="border-b hover:bg-gray-50">
+                  <td className="py-4 px-0">#{order.orderNumber || order._id.slice(-6)}</td>
+                  <td className="py-4 px-4">{new Date(order.createdAt).toLocaleDateString()}</td>
+                  <td className="py-4 px-4">{order.status || 'Processing'}</td>
+                  <td className="py-4 px-4">${order.total || '0.00'} for {order.items?.length || 0} Items</td>
+                  <td className="py-4 px-4">
+                    <button className="bg-black text-white px-4 py-2 font-medium hover:bg-gray-800 transition-colors">
+                      View
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 
@@ -112,86 +203,86 @@ const AccountPage = () => {
       <button className="bg-black text-white px-6 py-3 font-medium mb-8 hover:bg-gray-800 transition-colors">
         Add a new address
       </button>
-      <div className="bg-white border border-gray-200 p-6 max-w-md">
-        <h3 className="font-semibold mb-4">Default</h3>
-        <div className="text-gray-700 mb-4 leading-relaxed">
-          <p>1234 Fashion Street, Suite 567,</p>
-          <p>New York, NY 10001</p>
-          <p className="mt-2">Email: info@fashionshop.com</p>
-          <p>Phone: (212) 555-1234</p>
+      {user?.address ? (
+        <div className="bg-white border border-gray-200 p-6 max-w-md">
+          <h3 className="font-semibold mb-4">Default</h3>
+          <div className="text-gray-700 mb-4 leading-relaxed">
+            <p>{user.address.street}, {user.address.city},</p>
+            <p>{user.address.state} {user.address.zipCode}</p>
+            <p className="mt-2">Email: {user.email}</p>
+            <p>Phone: {user.address.phone || 'Not provided'}</p>
+          </div>
+          <div className="flex gap-3">
+            <button className="bg-black text-white px-4 py-2 font-medium hover:bg-gray-800 transition-colors">
+              Edit
+            </button>
+            <button className="border border-black text-black px-4 py-2 font-medium hover:bg-gray-50 transition-colors">
+              Delete
+            </button>
+          </div>
         </div>
-        <div className="flex gap-3">
-          <button className="bg-black text-white px-4 py-2 font-medium hover:bg-gray-800 transition-colors">
-            Edit
-          </button>
-          <button className="border border-black text-black px-4 py-2 font-medium hover:bg-gray-50 transition-colors">
-            Delete
-          </button>
+      ) : (
+        <div className="bg-white border border-gray-200 p-6 max-w-md">
+          <h3 className="font-semibold mb-4">No Address Saved</h3>
+          <p className="text-gray-600">You haven't added any addresses yet. Click "Add a new address" to get started.</p>
         </div>
-      </div>
+      )}
     </div>
   );
 
   const renderWishlist = () => (
     <div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {/* Product 1 */}
-        <div className="group">
-          <div className="relative mb-4 bg-gray-100 aspect-square overflow-hidden">
-            <img 
-                                    src="/images/IMAGE_1.png" 
-              alt="Ribbed Tank Top"
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            />
-          </div>
-          <h3 className="font-semibold mb-2">Ribbed Tank Top</h3>
-          <p className="font-medium mb-3">$16.95</p>
-          <div className="flex gap-2">
-            <button className="w-5 h-5 rounded-full bg-orange-400 border-2 border-orange-400"></button>
-            <button className="w-5 h-5 rounded-full bg-black border-2 border-gray-300"></button>
-          </div>
+      {wishlist.length === 0 ? (
+        <div className="text-center py-12">
+          <h3 className="text-lg font-semibold mb-2">Your wishlist is empty</h3>
+          <p className="text-gray-600">Start adding products to your wishlist to see them here.</p>
         </div>
-
-        {/* Product 2 */}
-        <div className="group">
-          <div className="relative mb-4 bg-gray-100 aspect-square overflow-hidden">
-            <img 
-                                    src="/images/IMAGE_2.png" 
-              alt="Ribbed Modal T-shirt"
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            />
-            <div className="absolute top-4 right-4 bg-white px-2 py-1 text-sm font-medium">
-              You are good to go!
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {wishlist.map((item) => (
+            <div key={item._id} className="group">
+              <div className="relative mb-4 bg-gray-100 aspect-square overflow-hidden">
+                <img 
+                  src={item.product?.images?.[0] || '/images/placeholder.svg'} 
+                  alt={item.product?.name || 'Product'}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <button 
+                  onClick={() => handleRemoveFromWishlist(item._id)}
+                  className="absolute top-4 right-4 bg-white p-2 rounded-full shadow-md hover:bg-gray-50 transition-colors"
+                >
+                  <svg className="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+              <h3 className="font-semibold mb-2">{item.product?.name || 'Product'}</h3>
+              <p className="font-medium mb-3">${item.product?.price || '0.00'}</p>
+              <div className="flex gap-2">
+                {item.product?.colors?.slice(0, 3).map((color, index) => (
+                  <button 
+                    key={index}
+                    className={`w-5 h-5 rounded-full border-2 border-gray-300`}
+                    style={{ backgroundColor: color }}
+                  ></button>
+                ))}
+              </div>
             </div>
-          </div>
-          <h3 className="font-semibold mb-2">Ribbed Modal T-shirt</h3>
-          <p className="font-medium mb-3">$18.95</p>
-          <div className="flex gap-2">
-            <button className="w-5 h-5 rounded-full bg-green-400 border-2 border-green-400"></button>
-            <button className="w-5 h-5 rounded-full bg-pink-300 border-2 border-gray-300"></button>
-            <button className="w-5 h-5 rounded-full bg-green-200 border-2 border-gray-300"></button>
-          </div>
+          ))}
         </div>
-
-        {/* Product 3 */}
-        <div className="group">
-          <div className="relative mb-4 bg-gray-100 aspect-square overflow-hidden">
-            <img 
-                                    src="/images/IMAGE_3.png" 
-              alt="Oversized Printed T-shirt"
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            />
-          </div>
-          <h3 className="font-semibold mb-2">Oversized Printed T-shirt</h3>
-          <p className="font-medium mb-3">$10.00</p>
-        </div>
-      </div>
+      )}
     </div>
   );
 
   const renderAccountDetails = () => (
     <div>
-      <form className="max-w-2xl">
+      {error && (
+        <div className="max-w-2xl mb-4 p-3 rounded bg-red-50 text-red-700 border border-red-200">{error}</div>
+      )}
+      {success && (
+        <div className="max-w-2xl mb-4 p-3 rounded bg-green-50 text-green-700 border border-green-200">{success}</div>
+      )}
+      <form className="max-w-2xl" onSubmit={handleSaveAccount}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -199,7 +290,8 @@ const AccountPage = () => {
             </label>
             <input
               type="text"
-              defaultValue="John"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
               className="w-full border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
             />
           </div>
@@ -209,7 +301,8 @@ const AccountPage = () => {
             </label>
             <input
               type="text"
-              defaultValue="Doe"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
               className="w-full border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
             />
           </div>
@@ -221,7 +314,8 @@ const AccountPage = () => {
           </label>
           <input
             type="text"
-            defaultValue="Themesflat"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
             className="w-full border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
           />
         </div>
@@ -232,7 +326,8 @@ const AccountPage = () => {
           </label>
           <input
             type="email"
-            defaultValue="info@fashionshop.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             className="w-full border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
           />
         </div>
@@ -245,6 +340,8 @@ const AccountPage = () => {
           </label>
           <input
             type="password"
+            value={passwordCurrent}
+            onChange={(e) => setPasswordCurrent(e.target.value)}
             className="w-full border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
           />
         </div>
@@ -255,6 +352,8 @@ const AccountPage = () => {
           </label>
           <input
             type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             className="w-full border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
           />
         </div>
@@ -265,6 +364,8 @@ const AccountPage = () => {
           </label>
           <input
             type="password"
+            value={passwordConfirm}
+            onChange={(e) => setPasswordConfirm(e.target.value)}
             className="w-full border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
           />
         </div>

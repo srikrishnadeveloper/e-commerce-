@@ -18,6 +18,41 @@ api.interceptors.request.use((config) => {
 });
 
 class CartService {
+  constructor() {
+    this._ids = new Set();
+    this._ready = false;
+    // Keep cache in sync with global cart changes
+    try {
+      window.addEventListener('cart:changed', () => {
+        this.refreshIds().catch(() => {});
+      });
+    } catch {}
+  }
+
+  async refreshIds() {
+    try {
+      const data = await this.getCart();
+      const items = data?.data?.items || [];
+      this._ids = new Set(items.map((it) => String(it.product?._id || it.product)));
+      this._ready = true;
+      return this._ids;
+    } catch (e) {
+      this._ids.clear();
+      this._ready = false;
+      return this._ids;
+    }
+  }
+
+  async getCartIds() {
+    if (!this._ready) {
+      await this.refreshIds();
+    }
+    return this._ids;
+  }
+
+  isInCartSync(productId) {
+    return this._ids.has(String(productId));
+  }
   async getCart() {
     try {
       const response = await api.get('/cart');
@@ -30,6 +65,7 @@ class CartService {
   async addToCart(productId, quantity = 1) {
     try {
       const response = await api.post(`/cart/${productId}`, { quantity });
+      try { window.dispatchEvent(new Event('cart:changed')); } catch {}
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Failed to add to cart' };
@@ -39,6 +75,7 @@ class CartService {
   async updateCartItem(itemId, quantity) {
     try {
       const response = await api.put(`/cart/item/${itemId}`, { quantity });
+      try { window.dispatchEvent(new Event('cart:changed')); } catch {}
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Failed to update cart item' };
@@ -48,6 +85,7 @@ class CartService {
   async removeFromCart(itemId) {
     try {
       const response = await api.delete(`/cart/item/${itemId}`);
+      try { window.dispatchEvent(new Event('cart:changed')); } catch {}
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Failed to remove from cart' };
@@ -57,6 +95,7 @@ class CartService {
   async clearCart() {
     try {
       const response = await api.delete('/cart');
+      try { window.dispatchEvent(new Event('cart:changed')); } catch {}
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Failed to clear cart' };

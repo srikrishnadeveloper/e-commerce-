@@ -151,6 +151,9 @@ export const getBestsellerProducts = async (limit = 8) => {
   }
 };
 
+// Backward-compatible alias (camel-cased with capital S)
+export const getBestSellerProducts = getBestsellerProducts;
+
 // =============================================================================
 // CATEGORY DATA FUNCTIONS
 // =============================================================================
@@ -362,6 +365,7 @@ export default {
   getOnSaleProducts,
   getProductsByCategory,
   getBestsellerProducts,
+  getBestSellerProducts,
   getDealsProducts,
   
   // Category functions

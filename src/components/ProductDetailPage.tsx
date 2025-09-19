@@ -8,6 +8,9 @@ import {
   getSiteConfig,
   calculateDiscountPercentage 
 } from '../services/dataService';
+import cartService from '../services/cartService';
+import wishlistService from '../services/wishlistService';
+import authService from '../services/authService';
 
 interface ArrowIconProps {
   className?: string;
@@ -125,6 +128,129 @@ const ProductDetailPage: React.FC = () => {
     setQuantity(Math.max(1, quantity + change));
   };
 
+  const handleAddToCart = async () => {
+    if (!currentProduct) return;
+    if (!authService.isAuthenticated()) {
+      window.dispatchEvent(new Event('auth:openLogin'));
+      return;
+    }
+    try {
+      await cartService.addToCart(currentProduct._id || currentProduct.id, quantity);
+      // cartService already dispatches 'cart:changed'
+    } catch (error) {
+      console.error('Failed to add to cart:', error);
+    }
+  };
+
+  const handleAddToWishlist = async () => {
+    if (!currentProduct) return;
+    if (!authService.isAuthenticated()) {
+      window.dispatchEvent(new Event('auth:openLogin'));
+      return;
+    }
+    try {
+      await wishlistService.addToWishlist(currentProduct._id || currentProduct.id);
+      // wishlistService already dispatches 'wishlist:changed'
+    } catch (error) {
+      console.error('Failed to add to wishlist:', error);
+    }
+  };
+
+  // Visual state: in cart / in wishlist
+  const [inCart, setInCart] = React.useState(false);
+  const [inWishlist, setInWishlist] = React.useState(false);
+  React.useEffect(() => {
+    if (!currentProduct) return;
+    let mounted = true;
+    const refresh = async () => {
+      const [cartIds, wishIds] = await Promise.all([
+        cartService.getCartIds(),
+        wishlistService.getWishlistIds(),
+      ]);
+      if (!mounted) return;
+      const pid = String(currentProduct._id || currentProduct.id);
+      setInCart(cartIds.has(pid));
+      setInWishlist(wishIds.has(pid));
+    };
+    refresh();
+    const onCart = () => refresh();
+    const onWish = () => refresh();
+    window.addEventListener('cart:changed', onCart);
+    window.addEventListener('wishlist:changed', onWish);
+    return () => {
+      mounted = false;
+      window.removeEventListener('cart:changed', onCart);
+      window.removeEventListener('wishlist:changed', onWish);
+    };
+  }, [currentProduct?._id, currentProduct?.id]);
+
+  // Related products quick actions: maintain cart/wishlist membership sets for visual indicators
+  const [relatedCartIds, setRelatedCartIds] = React.useState<Set<string>>(new Set());
+  const [relatedWishIds, setRelatedWishIds] = React.useState<Set<string>>(new Set());
+  React.useEffect(() => {
+    let mounted = true;
+    const refresh = async () => {
+      try {
+        const [c, w] = await Promise.all([
+          cartService.getCartIds(),
+          wishlistService.getWishlistIds(),
+        ]);
+        if (!mounted) return;
+        setRelatedCartIds(new Set(Array.from(c)));
+        setRelatedWishIds(new Set(Array.from(w)));
+      } catch {}
+    };
+    refresh();
+    const onCart = () => refresh();
+    const onWish = () => refresh();
+    window.addEventListener('cart:changed', onCart);
+    window.addEventListener('wishlist:changed', onWish);
+    return () => {
+      mounted = false;
+      window.removeEventListener('cart:changed', onCart);
+      window.removeEventListener('wishlist:changed', onWish);
+    };
+  }, []);
+
+  // Mobile collapsible state for sections (must be declared before any early returns to preserve hook order)
+  const [mobileInfoOpen, setMobileInfoOpen] = useState<{pricing:boolean;color:boolean;size:boolean;details:boolean}>(
+    { pricing: true, color: true, size: false, details: false }
+  );
+
+  const isInRelatedCart = (p: Product) => relatedCartIds.has(String((p as any)._id || (p as any).id));
+  const isInRelatedWishlist = (p: Product) => relatedWishIds.has(String((p as any)._id || (p as any).id));
+
+  const handleQuickAddToCart = async (p: Product, e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    if (!authService.isAuthenticated()) {
+      window.dispatchEvent(new Event('auth:openLogin'));
+      return;
+    }
+    if (isInRelatedCart(p)) return;
+    try {
+      await cartService.addToCart((p as any)._id || (p as any).id, 1);
+      // cartService dispatches 'cart:changed'
+    } catch (error) {
+      console.error('Failed to add to cart:', error);
+    }
+  };
+
+  const handleQuickWishlist = async (p: Product, e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    if (!authService.isAuthenticated()) {
+      window.dispatchEvent(new Event('auth:openLogin'));
+      return;
+    }
+    try {
+      await wishlistService.addToWishlist((p as any)._id || (p as any).id);
+      // wishlistService dispatches 'wishlist:changed'
+    } catch (error) {
+      console.error('Failed to add to wishlist:', error);
+    }
+  };
+
   // Carousel navigation handlers
   const handlePrevious = (): void => {
     if (isTransitioning) return;
@@ -194,97 +320,36 @@ const ProductDetailPage: React.FC = () => {
     setIsZoomed(false);
   };
 
+
   return (
-    <div className="min-h-screen bg-white" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
+    <div className="min-h-screen bg-white pb-28" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
       {/* Main Product Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="lg:grid lg:grid-cols-2 lg:gap-16 xl:gap-20">
-          {/* Left Column - Image Gallery */}
-          <div className="flex flex-col lg:flex-row gap-4 mb-8 lg:mb-0">
-            {/* Thumbnails */}
-            <div className="flex lg:flex-col gap-3 order-2 lg:order-1">
-              {currentProduct.images.map((image, index) => (
-                <button
-                  key={index}
-                  onClick={() => setSelectedImage(index)}
-                  className={`w-20 h-20 lg:w-24 lg:h-24 border-2 rounded-lg overflow-hidden transition-all duration-200 ${
-                    selectedImage === index ? 'border-black shadow-md' : 'border-gray-200 hover:border-gray-400'
-                  }`}
-                >
-                  <img
-                    src={image}
-                    alt={`Product view ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                </button>
-              ))}
-            </div>
-
-            {/* Main Image */}
-            <div className="flex-1 order-1 lg:order-2 relative">
-              <div className="w-full aspect-square bg-gray-50 rounded-lg overflow-hidden shadow-lg relative">
-                <img
-                  ref={imageRef}
-                  src={currentProduct.images[selectedImage]}
-                  alt="Product main view"
-                  className={`w-full h-full object-cover ${isDesktop ? 'cursor-crosshair' : ''}`}
-                  onMouseMove={isDesktop ? handleMouseMove : undefined}
-                  onMouseEnter={isDesktop ? handleMouseEnter : undefined}
-                  onMouseLeave={isDesktop ? handleMouseLeave : undefined}
-                />
-                
-                {/* Zoom Lens Overlay - Only on desktop */}
-                {isZoomed && isDesktop && (
-                  <div
-                    className="absolute border-2 border-white shadow-lg pointer-events-none"
-                    style={{
-                      width: '120px',
-                      height: '120px',
-                      left: `calc(${zoomPosition.x}% - 60px)`,
-                      top: `calc(${zoomPosition.y}% - 60px)`,
-                      borderRadius: '50%',
-                      background: 'rgba(255, 255, 255, 0.3)',
-                      backdropFilter: 'blur(1px)',
-                    }}
-                  />
-                )}
-              </div>
-              
-              {/* Zoom Window - Only on desktop */}
-              {isZoomed && isDesktop && (
-                <div className="absolute top-0 left-full ml-4 w-80 h-80 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden z-10">
-                  <div
-                    className="w-full h-full"
-                    style={{
-                      backgroundImage: `url(${currentProduct.images[selectedImage]})`,
-                      backgroundSize: '300% 300%',
-                      backgroundPosition: `${zoomPosition.x}% ${zoomPosition.y}%`,
-                      backgroundRepeat: 'no-repeat',
-                    }}
-                  />
-                  <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-xs">
-                    3x Zoom
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Right Column - Product Information */}
-          <div className="space-y-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 lg:py-12">
+        <div className="flex flex-col-reverse lg:grid lg:grid-cols-2 lg:gap-16 xl:gap-20">
+          {/* Right Column (moves below images on mobile) - Product Information */}
+          <div className="space-y-8 pt-6 lg:pt-0">
             {/* Product Title */}
             <h1 className="text-3xl lg:text-4xl font-bold text-black leading-tight" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
               {currentProduct.name}
             </h1>
 
-            {/* Pricing Row */}
-            <div className="flex items-center gap-4">
+            {/* Pricing Row (collapsible on small screens) */}
+            <button
+              type="button"
+              onClick={() => setMobileInfoOpen(s => ({...s, pricing: !s.pricing}))}
+              className="lg:cursor-default w-full lg:w-auto flex items-center justify-between lg:justify-start gap-4"
+              aria-expanded={mobileInfoOpen.pricing}
+            >
               <span className="text-2xl lg:text-3xl font-bold text-black" style={{ fontFamily: "'Albert Sans', sans-serif" }}>${currentProduct.price}</span>
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
-                25% OFF
-              </span>
-              <span className="text-lg text-gray-600 line-through" style={{ fontFamily: "'Albert Sans', sans-serif" }}>${currentProduct.originalPrice}</span>
-            </div>
+              <div className={`flex items-center gap-4 ${mobileInfoOpen.pricing ? '' : 'lg:flex'}`}>
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
+                  25% OFF
+                </span>
+                <span className="text-lg text-gray-600 line-through" style={{ fontFamily: "'Albert Sans', sans-serif" }}>${currentProduct.originalPrice}</span>
+              </div>
+              <span className="lg:hidden text-sm text-gray-500">{mobileInfoOpen.pricing ? '−' : '+'}</span>
+            </button>
+            {!mobileInfoOpen.pricing && <div className="lg:hidden h-px bg-gray-200" />}
 
             {/* Sales & Urgency Prompts */}
             <div className="space-y-3">
@@ -299,56 +364,78 @@ const ProductDetailPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Color Selector */}
-            <div className="space-y-3">
-              <h3 className="text-base font-medium text-black" style={{ fontFamily: "'Albert Sans', sans-serif" }}>Color: <span className="font-normal capitalize">{selectedColor}</span></h3>
-              <div className="flex gap-2">
-                {currentProduct.colors.map((color: Color) => (
-                  <button
-                    key={color.name}
-                    onClick={() => setSelectedColor(color.name)}
-                    className={`w-8 h-8 rounded-full border-2 transition-all duration-200 ${
-                      selectedColor === color.name ? 'border-black' : 'border-gray-300 hover:border-gray-400'
-                    }`}
-                    style={{ backgroundColor: color.value }}
-                    title={color.name}
-                  >
-                    {color.value === '#FFFFFF' && (
-                      <div className="w-full h-full rounded-full border border-gray-200"></div>
-                    )}
-                  </button>
-                ))}
-              </div>
+            {/* Color Selector (collapsible on mobile) */}
+            <div className="space-y-3 border-t pt-5 lg:border-none lg:pt-0">
+              <button
+                type="button"
+                onClick={() => setMobileInfoOpen(s => ({...s, color: !s.color}))}
+                className="flex w-full items-center justify-between lg:cursor-default"
+                aria-expanded={mobileInfoOpen.color}
+              >
+                <h3 className="text-base font-medium text-black" style={{ fontFamily: "'Albert Sans', sans-serif" }}>Color: <span className="font-normal capitalize">{selectedColor}</span></h3>
+                <span className="lg:hidden text-sm text-gray-500">{mobileInfoOpen.color ? '−' : '+'}</span>
+              </button>
+              {mobileInfoOpen.color && (
+                <>
+                  <div className="flex gap-2">
+                    {currentProduct.colors.map((color: Color) => (
+                      <button
+                        key={color.name}
+                        onClick={() => setSelectedColor(color.name)}
+                        className={`w-8 h-8 rounded-full border-2 transition-all duration-200 ${
+                          selectedColor === color.name ? 'border-black' : 'border-gray-300 hover:border-gray-400'
+                        }`}
+                        style={{ backgroundColor: color.value }}
+                        title={color.name}
+                      >
+                        {color.value === '#FFFFFF' && (
+                          <div className="w-full h-full rounded-full border border-gray-200"></div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
 
-            {/* Size Selector */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
+            {/* Size Selector (collapsible on mobile) */}
+            <div className="space-y-3 border-t pt-5 lg:border-none lg:pt-0">
+              <button
+                type="button"
+                onClick={() => setMobileInfoOpen(s => ({...s, size: !s.size}))}
+                className="flex w-full items-center justify-between lg:cursor-default"
+                aria-expanded={mobileInfoOpen.size}
+              >
                 <h3 className="text-base font-medium text-black" style={{ fontFamily: "'Albert Sans', sans-serif" }}>Size: <span className="font-normal">{selectedSize}</span></h3>
-                <button className="text-sm text-gray-600 hover:text-black underline" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
-                  Find your size
-                </button>
-              </div>
-              <div className="flex gap-2">
-                {currentProduct.sizes.map((size: string) => (
-                  <button
-                    key={size}
-                    onClick={() => setSelectedSize(size)}
-                    className={`px-3 py-2 border text-sm font-medium transition-all duration-200 ${
-                      selectedSize === size
-                        ? 'border-black bg-black text-white'
-                        : 'border-gray-300 hover:border-gray-400 text-gray-700'
-                    }`}
-                    style={{ fontFamily: "'Albert Sans', sans-serif" }}
-                  >
-                    {size}
-                  </button>
-                ))}
-              </div>
+                <span className="lg:hidden text-sm text-gray-500">{mobileInfoOpen.size ? '−' : '+'}</span>
+              </button>
+              {mobileInfoOpen.size && (
+                <>
+                  <div className="flex justify-end">
+                    <button className="text-sm text-gray-600 hover:text-black underline" style={{ fontFamily: "'Albert Sans', sans-serif" }}>Find your size</button>
+                  </div>
+                  <div className="flex gap-2">
+                    {currentProduct.sizes.map((size: string) => (
+                      <button
+                        key={size}
+                        onClick={() => setSelectedSize(size)}
+                        className={`px-3 py-2 border text-sm font-medium transition-all duration-200 ${
+                          selectedSize === size
+                            ? 'border-black bg-black text-white'
+                            : 'border-gray-300 hover:border-gray-400 text-gray-700'
+                        }`}
+                        style={{ fontFamily: "'Albert Sans', sans-serif" }}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
 
-            {/* Quantity & Actions */}
-            <div className="space-y-4">
+            {/* Quantity & Actions (desktop primary area) */}
+            <div className="space-y-4 hidden sm:block">
               {/* Quantity Stepper */}
               <div className="flex items-center gap-4">
                 <span className="text-base font-medium text-black" style={{ fontFamily: "'Albert Sans', sans-serif" }}>Quantity</span>
@@ -375,9 +462,25 @@ const ProductDetailPage: React.FC = () => {
 
               {/* Action Buttons */}
               <div className="space-y-4">
-                <button className="w-full bg-black text-white py-4 px-6 rounded-lg font-bold text-lg hover:bg-gray-800 transition-colors" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
-                  Add to Cart - ${(currentProduct.price * quantity).toFixed(2)}
-                </button>
+                <div className="flex gap-4">
+                  <button 
+                    onClick={handleAddToCart}
+                    disabled={inCart}
+                    className={`flex-1 py-4 px-6 rounded-lg font-bold text-lg transition-colors ${inCart ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-black text-white hover:bg-gray-800'}`}
+                    style={{ fontFamily: "'Albert Sans', sans-serif" }}
+                  >
+                    {inCart ? 'In Cart' : `Add to Cart - $${(currentProduct.price * quantity).toFixed(2)}`}
+                  </button>
+                  <button 
+                    onClick={handleAddToWishlist}
+                    className={`p-4 rounded-lg transition-colors ${inWishlist ? 'bg-red-100 text-red-600' : 'bg-gray-100 hover:bg-gray-200'}`}
+                    title={inWishlist ? 'In Wishlist' : 'Add to Wishlist'}
+                  >
+                    <svg className="w-6 h-6" fill={inWishlist ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                    </svg>
+                  </button>
+                </div>
                 <button className="w-full bg-yellow-400 text-black py-4 px-6 rounded-lg font-bold text-lg hover:bg-yellow-500 transition-colors" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
                   Buy with PayPal
                 </button>
@@ -387,10 +490,80 @@ const ProductDetailPage: React.FC = () => {
               </div>
             </div>
           </div>
+
+          {/* Left Column - Image Gallery */}
+          <div className="flex flex-col lg:flex-row gap-4 mb-4 lg:mb-0 lg:order-first">
+            {/* Thumbnails (horizontal scroll on mobile) */}
+            <div className="flex lg:flex-col gap-3 order-2 lg:order-1 overflow-x-auto pb-1 lg:pb-0 -mx-2 px-2 lg:mx-0 lg:px-0 scrollbar-hide">
+              {currentProduct.images.map((image, index) => (
+                <button
+                  key={index}
+                  onClick={() => setSelectedImage(index)}
+                  className={`w-20 h-20 flex-shrink-0 lg:w-24 lg:h-24 border-2 rounded-lg overflow-hidden transition-all duration-200 ${
+                    selectedImage === index ? 'border-black shadow-md' : 'border-gray-200 hover:border-gray-400'
+                  }`}
+                  aria-label={`Show image ${index + 1}`}
+                >
+                  <img
+                    src={image}
+                    alt={`Product view ${index + 1}`}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </button>
+              ))}
+            </div>
+
+            {/* Main Image */}
+            <div className="flex-1 order-1 lg:order-2 relative">
+              <div className="w-full aspect-square bg-gray-50 rounded-lg overflow-hidden shadow-md relative">
+                <img
+                  ref={imageRef}
+                  src={currentProduct.images[selectedImage]}
+                  alt={currentProduct.name}
+                  className={`w-full h-full object-cover ${isDesktop ? 'cursor-crosshair' : ''}`}
+                  onMouseMove={isDesktop ? handleMouseMove : undefined}
+                  onMouseEnter={isDesktop ? handleMouseEnter : undefined}
+                  onMouseLeave={isDesktop ? handleMouseLeave : undefined}
+                  loading="eager"
+                />
+                {isZoomed && isDesktop && (
+                  <div
+                    className="absolute border-2 border-white shadow-lg pointer-events-none"
+                    style={{
+                      width: '120px',
+                      height: '120px',
+                      left: `calc(${zoomPosition.x}% - 60px)`,
+                      top: `calc(${zoomPosition.y}% - 60px)`,
+                      borderRadius: '50%',
+                      background: 'rgba(255, 255, 255, 0.3)',
+                      backdropFilter: 'blur(1px)',
+                    }}
+                  />
+                )}
+              </div>
+              {isZoomed && isDesktop && (
+                <div className="hidden lg:block absolute top-0 left-full ml-4 w-80 h-80 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden z-10">
+                  <div
+                    className="w-full h-full"
+                    style={{
+                      backgroundImage: `url(${currentProduct.images[selectedImage]})`,
+                      backgroundSize: '300% 300%',
+                      backgroundPosition: `${zoomPosition.x}% ${zoomPosition.y}%`,
+                      backgroundRepeat: 'no-repeat',
+                    }}
+                  />
+                  <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-xs">
+                    3x Zoom
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* Info Cards */}
-        <div className="grid md:grid-cols-3 gap-6 mt-16 mb-16">
+  {/* Info Cards (stack then grid) */}
+  <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 mt-12 mb-16">
           <div className="flex items-center gap-4 p-6 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
             <svg className="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
@@ -420,8 +593,8 @@ const ProductDetailPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Tabbed Information Section */}
-        <div className="border-t border-gray-200 pt-8 lg:pt-16">
+  {/* Tabbed / Accordion Information Section */}
+  <div className="border-t border-gray-200 pt-8 lg:pt-16" id="details-section">
           {/* Tabs */}
           <div className="w-full overflow-x-auto border-b border-gray-200 mb-6 lg:mb-12 scrollbar-hide">
             <div className="flex min-w-max">
@@ -641,15 +814,30 @@ const ProductDetailPage: React.FC = () => {
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                         <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-100">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                          <button
+                            onClick={(e) => handleQuickWishlist(product, e)}
+                            title={isInRelatedWishlist(product) ? 'In Wishlist' : 'Add to Wishlist'}
+                            className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md ${isInRelatedWishlist(product) ? 'bg-red-100 text-red-600' : 'bg-white hover:bg-gray-100'}`}
+                          >
+                            <svg className="w-4 h-4" fill={isInRelatedWishlist(product) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                             </svg>
                           </button>
-                          <button className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-100">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
+                          <button
+                            onClick={(e) => handleQuickAddToCart(product, e)}
+                            disabled={isInRelatedCart(product)}
+                            title={isInRelatedCart(product) ? 'In Cart' : 'Add to Cart'}
+                            className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md ${isInRelatedCart(product) ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-white hover:bg-gray-100'}`}
+                          >
+                            {isInRelatedCart(product) ? (
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                            ) : (
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                              </svg>
+                            )}
                           </button>
                         </div>
                       </div>
@@ -690,15 +878,30 @@ const ProductDetailPage: React.FC = () => {
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                         <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-100">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                          <button
+                            onClick={(e) => handleQuickWishlist(product as Product, e)}
+                            title={isInRelatedWishlist(product as Product) ? 'In Wishlist' : 'Add to Wishlist'}
+                            className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md ${isInRelatedWishlist(product as Product) ? 'bg-red-100 text-red-600' : 'bg-white hover:bg-gray-100'}`}
+                          >
+                            <svg className="w-4 h-4" fill={isInRelatedWishlist(product as Product) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                             </svg>
                           </button>
-                          <button className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-100">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
+                          <button
+                            onClick={(e) => handleQuickAddToCart(product as Product, e)}
+                            disabled={isInRelatedCart(product as Product)}
+                            title={isInRelatedCart(product as Product) ? 'In Cart' : 'Add to Cart'}
+                            className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md ${isInRelatedCart(product as Product) ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-white hover:bg-gray-100'}`}
+                          >
+                            {isInRelatedCart(product as Product) ? (
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                            ) : (
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                              </svg>
+                            )}
                           </button>
                         </div>
                       </div>
@@ -739,15 +942,30 @@ const ProductDetailPage: React.FC = () => {
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                         <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-100">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                          <button
+                            onClick={(e) => handleQuickWishlist(product as Product, e)}
+                            title={isInRelatedWishlist(product as Product) ? 'In Wishlist' : 'Add to Wishlist'}
+                            className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md ${isInRelatedWishlist(product as Product) ? 'bg-red-100 text-red-600' : 'bg-white hover:bg-gray-100'}`}
+                          >
+                            <svg className="w-4 h-4" fill={isInRelatedWishlist(product as Product) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                             </svg>
                           </button>
-                          <button className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-100">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
+                          <button
+                            onClick={(e) => handleQuickAddToCart(product as Product, e)}
+                            disabled={isInRelatedCart(product as Product)}
+                            title={isInRelatedCart(product as Product) ? 'In Cart' : 'Add to Cart'}
+                            className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md ${isInRelatedCart(product as Product) ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-white hover:bg-gray-100'}`}
+                          >
+                            {isInRelatedCart(product as Product) ? (
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                            ) : (
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                              </svg>
+                            )}
                           </button>
                         </div>
                       </div>
@@ -772,7 +990,7 @@ const ProductDetailPage: React.FC = () => {
             </div>
           </div>
           
-          {/* Mobile Grid - Same as original */}
+          {/* Mobile Grid - Related products simplified spacing */}
           <div className="block md:hidden">
             <div className="grid grid-cols-2 gap-4">
               {relatedProducts.map((product) => (
@@ -782,17 +1000,33 @@ const ProductDetailPage: React.FC = () => {
                       src={product.images[0]}
                       alt={product.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
                     />
                     <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-100">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                      <button
+                        onClick={(e) => handleQuickWishlist(product, e)}
+                        title={isInRelatedWishlist(product) ? 'In Wishlist' : 'Add to Wishlist'}
+                        className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md ${isInRelatedWishlist(product) ? 'bg-red-100 text-red-600' : 'bg-white hover:bg-gray-100'}`}
+                      >
+                        <svg className="w-4 h-4" fill={isInRelatedWishlist(product) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                         </svg>
                       </button>
-                      <button className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-100">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                        </svg>
+                      <button
+                        onClick={(e) => handleQuickAddToCart(product, e)}
+                        disabled={isInRelatedCart(product)}
+                        title={isInRelatedCart(product) ? 'In Cart' : 'Add to Cart'}
+                        className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md ${isInRelatedCart(product) ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-white hover:bg-gray-100'}`}
+                      >
+                        {isInRelatedCart(product) ? (
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        ) : (
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                          </svg>
+                        )}
                       </button>
                     </div>
                   </div>
@@ -814,6 +1048,34 @@ const ProductDetailPage: React.FC = () => {
               ))}
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Sticky Mobile Action Bar */}
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
+          <div className="flex flex-col leading-tight">
+            <span className="text-sm text-gray-500">Total</span>
+            <span className="text-lg font-semibold">${(currentProduct.price * quantity).toFixed(2)}</span>
+          </div>
+            <div className="flex items-center ml-auto gap-3">
+              <button
+                onClick={handleAddToWishlist}
+                aria-label={inWishlist ? 'In Wishlist' : 'Add to Wishlist'}
+                className={`p-3 rounded-full border ${inWishlist ? 'bg-red-100 border-red-300 text-red-600' : 'bg-gray-100 border-gray-300 text-gray-700'}`}
+              >
+                <svg className="w-5 h-5" fill={inWishlist ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                </svg>
+              </button>
+              <button
+                onClick={handleAddToCart}
+                disabled={inCart}
+                className={`px-6 py-3 rounded-md font-medium text-sm transition-colors ${inCart ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-black text-white hover:bg-gray-800'}`}
+              >
+                {inCart ? 'In Cart' : 'Add'}
+              </button>
+            </div>
         </div>
       </div>
     </div>

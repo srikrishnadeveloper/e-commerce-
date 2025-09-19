@@ -20,6 +20,40 @@ api.interceptors.request.use((config) => {
 });
 
 class WishlistService {
+  constructor() {
+    this._ids = new Set();
+    this._ready = false;
+    try {
+      window.addEventListener('wishlist:changed', () => {
+        this.refreshIds().catch(() => {});
+      });
+    } catch {}
+  }
+
+  async refreshIds() {
+    try {
+      const data = await this.getWishlist();
+      const items = data?.data || data || [];
+      this._ids = new Set((Array.isArray(items) ? items : []).map((p) => String(p._id || p.id)));
+      this._ready = true;
+      return this._ids;
+    } catch (e) {
+      this._ids.clear();
+      this._ready = false;
+      return this._ids;
+    }
+  }
+
+  async getWishlistIds() {
+    if (!this._ready) {
+      await this.refreshIds();
+    }
+    return this._ids;
+  }
+
+  isInWishlistSync(productId) {
+    return this._ids.has(String(productId));
+  }
   // Get user wishlist
   async getWishlist() {
     try {
@@ -34,6 +68,7 @@ class WishlistService {
   async addToWishlist(productId) {
     try {
       const response = await api.post(`/wishlist/${productId}`);
+      try { window.dispatchEvent(new Event('wishlist:changed')); } catch {}
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Failed to add to wishlist' };
@@ -44,6 +79,7 @@ class WishlistService {
   async removeFromWishlist(productId) {
     try {
       const response = await api.delete(`/wishlist/${productId}`);
+      try { window.dispatchEvent(new Event('wishlist:changed')); } catch {}
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Failed to remove from wishlist' };
@@ -54,6 +90,7 @@ class WishlistService {
   async clearWishlist() {
     try {
       const response = await api.delete('/wishlist');
+      try { window.dispatchEvent(new Event('wishlist:changed')); } catch {}
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Failed to clear wishlist' };
@@ -62,7 +99,8 @@ class WishlistService {
 
   // Check if product is in wishlist
   isInWishlist(productId, wishlist) {
-    return wishlist.some(item => item._id === productId);
+    const pid = String(productId);
+    return wishlist.some(item => String(item._id) === pid);
   }
 }
 

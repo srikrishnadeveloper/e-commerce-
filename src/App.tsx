@@ -48,13 +48,17 @@ const App: React.FC = () => {
     }
   }, []);
 
-  // Listen for login events to show welcome popup
+  // Listen for login events to show welcome popup (only once per user)
   useEffect(() => {
     const handleAuthChange = () => {
       const user = authService.getCurrentUserFromStorage();
       if (user && user.name) {
-        setWelcomeUsername(user.name);
-        setShowWelcomePopup(true);
+        const flagKey = `welcomeShown:${user._id || user.id || user.email || user.name}`;
+        if (!localStorage.getItem(flagKey)) {
+          setWelcomeUsername(user.name);
+          setShowWelcomePopup(true);
+          localStorage.setItem(flagKey, '1');
+        }
       }
     };
 

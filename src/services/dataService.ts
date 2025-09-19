@@ -154,6 +154,9 @@ export const getBestSellerProducts = async (): Promise<Product[]> => {
   }
 };
 
+// Backward-compatible alias for different naming in JS service
+export const getBestsellerProducts = getBestSellerProducts;
+
 /**
  * Get product categories
  * Backend: API call to GET /api/categories

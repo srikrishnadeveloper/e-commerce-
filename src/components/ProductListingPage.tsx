@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Product, Color, SiteConfig, Category } from '../types';
 // CENTRALIZED DATA SERVICE - Single source for all product data
 import { 
@@ -10,6 +10,9 @@ import {
   filterProductsByPriceRange,
   sortProducts 
 } from '../services/dataService';
+import cartService from '../services/cartService';
+import wishlistService from '../services/wishlistService';
+import authService from '../services/authService';
 
 interface CategoryWithCount {
   name: string;
@@ -174,8 +177,12 @@ const SortDropdown: React.FC<{
 };
 
 const ProductListingPage: React.FC = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialCategory = searchParams.get('category') || 'All';
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [sortBy, setSortBy] = useState<SortBy>('default');
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 100]);
@@ -210,6 +217,12 @@ const ProductListingPage: React.FC = () => {
           }))
         ];
         setCategories(categoriesList);
+
+        // If initialCategory is not valid, reset to All
+        setSelectedCategory(prev => {
+          if (!categoriesList.some(c => c.name.toLowerCase() === initialCategory.toLowerCase())) return 'All';
+          return initialCategory;
+        });
       } catch (error) {
         console.error('Error loading data:', error);
       } finally {
@@ -218,7 +231,22 @@ const ProductListingPage: React.FC = () => {
     };
     
     loadData();
-  }, []);
+  }, [initialCategory]);
+
+  // Handler to change category and push param without triggering loops
+  const handleSelectCategory = (name: string) => {
+    setSelectedCategory(name);
+    if (name === 'All') {
+      // Remove param
+      const next = new URLSearchParams(searchParams);
+      next.delete('category');
+      setSearchParams(next, { replace: true });
+    } else {
+      const next = new URLSearchParams(searchParams);
+      next.set('category', name);
+      setSearchParams(next, { replace: true });
+    }
+  };
 
   // Filter and sort products - IMPORTANT: This must be called unconditionally before any returns
   const filteredAndSortedProducts = useMemo(() => {
@@ -288,6 +316,62 @@ const ProductListingPage: React.FC = () => {
   };
 
   const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) => {
+    const [inCart, setInCart] = useState(false);
+    const [inWishlist, setInWishlist] = useState(false);
+
+    useEffect(() => {
+      let mounted = true;
+      const refresh = async () => {
+        const [cartIds, wishIds] = await Promise.all([
+          cartService.getCartIds(),
+          wishlistService.getWishlistIds(),
+        ]);
+        if (!mounted) return;
+        const pid = String(product._id || product.id);
+        setInCart(cartIds.has(pid));
+        setInWishlist(wishIds.has(pid));
+      };
+      refresh();
+      const onCart = () => refresh();
+      const onWish = () => refresh();
+      window.addEventListener('cart:changed', onCart);
+      window.addEventListener('wishlist:changed', onWish);
+      return () => {
+        mounted = false;
+        window.removeEventListener('cart:changed', onCart);
+        window.removeEventListener('wishlist:changed', onWish);
+      };
+    }, [product._id, product.id]);
+    const handleAddToCart = async (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!authService.isAuthenticated()) {
+        window.dispatchEvent(new Event('auth:openLogin'));
+        return;
+      }
+      try {
+        await cartService.addToCart(product._id || product.id, 1);
+        // cartService already dispatches 'cart:changed'
+      } catch (error) {
+        console.error('Failed to add to cart:', error);
+      }
+    };
+
+    const handleAddToWishlist = async (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!authService.isAuthenticated()) {
+        window.dispatchEvent(new Event('auth:openLogin'));
+        return;
+      }
+      try {
+        await wishlistService.addToWishlist(product._id || product.id);
+        // wishlistService already dispatches 'wishlist:changed'
+      } catch (error) {
+        console.error('Failed to add to wishlist:', error);
+      }
+    };
+
     if (viewMode === 'list') {
       return (
   <Link to={`/product/${(product._id || product.id)}`} className="flex flex-col sm:flex-row gap-3 sm:gap-4 p-3 sm:p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow group block">
@@ -325,18 +409,20 @@ const ProductListingPage: React.FC = () => {
               
               <div className="flex gap-2 justify-end sm:justify-start">
                 <button 
-                  onClick={(e) => e.preventDefault()}
-                  className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
+                  onClick={handleAddToWishlist}
+                  className={`p-2 rounded-full transition-colors ${inWishlist ? 'bg-red-100 text-red-600' : 'bg-gray-100 hover:bg-gray-200'}`}
+                  title={inWishlist ? 'In Wishlist' : 'Add to Wishlist'}
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4" fill={inWishlist ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                   </svg>
                 </button>
                 <button 
-                  onClick={(e) => e.preventDefault()}
-                  className="px-3 sm:px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors text-sm sm:text-base"
+                  onClick={handleAddToCart}
+                  disabled={inCart}
+                  className={`px-3 sm:px-4 py-2 rounded-lg transition-colors text-sm sm:text-base ${inCart ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-black text-white hover:bg-gray-800'}`}
                 >
-                  Add to Cart
+                  {inCart ? 'In Cart' : 'Add to Cart'}
                 </button>
               </div>
             </div>
@@ -357,20 +443,22 @@ const ProductListingPage: React.FC = () => {
           />
           <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
             <button 
-              onClick={(e) => e.preventDefault()}
-              className="p-1.5 sm:p-2 bg-white rounded-full shadow-md hover:bg-gray-50"
+              onClick={handleAddToWishlist}
+              className={`p-1.5 sm:p-2 rounded-full shadow-md ${inWishlist ? 'bg-red-100 text-red-600' : 'bg-white hover:bg-gray-50'}`}
+              title={inWishlist ? 'In Wishlist' : 'Add to Wishlist'}
             >
-              <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3 h-3 sm:w-4 sm:h-4" fill={inWishlist ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
               </svg>
             </button>
           </div>
           <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
             <button 
-              onClick={(e) => e.preventDefault()}
-              className="w-full py-1.5 sm:py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors text-xs sm:text-sm"
+              onClick={handleAddToCart}
+              disabled={inCart}
+              className={`w-full py-1.5 sm:py-2 rounded-lg transition-colors text-xs sm:text-sm ${inCart ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-black text-white hover:bg-gray-800'}`}
             >
-              Add to Cart
+              {inCart ? 'In Cart' : 'Add to Cart'}
             </button>
           </div>
         </div>
@@ -416,7 +504,7 @@ const ProductListingPage: React.FC = () => {
           {categories.map((category) => (
             <button
               key={category.name}
-              onClick={() => setSelectedCategory(category.name)}
+              onClick={() => handleSelectCategory(category.name)}
               className={`w-full flex items-center justify-between p-2 text-left rounded transition-colors ${
                 selectedCategory === category.name
                   ? 'bg-gray-100 text-black font-medium'

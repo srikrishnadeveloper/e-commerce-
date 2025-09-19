@@ -6,6 +6,7 @@ import wishlistService from '../services/wishlistService';
 import cartService from '../services/cartService';
 import LoginModal from './LoginModal.tsx';
 import RegisterModal from './RegisterModal.tsx';
+import SearchSidebar from './SearchSidebar';
 
 const Navbar: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -16,6 +17,7 @@ const Navbar: React.FC = () => {
   const [cartCount, setCartCount] = useState(0);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const sidebarRef = useRef<HTMLDivElement | null>(null);
   const toggleButtonRef = useRef<HTMLButtonElement | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -46,15 +48,21 @@ const Navbar: React.FC = () => {
         // Load wishlist and cart counts
         loadWishlistCount();
         loadCartCount();
+      } else {
+        // Reset counts and user on logout
+        setUser(null);
+        setWishlistCount(0);
+        setCartCount(0);
       }
     };
 
     const loadWishlistCount = async () => {
       try {
         const response = await wishlistService.getWishlist();
-        if (response.success) {
-          setWishlistCount(response.count || 0);
-        }
+        const count =
+          (typeof response?.count === 'number' && response.count) ??
+          (Array.isArray(response?.data) ? response.data.length : (Array.isArray(response) ? response.length : 0));
+        setWishlistCount(count || 0);
       } catch (error) {
         console.error('Failed to load wishlist count:', error);
       }
@@ -80,6 +88,19 @@ const Navbar: React.FC = () => {
     // Also listen to a custom login event to update navbar immediately after login
     const handleAuthEvent = () => checkAuth();
     window.addEventListener('auth:changed', handleAuthEvent);
+    // Listen for wishlist/cart changes to refresh counts
+    const handleWishlistChanged = () => {
+      if (authService.isAuthenticated()) {
+        loadWishlistCount();
+      }
+    };
+    const handleCartChanged = () => {
+      if (authService.isAuthenticated()) {
+        loadCartCount();
+      }
+    };
+    window.addEventListener('wishlist:changed', handleWishlistChanged);
+    window.addEventListener('cart:changed', handleCartChanged);
     // Listen for global requests to open auth modals
     const openLoginHandler = () => {
       setShowRegisterModal(false);
@@ -96,6 +117,8 @@ const Navbar: React.FC = () => {
       window.removeEventListener('auth:changed', handleAuthEvent);
       window.removeEventListener('auth:openLogin', openLoginHandler);
       window.removeEventListener('auth:openRegister', openRegisterHandler);
+      window.removeEventListener('wishlist:changed', handleWishlistChanged);
+      window.removeEventListener('cart:changed', handleCartChanged);
     };
   }, []);
 
@@ -249,6 +272,7 @@ const Navbar: React.FC = () => {
           <button 
             className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-full transition-colors duration-200" 
             aria-label="Search"
+            onClick={() => setIsSearchOpen(true)}
           >
             <svg 
               width="18" 
@@ -266,28 +290,53 @@ const Navbar: React.FC = () => {
             </svg>
           </button>
 
-          {/* Account Icon - Hidden on mobile */}
+          {/* Account Icon / Logout - Hidden on mobile */}
           {isAuthenticated ? (
-            <Link 
-              to="/account"
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200 hidden lg:block" 
-              aria-label="Account"
-            >
-              <svg 
-                width="20" 
-                height="20" 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth="2.5" 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                className="text-gray-700 hover:text-gray-900"
+            <div className="hidden lg:flex items-center gap-2">
+              <Link 
+                to="/account"
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200" 
+                aria-label="Account"
+                title={user?.name || 'My Account'}
               >
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                <circle cx="12" cy="7" r="4"/>
-              </svg>
-            </Link>
+                <svg 
+                  width="20" 
+                  height="20" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2.5" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  className="text-gray-700 hover:text-gray-900"
+                >
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+              </Link>
+              <button
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
+                onClick={() => authService.logout()}
+                aria-label="Logout"
+                title="Logout"
+              >
+                <svg 
+                  width="20" 
+                  height="20" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2.5" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  className="text-gray-700 hover:text-gray-900"
+                >
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                  <polyline points="16 17 21 12 16 7"/>
+                  <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+              </button>
+            </div>
           ) : (
             <button 
               className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200 hidden lg:block" 
@@ -311,29 +360,7 @@ const Navbar: React.FC = () => {
             </button>
           )}
 
-          {/* Compare Icon - Hidden on mobile and tablet */}
-          <button 
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200 hidden lg:block" 
-            aria-label="Compare"
-          >
-            <svg 
-              width="20" 
-              height="20" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="2.5" 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              className="text-gray-700 hover:text-gray-900"
-            >
-              <path d="M9 12l2 2 4-4"/>
-              <path d="M21 12c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1z"/>
-              <path d="M3 12c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1z"/>
-              <path d="M12 21c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1z"/>
-              <path d="M12 3c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1z"/>
-            </svg>
-          </button>
+          {/* Removed Compare icon button as it had no purpose */}
 
           {/* Heart Icon - Hidden on mobile */}
           {isAuthenticated ? (
@@ -593,17 +620,30 @@ const Navbar: React.FC = () => {
         <div className="border-t border-gray-200 p-4">
           {/* Login/Account Button */}
           {isAuthenticated ? (
-            <Link 
-              to="/account"
-              className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors mb-4"
-              onClick={() => setIsSidebarOpen(false)}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                <circle cx="12" cy="7" r="4"/>
-              </svg>
-              <span className="font-medium">My Account</span>
-            </Link>
+            <div className="flex flex-col gap-3 mb-4">
+              <Link 
+                to="/account"
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                onClick={() => setIsSidebarOpen(false)}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+                <span className="font-medium">My Account</span>
+              </Link>
+              <button 
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                onClick={() => { authService.logout(); setIsSidebarOpen(false); }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                  <polyline points="16 17 21 12 16 7"/>
+                  <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                <span className="font-medium">Logout</span>
+              </button>
+            </div>
           ) : (
             <button 
               className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors mb-4"
@@ -635,6 +675,9 @@ const Navbar: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Search Sidebar */}
+      <SearchSidebar isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
 
       {/* Login Modal */}
       <LoginModal
