@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Ensure no default browser spacing around the page */
+html, body {
+  margin: 0 !important;
+  padding: 0 !important;
+  background-color: white;
+}
+
 /* Line clamp utility */
 .line-clamp-1 {
   overflow: hidden;

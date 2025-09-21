@@ -1,49 +1,63 @@
-import React, { useState, useEffect } from 'react';
-import { getSiteConfig } from '../services/dataService';
-import type { SiteConfig } from '../types';
+import React, { useEffect, useRef, useState } from 'react';
+import { useAnnouncementBar } from '../hooks/useSiteConfig';
 
 const AnnouncementBar: React.FC = () => {
-  const [siteConfig, setSiteConfig] = useState<SiteConfig | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data, loading } = useAnnouncementBar();
+  // Do NOT persist dismissal so it shows again on refresh
+  const [dismissed, setDismissed] = useState<boolean>(false);
 
+  const barRef = useRef<HTMLDivElement | null>(null);
+  const isActive = data?.isActive !== false; // default to true when undefined
+  const showBar = !dismissed && isActive && !loading;
+
+  // Inform layout about the bar height so content can offset accordingly
   useEffect(() => {
-    const loadSiteConfig = async () => {
-      try {
-        const config = await getSiteConfig();
-        setSiteConfig(config);
-      } catch (error) {
-        console.error('Error loading site config:', error);
-      } finally {
-        setLoading(false);
-      }
+    const notifyHeight = () => {
+      const h = showBar ? (barRef.current?.offsetHeight || 0) : 0;
+      window.dispatchEvent(new CustomEvent('announcementbar:height', { detail: h }));
     };
-    
-    loadSiteConfig();
-  }, []);
+    notifyHeight();
+    if (showBar) {
+      window.addEventListener('resize', notifyHeight);
+    }
+    return () => {
+      window.removeEventListener('resize', notifyHeight);
+      window.dispatchEvent(new CustomEvent('announcementbar:height', { detail: 0 }));
+    };
+  }, [showBar]);
 
-  // Show loading state or nothing while config is loading
-  if (loading || !siteConfig) {
+  const handleClose = () => {
+    setDismissed(true);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('announcementbar:height', { detail: 0 }));
+    }
+  };
+
+  const announcements = (data?.announcements && data.announcements.length > 0)
+    ? data.announcements
+    : [
+        'Welcome to our store - Free shipping on orders over $50!',
+        'Summer Sale - Up to 50% off selected items!',
+        'New arrivals just landed - Shop the latest trends!'
+      ];
+
+  // After all hooks, decide to render or not
+  if (!showBar) {
     return null;
   }
-
-  const { announcementBar } = siteConfig;
-  
-  // Don't render if announcement bar is disabled or doesn't exist
-  if (!announcementBar?.isActive) {
-    return null;
-  }
-
-  const announcements = announcementBar.announcements;
 
   return (
-    <div className="w-full bg-announcement text-white h-12 flex items-center relative overflow-hidden" style={{ fontFamily: "'Albert Sans', sans-serif", color: 'white' }}>
-      
-      {/* Left gradient fade */}
-      <div className="absolute left-0 top-0 w-20 h-full bg-gradient-to-r from-announcement to-transparent z-10"></div>
-      
-      {/* Right gradient fade */}
-      <div className="absolute right-0 top-0 w-20 h-full bg-gradient-to-l from-announcement to-transparent z-10"></div>
-      
+    <div
+      ref={barRef}
+      role="region"
+      aria-label="Site announcements"
+  className="w-full bg-announcement text-white h-12 flex items-center fixed -top-px inset-x-0 z-[60] overflow-hidden relative pr-12"
+      style={{ fontFamily: "'Albert Sans', sans-serif", color: 'white' }}
+    >
+  {/* Left gradient fade */}
+  <div className="absolute left-0 top-0 w-20 h-full bg-gradient-to-r from-transparent to-announcement z-10 pointer-events-none"></div>
+  {/* Right gradient fade */}
+  <div className="absolute right-0 top-0 w-20 h-full bg-gradient-to-l from-transparent to-announcement z-10 pointer-events-none"></div>
       {/* Infinite scrolling container */}
       <div className="absolute inset-0 flex items-center">
         <div className="animate-scroll-left flex items-center space-x-16 whitespace-nowrap pl-16">
@@ -61,6 +75,16 @@ const AnnouncementBar: React.FC = () => {
           ))}
         </div>
       </div>
+
+      {/* Close (X) button */}
+      <button
+        type="button"
+        aria-label="Dismiss announcements"
+        onClick={handleClose}
+        className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center rounded hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white/60 text-white z-20"
+      >
+        <span aria-hidden="true" className="text-xl leading-none">×</span>
+      </button>
     </div>
   );
 };

@@ -6,7 +6,6 @@ import HeroCarousel from './components/HeroCarousel.tsx'
 import FeatureSection from './components/FeatureSection.tsx'
 import HotDealsSection from './components/HotDealsSection.tsx'
 import TwoBoxSection from './components/TwoBoxSection.tsx'
-import ServiceFeaturesSection from './components/ServiceFeaturesSection.tsx'
 import TestimonialSection from './components/TestimonialSection.tsx'
 import Footer from './components/Footer.tsx'
 import ContactUs from './components/ContactUs.tsx'
@@ -25,7 +24,6 @@ import authService from './services/authService'
 const HomePage: React.FC = () => (
   <>
     <HeroCarousel />
-    <ServiceFeaturesSection />
     <FeatureSection />
     <HotDealsSection />
     <TwoBoxSection />
@@ -36,6 +34,7 @@ const HomePage: React.FC = () => (
 const App: React.FC = () => {
   const [showWelcomePopup, setShowWelcomePopup] = useState(false);
   const [welcomeUsername, setWelcomeUsername] = useState('');
+  const [announcementHeight, setAnnouncementHeight] = useState<number>(0);
 
   // (Removed legacy login page redirect) Standalone /login page is removed in favor of modal
 
@@ -46,6 +45,17 @@ const App: React.FC = () => {
       window.history.replaceState(null, '', '/');
       window.dispatchEvent(new Event(path === '/signup' ? 'auth:openRegister' : 'auth:openLogin'));
     }
+  }, []);
+
+  // Adjust layout padding based on AnnouncementBar height
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const custom = e as CustomEvent<number>;
+      const h = typeof custom.detail === 'number' ? custom.detail : 0;
+      setAnnouncementHeight(h);
+    };
+    window.addEventListener('announcementbar:height', handler as EventListener);
+    return () => window.removeEventListener('announcementbar:height', handler as EventListener);
   }, []);
 
   // Listen for login events to show welcome popup (only once per user)
@@ -74,7 +84,7 @@ const App: React.FC = () => {
 
   return (
     <Router>
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-white" style={{ paddingTop: announcementHeight }}>
         <AnnouncementBar />
         <Navbar />
         <Routes>

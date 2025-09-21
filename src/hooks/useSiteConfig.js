@@ -68,26 +68,7 @@ export const useBranding = () => useSiteConfig('branding');
 export const useNavigation = () => useSiteConfig('navigation');
 export const useHomepage = () => useSiteConfig('homepage');
 export const useFooter = () => useSiteConfig('footer');
-export const useAnnouncementBar = () => {
-  const { data, loading, error, refresh } = useSiteConfig('announcementBar');
-  
-  // If there's an error, try with lowercase key
-  const { data: fallbackData, loading: fallbackLoading, error: fallbackError } = useSiteConfig('announcementbar');
-  
-  return {
-    data: data || fallbackData || {
-      isActive: true,
-      announcements: [
-        "Welcome to our store - Free shipping on orders over $50!",
-        "Summer Sale - Up to 50% off selected items!",
-        "New arrivals just landed - Shop the latest trends!"
-      ]
-    },
-    loading: loading && fallbackLoading,
-    error: error && fallbackError,
-    refresh
-  };
-};
+export const useAnnouncementBar = () => useSiteConfig('announcementbar');
 export const useHero = () => useSiteConfig('hero');
 export const useProductPages = () => useSiteConfig('productPages');
 export const useCompany = () => useSiteConfig('company');

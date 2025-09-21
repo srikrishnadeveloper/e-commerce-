@@ -216,7 +216,7 @@ const Navbar: React.FC = () => {
 
   return (
     <>
-      <nav className="w-full h-[74px] md:h-[74px] sm:h-[40px] h-[32px] bg-white flex items-center justify-between px-2 sm:px-3 md:px-6 relative z-50" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
+  <nav className="w-full h-[74px] md:h-[74px] sm:h-[40px] h-[32px] bg-white flex items-center justify-between px-2 sm:px-3 md:px-6 z-50" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
         {/* Mobile Menu Button - Only visible on small screens */}
         <button 
           className="lg:hidden p-1 sm:p-1.5 hover:bg-gray-100 rounded-full transition-colors duration-200"

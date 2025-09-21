@@ -27,8 +27,9 @@ const ServiceFeaturesSection: React.FC = () => {
 
   // Add fallback data if featuresSection doesn't exist
   const featuresSection: FeaturesSection = config.homePage?.featuresSection || {
-    title: "Our Services",
-    subtitle: "Discover what makes us special",
+    // Removed heading/subtitle content for cleaner UI
+    title: "",
+    subtitle: "",
     features: [
       {
         icon: "truck",
@@ -82,15 +83,7 @@ const ServiceFeaturesSection: React.FC = () => {
   return (
     <section className="w-full py-16 bg-white">
       <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
-            {featuresSection.title}
-          </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
-            {featuresSection.subtitle}
-          </p>
-        </div>
+        {/* Section Header removed intentionally */}
 
         {/* Mobile Carousel View */}
         <div className="block sm:hidden">

@@ -393,17 +393,44 @@ const ProductListingPage: React.FC = () => {
             </div>
             
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                <p className="text-lg sm:text-xl font-semibold text-black">${product.price}</p>
-                <div className="flex gap-1">
-                  {product.colors.map((color: Color, index: number) => (
-                    <button
-                      key={index}
-                      className={`w-4 h-4 rounded-full border ${getColorClass(color.name)} hover:scale-110 transition-transform`}
-                      title={color.name}
-                      onClick={(e) => e.preventDefault()}
-                    />
-                  ))}
+              <div className="flex flex-col gap-2">
+                {/* Price with discount */}
+                <div className="flex items-center gap-2">
+                  <span className="text-lg sm:text-xl font-semibold text-black">${product.price}</span>
+                  {product.originalPrice && product.originalPrice > product.price && (
+                    <span className="text-sm text-gray-500 line-through">${product.originalPrice}</span>
+                  )}
+                </div>
+
+                {/* Rating and Reviews */}
+                {product.rating > 0 && (
+                  <div className="flex items-center gap-2">
+                    <div className="flex">
+                      {[...Array(5)].map((_, i) => (
+                        <svg key={i} className={`w-4 h-4 ${i < Math.floor(product.rating) ? 'text-yellow-400' : 'text-gray-300'}`} fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                      ))}
+                    </div>
+                    <span className="text-sm text-gray-600">({product.reviews} reviews)</span>
+                  </div>
+                )}
+
+                {/* Stock Status and Colors */}
+                <div className="flex items-center gap-3">
+                  {!product.inStock && (
+                    <span className="text-sm text-red-600">Out of Stock</span>
+                  )}
+                  <div className="flex gap-1">
+                    {product.colors.map((color: Color, index: number) => (
+                      <button
+                        key={index}
+                        className={`w-4 h-4 rounded-full border ${getColorClass(color.name)} hover:scale-110 transition-transform`}
+                        title={color.name}
+                        onClick={(e) => e.preventDefault()}
+                      />
+                    ))}
+                  </div>
                 </div>
               </div>
               
@@ -467,8 +494,34 @@ const ProductListingPage: React.FC = () => {
           <h3 className="text-xs sm:text-sm font-medium text-black mb-1 group-hover:text-gray-700 transition-colors line-clamp-2 min-h-[2.5rem] sm:min-h-[2.8rem]">
             {product.name}
           </h3>
-          <p className="text-sm sm:text-base font-semibold text-black mb-2">${product.price}</p>
-          
+
+          {/* Price with discount */}
+          <div className="flex items-center justify-center gap-2 mb-1">
+            <span className="text-sm sm:text-base font-semibold text-black">${product.price}</span>
+            {product.originalPrice && product.originalPrice > product.price && (
+              <span className="text-xs text-gray-500 line-through">${product.originalPrice}</span>
+            )}
+          </div>
+
+          {/* Rating and Reviews */}
+          {product.rating > 0 && (
+            <div className="flex items-center justify-center gap-1 mb-1">
+              <div className="flex">
+                {[...Array(5)].map((_, i) => (
+                  <svg key={i} className={`w-3 h-3 ${i < Math.floor(product.rating) ? 'text-yellow-400' : 'text-gray-300'}`} fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                ))}
+              </div>
+              <span className="text-xs text-gray-600">({product.reviews})</span>
+            </div>
+          )}
+
+          {/* Stock Status */}
+          {!product.inStock && (
+            <div className="text-xs text-red-600 mb-1">Out of Stock</div>
+          )}
+
           {/* Color Swatches */}
           <div className="flex justify-center gap-1">
             {product.colors.slice(0, 4).map((color: Color, index: number) => (

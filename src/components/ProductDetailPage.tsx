@@ -2,11 +2,11 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Product, Color } from '../types';
 // CENTRALIZED DATA SERVICE - Single source for all product data
-import { 
-  getProductById, 
-  getRelatedProducts, 
+import {
+  getProductById,
+  getRelatedProducts,
   getSiteConfig,
-  calculateDiscountPercentage 
+  calculateDiscountPercentage
 } from '../services/dataService';
 import cartService from '../services/cartService';
 import wishlistService from '../services/wishlistService';
@@ -25,14 +25,14 @@ type TabType = 'description' | 'review' | 'shipping';
 
 // Arrow Icon Components for Carousel
 const ArrowLeftIcon: React.FC<ArrowIconProps> = ({ className }) => (
-  <svg 
-    width="16" 
-    height="16" 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2.5" 
-    strokeLinecap="round" 
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
   >
@@ -41,14 +41,14 @@ const ArrowLeftIcon: React.FC<ArrowIconProps> = ({ className }) => (
 );
 
 const ArrowRightIcon: React.FC<ArrowIconProps> = ({ className }) => (
-  <svg 
-    width="16" 
-    height="16" 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2.5" 
-    strokeLinecap="round" 
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
   >
@@ -84,7 +84,7 @@ const ProductDetailPage: React.FC = () => {
     load();
     return () => { isActive = false; };
   }, [id]);
-  
+
   const [selectedImage, setSelectedImage] = useState<number>(0);
   const [selectedColor, setSelectedColor] = useState<string>('black');
   const [selectedSize, setSelectedSize] = useState<string>('M');
@@ -93,7 +93,7 @@ const ProductDetailPage: React.FC = () => {
   const [isZoomed, setIsZoomed] = useState<boolean>(false);
   const [zoomPosition, setZoomPosition] = useState<ZoomPosition>({ x: 0, y: 0 });
   const [isDesktop, setIsDesktop] = useState<boolean>(false);
-  
+
   const imageRef = useRef<HTMLImageElement>(null);
 
   // Initialize selected options after product is loaded
@@ -109,10 +109,10 @@ const ProductDetailPage: React.FC = () => {
     const checkScreenSize = (): void => {
       setIsDesktop(window.innerWidth >= 1024);
     };
-    
+
     checkScreenSize();
     window.addEventListener('resize', checkScreenSize);
-    
+
     return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
 
@@ -254,10 +254,10 @@ const ProductDetailPage: React.FC = () => {
   // Carousel navigation handlers
   const handlePrevious = (): void => {
     if (isTransitioning) return;
-    
+
     setIsTransitioning(true);
     setCurrentIndex(prev => prev - 1);
-    
+
     setTimeout(() => {
       setIsTransitioning(false);
       // Reset position if we've scrolled too far left
@@ -269,13 +269,13 @@ const ProductDetailPage: React.FC = () => {
       });
     }, 500);
   };
-  
+
   const handleNext = (): void => {
     if (isTransitioning) return;
-    
+
     setIsTransitioning(true);
     setCurrentIndex(prev => prev + 1);
-    
+
     setTimeout(() => {
       setIsTransitioning(false);
       // Reset position if we've scrolled too far right
@@ -298,15 +298,15 @@ const ProductDetailPage: React.FC = () => {
 
   const handleMouseMove = (e: React.MouseEvent<HTMLImageElement>): void => {
     if (!imageRef.current || !isDesktop) return;
-    
+
     const rect = imageRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    
+
     // Calculate percentage position
     const xPercent = (x / rect.width) * 100;
     const yPercent = (y / rect.height) * 100;
-    
+
     setZoomPosition({ x: xPercent, y: yPercent });
   };
 
@@ -343,7 +343,7 @@ const ProductDetailPage: React.FC = () => {
               <span className="text-2xl lg:text-3xl font-bold text-black" style={{ fontFamily: "'Albert Sans', sans-serif" }}>${currentProduct.price}</span>
               <div className={`flex items-center gap-4 ${mobileInfoOpen.pricing ? '' : 'lg:flex'}`}>
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
-                  25% OFF
+                  {(currentProduct as any)?.discountPercentage || 25}% OFF
                 </span>
                 <span className="text-lg text-gray-600 line-through" style={{ fontFamily: "'Albert Sans', sans-serif" }}>${currentProduct.originalPrice}</span>
               </div>
@@ -463,7 +463,7 @@ const ProductDetailPage: React.FC = () => {
               {/* Action Buttons */}
               <div className="space-y-4">
                 <div className="flex gap-4">
-                  <button 
+                  <button
                     onClick={handleAddToCart}
                     disabled={inCart}
                     className={`flex-1 py-4 px-6 rounded-lg font-bold text-lg transition-colors ${inCart ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-black text-white hover:bg-gray-800'}`}
@@ -471,7 +471,7 @@ const ProductDetailPage: React.FC = () => {
                   >
                     {inCart ? 'In Cart' : `Add to Cart - $${(currentProduct.price * quantity).toFixed(2)}`}
                   </button>
-                  <button 
+                  <button
                     onClick={handleAddToWishlist}
                     className={`p-4 rounded-lg transition-colors ${inWishlist ? 'bg-red-100 text-red-600' : 'bg-gray-100 hover:bg-gray-200'}`}
                     title={inWishlist ? 'In Wishlist' : 'Add to Wishlist'}
@@ -618,67 +618,161 @@ const ProductDetailPage: React.FC = () => {
           {/* Tab Content */}
           <div className="min-h-[300px] lg:min-h-[400px]" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
             {activeTab === 'description' && (
-              <div className="grid gap-6 lg:gap-8 lg:grid-cols-2">
-                <div>
-                  <h3 className="text-lg lg:text-xl font-bold text-black mb-4 lg:mb-6" style={{ fontFamily: "'Albert Sans', sans-serif" }}>Features</h3>
+              <div className="space-y-8">
+                {/* Product Description */}
+                {currentProduct.description && (
+                  <div>
+                    <h3 className="text-lg lg:text-xl font-bold text-black mb-4 lg:mb-6" style={{ fontFamily: "'Albert Sans', sans-serif" }}>Description</h3>
+                    <p className="text-gray-700 text-sm lg:text-base leading-relaxed">{currentProduct.description}</p>
+                  </div>
+                )}
+
+                <div className="grid gap-6 lg:gap-8 lg:grid-cols-2">
+                  <div>
+                    <h3 className="text-lg lg:text-xl font-bold text-black mb-4 lg:mb-6" style={{ fontFamily: "'Albert Sans', sans-serif" }}>Features</h3>
                   <ul className="space-y-3 text-gray-700 text-sm lg:text-base">
-                    <li className="flex items-start gap-3">
-                      <span className="text-black mt-1">•</span>
-                      <span>Active Noise Cancellation technology</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <span className="text-black mt-1">•</span>
-                      <span>Premium leather headband and ear cushions</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <span className="text-black mt-1">•</span>
-                      <span>40mm custom-tuned drivers</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <span className="text-black mt-1">•</span>
-                      <span>30-hour battery life with ANC on</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <span className="text-black mt-1">•</span>
-                      <span>Quick charge: 5 min = 3 hours playback</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <span className="text-black mt-1">•</span>
-                      <span>Multi-device connectivity</span>
-                    </li>
+                    {currentProduct.features && currentProduct.features.length > 0 ? (
+                      currentProduct.features.map((feature, index) => (
+                        <li key={index} className="flex items-start gap-3">
+                          <span className="text-black mt-1">•</span>
+                          <span>{feature}</span>
+                        </li>
+                      ))
+                    ) : (
+                      <>
+                        {/* Dynamic fallback features based on product category/tags */}
+                        <li className="flex items-start gap-3">
+                          <span className="text-black mt-1">•</span>
+                          <span>High-quality construction and materials</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <span className="text-black mt-1">•</span>
+                          <span>Designed for durability and performance</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <span className="text-black mt-1">•</span>
+                          <span>Easy to use and maintain</span>
+                        </li>
+                        {currentProduct.tags && currentProduct.tags.includes('electronics') && (
+                          <>
+                            <li className="flex items-start gap-3">
+                              <span className="text-black mt-1">•</span>
+                              <span>Advanced technology integration</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                              <span className="text-black mt-1">•</span>
+                              <span>Energy efficient operation</span>
+                            </li>
+                          </>
+                        )}
+                        {currentProduct.tags && currentProduct.tags.includes('clothing') && (
+                          <>
+                            <li className="flex items-start gap-3">
+                              <span className="text-black mt-1">•</span>
+                              <span>Comfortable fit and feel</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                              <span className="text-black mt-1">•</span>
+                              <span>Stylish and versatile design</span>
+                            </li>
+                          </>
+                        )}
+                        <li className="flex items-start gap-3">
+                          <span className="text-black mt-1">•</span>
+                          <span>Excellent value for money</span>
+                        </li>
+                      </>
+                    )}
                   </ul>
                 </div>
                 <div>
-                  <h3 className="text-lg lg:text-xl font-bold text-black mb-4 lg:mb-6" style={{ fontFamily: "'Albert Sans', sans-serif" }}>Materials & Care</h3>
+                  <h3 className="text-lg lg:text-xl font-bold text-black mb-4 lg:mb-6" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
+                    {currentProduct.specifications && Object.keys(currentProduct.specifications).length > 0 ? 'Specifications' : 'Materials & Care'}
+                  </h3>
                   <ul className="space-y-3 text-gray-700 mb-8 text-sm lg:text-base">
-                    <li className="flex items-start gap-3">
-                      <span className="text-black mt-1">•</span>
-                      <span>Premium aluminum and leather construction</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <span className="text-black mt-1">•</span>
-                      <span>Memory foam ear cushions</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <span className="text-black mt-1">•</span>
-                      <span>Tangle-free cable included</span>
-                    </li>
+                    {currentProduct.specifications && Object.keys(currentProduct.specifications).length > 0 ? (
+                      Object.entries(currentProduct.specifications).map(([key, value]) => (
+                        <li key={key} className="flex items-start gap-3">
+                          <span className="text-black mt-1">•</span>
+                          <span><strong>{key}:</strong> {value}</span>
+                        </li>
+                      ))
+                    ) : (
+                      <>
+                        {/* Dynamic fallback specifications based on product data */}
+                        {currentProduct.tags && currentProduct.tags.length > 0 && (
+                          <li className="flex items-start gap-3">
+                            <span className="text-black mt-1">•</span>
+                            <span><strong>Category:</strong> {currentProduct.tags.join(', ')}</span>
+                          </li>
+                        )}
+                        <li className="flex items-start gap-3">
+                          <span className="text-black mt-1">•</span>
+                          <span><strong>Quality:</strong> Premium materials and construction</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <span className="text-black mt-1">•</span>
+                          <span><strong>Warranty:</strong> Manufacturer warranty included</span>
+                        </li>
+                        {currentProduct.inStock !== undefined && (
+                          <li className="flex items-start gap-3">
+                            <span className="text-black mt-1">•</span>
+                            <span><strong>Availability:</strong> {currentProduct.inStock ? 'In Stock' : 'Out of Stock'}</span>
+                          </li>
+                        )}
+                      </>
+                    )}
                   </ul>
+                  {/* Dynamic Care Instructions based on product category/tags */}
                   <div className="flex items-center gap-4">
-                    <span className="font-semibold text-black" style={{ fontFamily: "'Albert Sans', sans-serif" }}>Care Instructions:</span>
+                    <span className="font-semibold text-black" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
+                      {currentProduct.tags && currentProduct.tags.includes('electronics') ? 'Care Instructions:' :
+                       currentProduct.tags && currentProduct.tags.includes('clothing') ? 'Washing Instructions:' :
+                       'Care Instructions:'}
+                    </span>
                     <div className="flex gap-3">
-                      <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-lg" title="Wipe clean">
-                        🧽
-                      </div>
-                      <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-lg" title="Dry storage">
-                        🌡️
-                      </div>
-                      <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-lg" title="Handle with care">
-                        ⚠️
-                      </div>
+                      {/* Dynamic care icons based on product type */}
+                      {currentProduct.tags && currentProduct.tags.includes('electronics') ? (
+                        <>
+                          <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-lg" title="Keep dry">
+                            💧
+                          </div>
+                          <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-lg" title="Handle with care">
+                            ⚠️
+                          </div>
+                          <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-lg" title="Store safely">
+                            📦
+                          </div>
+                        </>
+                      ) : currentProduct.tags && currentProduct.tags.includes('clothing') ? (
+                        <>
+                          <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-lg" title="Machine wash">
+                            🌊
+                          </div>
+                          <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-lg" title="Tumble dry">
+                            🌡️
+                          </div>
+                          <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-lg" title="Iron if needed">
+                            👕
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-lg" title="Wipe clean">
+                            🧽
+                          </div>
+                          <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-lg" title="Dry storage">
+                            🌡️
+                          </div>
+                          <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-lg" title="Handle with care">
+                            ⚠️
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
+              </div>
               </div>
             )}
 
@@ -686,26 +780,36 @@ const ProductDetailPage: React.FC = () => {
               <div className="space-y-8">
                 <div className="flex items-center gap-6">
                   <div className="text-center">
-                    <div className="text-4xl font-bold text-black mb-2">4.8</div>
+                    <div className="text-4xl font-bold text-black mb-2">{currentProduct.rating ? currentProduct.rating.toFixed(1) : '4.8'}</div>
                     <div className="flex items-center gap-1 mb-2">
                       {[...Array(5)].map((_, i) => (
-                        <svg key={i} className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                        <svg key={i} className={`w-5 h-5 ${i < Math.floor(currentProduct.rating || 4.8) ? 'text-yellow-400' : 'text-gray-300'}`} fill="currentColor" viewBox="0 0 20 20">
                           <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                         </svg>
                       ))}
                     </div>
-                    <div className="text-sm text-gray-600">Based on 124 reviews</div>
+                    <div className="text-sm text-gray-600">Based on {currentProduct.reviews || 124} reviews</div>
                   </div>
                   <div className="flex-1 space-y-2">
-                    {[5,4,3,2,1].map(stars => (
-                      <div key={stars} className="flex items-center gap-3">
-                        <span className="text-sm w-3">{stars}</span>
-                        <div className="flex-1 bg-gray-200 rounded-full h-2">
-                          <div className="bg-yellow-400 h-2 rounded-full" style={{ width: `${stars === 5 ? 70 : stars === 4 ? 20 : stars === 3 ? 5 : stars === 2 ? 3 : 2}%` }}></div>
+                    {[5,4,3,2,1].map(stars => {
+                      // Calculate percentage based on current rating (simplified distribution)
+                      const rating = currentProduct.rating || 4.8;
+                      const reviews = currentProduct.reviews || 124;
+                      const percentage = stars === Math.floor(rating) ?
+                        Math.max(60, (rating / 5) * 100) :
+                        stars > rating ? Math.max(2, 20 - Math.abs(stars - rating) * 5) : Math.max(5, 20 - Math.abs(stars - rating) * 5);
+                      const count = Math.floor((percentage / 100) * reviews);
+
+                      return (
+                        <div key={stars} className="flex items-center gap-3">
+                          <span className="text-sm w-3">{stars}</span>
+                          <div className="flex-1 bg-gray-200 rounded-full h-2">
+                            <div className="bg-yellow-400 h-2 rounded-full" style={{ width: `${percentage}%` }}></div>
+                          </div>
+                          <span className="text-sm text-gray-600 w-8">{count}</span>
                         </div>
-                        <span className="text-sm text-gray-600 w-8">{stars === 5 ? 87 : stars === 4 ? 25 : stars === 3 ? 6 : stars === 2 ? 4 : 2}</span>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
                 <div className="space-y-6">
@@ -717,14 +821,18 @@ const ProductDetailPage: React.FC = () => {
                         <div className="text-sm text-gray-600">Verified Purchase</div>
                       </div>
                       <div className="flex items-center gap-1 ml-auto">
-                        {[...Array(5)].map((_, i) => (
+                        {[...Array(Math.floor(currentProduct.rating || 4.8))].map((_, i) => (
                           <svg key={i} className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                           </svg>
                         ))}
                       </div>
                     </div>
-                    <p className="text-gray-700">Amazing sound quality and comfortable fit. The noise cancellation works perfectly for my daily commute. Highly recommended!</p>
+                    <p className="text-gray-700">
+                      {currentProduct.rating >= 4 ? 'Amazing sound quality and comfortable fit. The noise cancellation works perfectly for my daily commute. Highly recommended!' :
+                       currentProduct.rating >= 3 ? 'Good product overall. Works as expected and decent value for the price.' :
+                       'Average product. Does the job but could be better.'}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -736,27 +844,42 @@ const ProductDetailPage: React.FC = () => {
                   <h3 className="text-lg lg:text-xl font-bold text-black mb-4 lg:mb-6" style={{ fontFamily: "'Albert Sans', sans-serif" }}>Shipping Information</h3>
                   <div className="grid md:grid-cols-2 gap-8">
                     <div className="space-y-4">
+                      {/* Dynamic Standard Shipping */}
                       <div>
                         <h4 className="font-semibold text-black mb-2">Standard Shipping</h4>
-                        <p className="text-gray-700">5-7 business days - FREE on orders over $50</p>
+                        <p className="text-gray-700">
+                          {(currentProduct as any)?.shipping?.standard?.days || "5-7 business days"} - {(currentProduct as any)?.shipping?.standard?.price || "FREE on orders over $50"}
+                        </p>
                       </div>
+                      {/* Dynamic Express Shipping */}
                       <div>
                         <h4 className="font-semibold text-black mb-2">Express Shipping</h4>
-                        <p className="text-gray-700">2-3 business days - $9.99</p>
+                        <p className="text-gray-700">
+                          {(currentProduct as any)?.shipping?.express?.days || "2-3 business days"} - {(currentProduct as any)?.shipping?.express?.price || "$9.99"}
+                        </p>
                       </div>
+                      {/* Dynamic Overnight Shipping */}
                       <div>
                         <h4 className="font-semibold text-black mb-2">Overnight Shipping</h4>
-                        <p className="text-gray-700">1 business day - $19.99</p>
+                        <p className="text-gray-700">
+                          {(currentProduct as any)?.shipping?.overnight?.days || "1 business day"} - {(currentProduct as any)?.shipping?.overnight?.price || "$19.99"}
+                        </p>
                       </div>
                     </div>
                     <div className="space-y-4">
+                      {/* Dynamic International Shipping */}
                       <div>
                         <h4 className="font-semibold text-black mb-2">International Shipping</h4>
-                        <p className="text-gray-700">12-26 business days depending on location</p>
+                        <p className="text-gray-700">
+                          {(currentProduct as any)?.shipping?.international?.days || "12-25 business days depending on location"}
+                        </p>
                       </div>
+                      {/* Dynamic Order Processing */}
                       <div>
                         <h4 className="font-semibold text-black mb-2">Order Processing</h4>
-                        <p className="text-gray-700">Orders are processed within 1-2 business days</p>
+                        <p className="text-gray-700">
+                          {(currentProduct as any)?.shipping?.international?.processing || "Orders are processed within 1-2 business days"}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -771,7 +894,7 @@ const ProductDetailPage: React.FC = () => {
         {/* Related Products Carousel */}
         <div className="border-t border-gray-200 pt-16 mt-16">
           <h2 className="text-2xl font-bold text-black mb-10" style={{ fontFamily: "'Albert Sans', sans-serif" }}>People Also Bought</h2>
-          
+
           {/* Desktop Carousel */}
           <div className="hidden md:block relative">
             {/* Left Arrow */}
@@ -783,7 +906,7 @@ const ProductDetailPage: React.FC = () => {
             >
               <ArrowLeftIcon className="w-5 h-5" />
             </button>
-            
+
             {/* Right Arrow */}
             <button
               onClick={handleNext}
@@ -793,12 +916,12 @@ const ProductDetailPage: React.FC = () => {
             >
               <ArrowRightIcon className="w-5 h-5" />
             </button>
-            
+
             {/* Carousel Container - Responsive for different screen sizes */}
             <div className="overflow-hidden mx-16">
               {/* Large Desktop: 4 cards (1280px+) */}
               <div className="hidden xl:block">
-                <div 
+                <div
                   className={`flex ${isTransitioning ? 'transition-transform duration-500 ease-in-out' : ''}`}
                   style={{
                     transform: `translateX(calc(-${currentIndex} * (25% + 0.375rem)))`, // Move by card width + gap
@@ -859,10 +982,10 @@ const ProductDetailPage: React.FC = () => {
                   ))}
                 </div>
               </div>
-              
+
               {/* Medium Desktop: 3 cards (1024px - 1279px) */}
               <div className="hidden lg:block xl:hidden">
-                <div 
+                <div
                   className={`flex ${isTransitioning ? 'transition-transform duration-500 ease-in-out' : ''}`}
                   style={{
                     transform: `translateX(calc(-${currentIndex} * (33.333% + 0.5rem)))`, // Move by card width + gap
@@ -923,10 +1046,10 @@ const ProductDetailPage: React.FC = () => {
                   ))}
                 </div>
               </div>
-              
+
               {/* Small Desktop: 2 cards (768px - 1023px) */}
               <div className="hidden md:block lg:hidden">
-                <div 
+                <div
                   className={`flex ${isTransitioning ? 'transition-transform duration-500 ease-in-out' : ''}`}
                   style={{
                     transform: `translateX(calc(-${currentIndex} * (50% + 0.75rem)))`, // Move by card width + gap
@@ -989,7 +1112,7 @@ const ProductDetailPage: React.FC = () => {
               </div>
             </div>
           </div>
-          
+
           {/* Mobile Grid - Related products simplified spacing */}
           <div className="block md:hidden">
             <div className="grid grid-cols-2 gap-4">
