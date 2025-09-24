@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-route
 import AnnouncementBar from './components/AnnouncementBar.tsx'
 import Navbar from './components/Navbar.tsx'
 import HeroCarousel from './components/HeroCarousel.tsx'
-import FeatureSection from './components/FeatureSection.tsx'
 import HotDealsSection from './components/HotDealsSection.tsx'
 import TwoBoxSection from './components/TwoBoxSection.tsx'
 import TestimonialSection from './components/TestimonialSection.tsx'
@@ -24,7 +23,6 @@ import authService from './services/authService'
 const HomePage: React.FC = () => (
   <>
     <HeroCarousel />
-    <FeatureSection />
     <HotDealsSection />
     <TwoBoxSection />
     <TestimonialSection />
@@ -84,7 +82,7 @@ const App: React.FC = () => {
 
   return (
     <Router>
-      <div className="min-h-screen bg-white" style={{ paddingTop: announcementHeight }}>
+      <div className="min-h-screen bg-white">
         <AnnouncementBar />
         <Navbar />
         <Routes>

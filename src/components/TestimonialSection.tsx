@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { getSiteConfig } from '../services/dataService';
-import { SiteConfig } from '../types';
+import siteConfigService from '../services/siteConfigService';
+import type { SiteConfig, TestimonialSection as TestimonialSectionType } from '../types';
 
 interface Testimonial {
   name: string;
@@ -10,28 +10,56 @@ interface Testimonial {
 }
 
 const TestimonialSection: React.FC = () => {
-  const [config, setConfig] = useState<SiteConfig | null>(null);
+  const [config, setConfig] = useState<any | null>(null);
   const [currentTestimonial, setCurrentTestimonial] = useState<number>(0);
 
   useEffect(() => {
-    // Load site configuration using the proper API service
-    const loadSiteConfig = async () => {
+    // Load homepage configuration using the siteConfigService
+    const loadHomepageConfig = async () => {
       try {
-        const siteConfig = await getSiteConfig();
-        setConfig(siteConfig);
+        const homepageConfig = await siteConfigService.getConfig('homepage');
+        setConfig(homepageConfig);
       } catch (error) {
-        console.error('Error loading site config:', error);
+        console.error('Error loading homepage config:', error);
+        // Set fallback config on error
+        setConfig({
+          testimonialSection: {
+            title: "Customer Testimonials",
+            navigationLabels: { previous: "Previous", next: "Next" },
+            testimonials: [
+              {
+                name: "John Doe",
+                role: "Customer",
+                text: "Great service and fast delivery!",
+                rating: 5
+              },
+              {
+                name: "Jane Smith",
+                role: "Customer",
+                text: "Excellent quality products.",
+                rating: 5
+              },
+              {
+                name: "Mike Johnson",
+                role: "Customer",
+                text: "Highly recommended!",
+                rating: 5
+              }
+            ]
+          }
+        });
       }
     };
-    
-    loadSiteConfig();
+
+    loadHomepageConfig();
   }, []);
 
   if (!config) return <div>Loading...</div>;
 
-  // Add fallback data if testimonialSection doesn't exist
-  const testimonialSection = config.homePage?.testimonialSection || {
+  // Get testimonialSection from config with fallback
+  const testimonialSection: TestimonialSectionType = config.testimonialSection || {
     title: "Customer Testimonials",
+    navigationLabels: { previous: "Previous", next: "Next" },
     testimonials: [
       {
         name: "John Doe",
@@ -54,6 +82,11 @@ const TestimonialSection: React.FC = () => {
     ]
   };
   
+  // Check if section is disabled by admin
+  if (testimonialSection.enabled === false) {
+    return null;
+  }
+
   const testimonials = testimonialSection.testimonials || [];
 
   const nextTestimonial = (): void => {
@@ -135,17 +168,19 @@ const TestimonialSection: React.FC = () => {
                   <button
                     onClick={prevTestimonial}
                     className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors duration-200"
-                    aria-label="Previous testimonial"
+                    aria-label={testimonialSection.navigationLabels?.previous || "Previous testimonial"}
+                    title={testimonialSection.navigationLabels?.previous || "Previous"}
                   >
                     <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
                   </button>
-                  
+
                   <button
                     onClick={nextTestimonial}
                     className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors duration-200"
-                    aria-label="Next testimonial"
+                    aria-label={testimonialSection.navigationLabels?.next || "Next testimonial"}
+                    title={testimonialSection.navigationLabels?.next || "Next"}
                   >
                     <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

@@ -12,18 +12,49 @@ export default function FeatureSection(): React.ReactElement {
         setConfig(siteConfig);
       } catch (error) {
         console.error('Error loading site config:', error);
+        // Set fallback config on error
+        setConfig({
+          homePage: {
+            featuresSection: {
+              title: "Featured Collections",
+              subtitle: "Discover our latest collections",
+              enabled: true,
+              features: [
+                {
+                  icon: "feature1",
+                  title: "Electronics",
+                  description: "Latest gadgets and technology",
+                  image: "/images/IMAGE_11.png"
+                },
+                {
+                  icon: "feature2",
+                  title: "Fashion",
+                  description: "Trendy clothing and accessories",
+                  image: "/images/IMAGE_11.png"
+                },
+                {
+                  icon: "feature3",
+                  title: "Home & Living",
+                  description: "Comfort and style for your home",
+                  image: "/images/IMAGE_11.png"
+                }
+              ]
+            }
+          }
+        } as SiteConfig);
       }
     };
-    
+
     loadSiteConfig();
   }, []);
 
   if (!config) return <div>Loading...</div>;
 
-  // Add fallback data if featuresSection doesn't exist
+  // Get featuresSection from config with fallback
   const featuresSection: FeaturesSection = config.homePage?.featuresSection || {
     title: "Featured Collections",
     subtitle: "Discover our latest collections",
+    enabled: true,
     features: [
       {
         icon: "feature1",
@@ -46,16 +77,43 @@ export default function FeatureSection(): React.ReactElement {
     ]
   };
 
+  // Check if section is disabled by admin
+  if (featuresSection.enabled === false) {
+    return null;
+  }
+
   return (
     <section className="pt-8 pb-20 bg-white">
       <div className="max-w-[1800px] mx-auto px-2 sm:px-4 lg:px-6">
+        {/* Section Header - Only show if admin has configured title/subtitle */}
+        {(featuresSection.title || featuresSection.subtitle) && (
+          <div className="text-center mb-12">
+            {featuresSection.title && (
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+                {featuresSection.title}
+              </h2>
+            )}
+            {featuresSection.subtitle && (
+              <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto">
+                {featuresSection.subtitle}
+              </p>
+            )}
+          </div>
+        )}
+
         <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
           {(featuresSection.features || []).slice(0, 3).map((feature, idx) => (
             <div
               key={idx}
               className="flex-1 relative rounded-sm overflow-hidden shadow-xl flex items-end min-h-[500px] sm:min-h-[550px] lg:min-h-[600px] bg-center bg-cover group cursor-pointer transition-transform duration-300 hover:scale-[1.02]"
               style={{
-                backgroundImage: `url(${feature.image || '/images/IMAGE_11.png'})`,
+                backgroundImage: `url(${
+                  feature.image
+                    ? (feature.image.startsWith('/siteconfig-api/') || feature.image.startsWith('http')
+                        ? feature.image
+                        : `/siteconfig-api/images/${feature.image}`)
+                    : '/images/IMAGE_11.png'
+                })`,
                 fontFamily: "'Albert Sans', sans-serif",
               }}
             >

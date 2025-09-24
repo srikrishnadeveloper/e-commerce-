@@ -43,6 +43,12 @@ html, body {
   }
 }
 
+/* Remove tiny white gap above fixed AnnouncementBar without changing JSX */
+[role="region"][aria-label="Site announcements"].-top-px {
+  top: 0 !important;
+}
+
+
 .animate-fade-in-up {
   animation: fadeInUp 0.7s ease-out forwards;
 }

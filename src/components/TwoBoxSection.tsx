@@ -15,6 +15,33 @@ const TwoBoxSection: React.FC = () => {
         }
       } catch (error) {
         console.error('Error loading site config:', error);
+        // Set fallback config on error
+        setFeaturedCollections({
+          title: 'Featured Collections',
+          enabled: true,
+          collections: [
+            {
+              id: 1,
+              title: 'Electronics',
+              subtitle: 'Latest Tech',
+              description: 'Discover the latest in technology',
+              image: '/images/IMAGE_11.png',
+              buttonText: 'Shop Now',
+              buttonLink: '/collections/electronics',
+              gradient: 'from-blue-500 to-purple-600'
+            },
+            {
+              id: 2,
+              title: 'Fashion',
+              subtitle: 'Trendy Styles',
+              description: 'Stay fashionable with our latest collection',
+              image: '/images/IMAGE_11.png',
+              buttonText: 'Explore',
+              buttonLink: '/collections/fashion',
+              gradient: 'from-pink-500 to-red-600'
+            }
+          ]
+        });
       }
     };
 
@@ -22,6 +49,11 @@ const TwoBoxSection: React.FC = () => {
   }, []);
 
   if (!featuredCollections) return <div>Loading...</div>;
+
+  // Check if section is disabled by admin
+  if (featuredCollections.enabled === false) {
+    return null;
+  }
 
   const handleDotClick = (index: number): void => {
     setCurrentSlide(index);

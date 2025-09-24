@@ -323,7 +323,16 @@ const HotDealsSection: React.FC = () => {
           getDealsProducts()
         ]);
         setHomepage(homepageConfig);
+
+        // Check if hot deals section is disabled
+        if (homepageConfig?.hotDealsSection?.enabled === false) {
+          setProducts([]);
+          setIsLoading(false);
+          return;
+        }
+
         let deals = Array.isArray(dealsProducts) ? dealsProducts : [];
+
         // Fallback: if API doesn't support onSale filter, derive deals locally
         if (!deals.length) {
           const all = await getProducts();
@@ -335,6 +344,13 @@ const HotDealsSection: React.FC = () => {
             return bd - ad;
           });
         }
+
+        // If specific products are assigned in admin, filter to only those
+        if (homepageConfig?.hotDealsSection?.productIds?.length > 0) {
+          const assignedIds = homepageConfig.hotDealsSection.productIds;
+          deals = deals.filter(p => assignedIds.includes((p as any)._id || (p as any).id));
+        }
+
         setProducts(deals);
         setIsLoading(false);
       } catch (error) {
@@ -342,7 +358,7 @@ const HotDealsSection: React.FC = () => {
         setIsLoading(false);
       }
     };
-    
+
     loadData();
   }, []);
 
@@ -415,6 +431,12 @@ const HotDealsSection: React.FC = () => {
 
   if (isLoading) return <div className="py-16 text-center">Loading...</div>;
   if (!homepage) return <div className="py-16 text-center">Loading...</div>;
+
+  // Check if section is disabled
+  if (homepage?.hotDealsSection?.enabled === false) {
+    return null;
+  }
+
   if (!products.length) return null; // Don't show section if no deals
 
   const hotDealsSection = homepage?.hotDealsSection || { title: 'Hot Deals', subtitle: '', viewAllText: 'View All', viewAllLink: '/products' };
