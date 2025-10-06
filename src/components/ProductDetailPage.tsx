@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Product, Color } from '../types';
 // CENTRALIZED DATA SERVICE - Single source for all product data
 import {
@@ -58,6 +58,7 @@ const ArrowRightIcon: React.FC<ArrowIconProps> = ({ className }) => (
 
 const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
 
   // Async-loaded data
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
@@ -154,6 +155,22 @@ const ProductDetailPage: React.FC = () => {
     } catch (error) {
       console.error('Failed to add to wishlist:', error);
     }
+  };
+
+  const handleBuyNow = () => {
+    if (!currentProduct) return;
+    if (!authService.isAuthenticated()) {
+      window.dispatchEvent(new Event('auth:openLogin'));
+      return;
+    }
+
+    // Navigate to billing page with product and quantity
+    navigate('/billing', {
+      state: {
+        product: currentProduct,
+        quantity: quantity
+      }
+    });
   };
 
   // Visual state: in cart / in wishlist
@@ -481,10 +498,18 @@ const ProductDetailPage: React.FC = () => {
                     </svg>
                   </button>
                 </div>
-                <button className="w-full bg-yellow-400 text-black py-4 px-6 rounded-lg font-bold text-lg hover:bg-yellow-500 transition-colors" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
-                  Buy with PayPal
+                <button
+                  onClick={handleBuyNow}
+                  className="w-full bg-yellow-400 text-black py-4 px-6 rounded-lg font-bold text-lg hover:bg-yellow-500 transition-colors"
+                  style={{ fontFamily: "'Albert Sans', sans-serif" }}
+                >
+                  Buy Now
                 </button>
-                <button className="text-gray-600 hover:text-black transition-colors text-sm" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
+                <button
+                  onClick={handleBuyNow}
+                  className="text-gray-600 hover:text-black transition-colors text-sm"
+                  style={{ fontFamily: "'Albert Sans', sans-serif" }}
+                >
                   More payment options
                 </button>
               </div>
@@ -507,7 +532,14 @@ const ProductDetailPage: React.FC = () => {
                   <img
                     src={image}
                     alt={`Product view ${index + 1}`}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full max-w-full max-h-full object-cover"
+                    style={{
+                      minHeight: '100%',
+                      maxHeight: '100%',
+                      minWidth: '100%',
+                      maxWidth: '100%',
+                      objectFit: 'cover'
+                    }}
                     loading="lazy"
                   />
                 </button>
@@ -521,7 +553,14 @@ const ProductDetailPage: React.FC = () => {
                   ref={imageRef}
                   src={currentProduct.images[selectedImage]}
                   alt={currentProduct.name}
-                  className={`w-full h-full object-cover ${isDesktop ? 'cursor-crosshair' : ''}`}
+                  className={`w-full h-full max-w-full max-h-full object-cover ${isDesktop ? 'cursor-crosshair' : ''}`}
+                  style={{
+                    minHeight: '100%',
+                    maxHeight: '100%',
+                    minWidth: '100%',
+                    maxWidth: '100%',
+                    objectFit: 'cover'
+                  }}
                   onMouseMove={isDesktop ? handleMouseMove : undefined}
                   onMouseEnter={isDesktop ? handleMouseEnter : undefined}
                   onMouseLeave={isDesktop ? handleMouseLeave : undefined}
@@ -934,7 +973,14 @@ const ProductDetailPage: React.FC = () => {
                         <img
                           src={product.images[0]}
                           alt={product.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          className="w-full h-full max-w-full max-h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          style={{
+                            minHeight: '100%',
+                            maxHeight: '100%',
+                            minWidth: '100%',
+                            maxWidth: '100%',
+                            objectFit: 'cover'
+                          }}
                         />
                         <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
@@ -998,7 +1044,14 @@ const ProductDetailPage: React.FC = () => {
                         <img
                           src={product.images[0]}
                           alt={product.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          className="w-full h-full max-w-full max-h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          style={{
+                            minHeight: '100%',
+                            maxHeight: '100%',
+                            minWidth: '100%',
+                            maxWidth: '100%',
+                            objectFit: 'cover'
+                          }}
                         />
                         <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
@@ -1062,7 +1115,14 @@ const ProductDetailPage: React.FC = () => {
                         <img
                           src={product.images[0]}
                           alt={product.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          className="w-full h-full max-w-full max-h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          style={{
+                            minHeight: '100%',
+                            maxHeight: '100%',
+                            minWidth: '100%',
+                            maxWidth: '100%',
+                            objectFit: 'cover'
+                          }}
                         />
                         <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
@@ -1094,8 +1154,8 @@ const ProductDetailPage: React.FC = () => {
                       </div>
                       <h3 className="font-semibold text-black mb-2" style={{ fontFamily: "'Albert Sans', sans-serif" }}>{product.name}</h3>
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="font-bold text-black" style={{ fontFamily: "'Albert Sans', sans-serif" }}>${product.price}</span>
-                        <span className="text-sm text-gray-600 line-through" style={{ fontFamily: "'Albert Sans', sans-serif" }}>${product.originalPrice}</span>
+                        <span className="font-bold text-black" style={{ fontFamily: "'Albert Sans', sans-serif" }}>₹{product.price}</span>
+                        <span className="text-sm text-gray-600 line-through" style={{ fontFamily: "'Albert Sans', sans-serif" }}>₹{product.originalPrice}</span>
                       </div>
                       <div className="flex gap-1">
                         {product.colors.map((color, colorIndex) => (
@@ -1122,7 +1182,14 @@ const ProductDetailPage: React.FC = () => {
                     <img
                       src={product.images[0]}
                       alt={product.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      className="w-full h-full max-w-full max-h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      style={{
+                        minHeight: '100%',
+                        maxHeight: '100%',
+                        minWidth: '100%',
+                        maxWidth: '100%',
+                        objectFit: 'cover'
+                      }}
                       loading="lazy"
                     />
                     <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">

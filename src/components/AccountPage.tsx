@@ -22,6 +22,7 @@ const AccountPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
 
   // Form state for account details
   const [firstName, setFirstName] = useState('');
@@ -74,6 +75,15 @@ const AccountPage = () => {
     } catch (err) {
       console.error('Failed to remove from wishlist:', err);
       setError('Failed to remove item from wishlist');
+    }
+  };
+
+  const fetchOrders = async () => {
+    try {
+      const ordersData = await orderService.getMyOrders();
+      setOrders(ordersData.data || []);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
     }
   };
 
@@ -158,41 +168,147 @@ const AccountPage = () => {
     </div>
   );
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'processing': return 'bg-blue-100 text-blue-800';
+      case 'shipped': return 'bg-purple-100 text-purple-800';
+      case 'delivered': return 'bg-green-100 text-green-800';
+      case 'cancelled': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const handleReorder = async (orderId: string) => {
+    try {
+      const response = await orderService.reorderFromOrder(orderId);
+      if (response.success) {
+        alert('Reorder created successfully!');
+        // Refresh orders
+        fetchOrders();
+      }
+    } catch (error: any) {
+      alert(error.message || 'Failed to create reorder');
+    }
+  };
+
+  const handleCancelOrder = async (orderId: string) => {
+    if (window.confirm('Are you sure you want to cancel this order?')) {
+      try {
+        const response = await orderService.cancelOrder(orderId);
+        if (response.success) {
+          alert('Order cancelled successfully');
+          // Refresh orders
+          fetchOrders();
+        }
+      } catch (error: any) {
+        alert(error.message || 'Failed to cancel order');
+      }
+    }
+  };
+
   const renderOrders = () => (
     <div>
       {orders.length === 0 ? (
         <div className="text-center py-12">
           <h3 className="text-lg font-semibold mb-2">No orders yet</h3>
           <p className="text-gray-600">You haven't placed any orders yet. Start shopping to see your orders here.</p>
+          <Link
+            to="/"
+            className="inline-block mt-4 bg-black text-white px-6 py-3 font-medium hover:bg-gray-800 transition-colors"
+          >
+            Start Shopping
+          </Link>
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left py-4 px-0 font-medium text-gray-700">Order</th>
-                <th className="text-left py-4 px-4 font-medium text-gray-700">Date</th>
-                <th className="text-left py-4 px-4 font-medium text-gray-700">Status</th>
-                <th className="text-left py-4 px-4 font-medium text-gray-700">Total</th>
-                <th className="text-left py-4 px-4 font-medium text-gray-700">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {orders.map((order) => (
-                <tr key={order._id} className="border-b hover:bg-gray-50">
-                  <td className="py-4 px-0">#{order.orderNumber || order._id.slice(-6)}</td>
-                  <td className="py-4 px-4">{new Date(order.createdAt).toLocaleDateString()}</td>
-                  <td className="py-4 px-4">{order.status || 'Processing'}</td>
-                  <td className="py-4 px-4">${order.total || '0.00'} for {order.items?.length || 0} Items</td>
-                  <td className="py-4 px-4">
-                    <button className="bg-black text-white px-4 py-2 font-medium hover:bg-gray-800 transition-colors">
-                      View
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="space-y-6">
+          {orders.map((order) => (
+            <div key={order._id} className="bg-white border border-gray-200 rounded-lg p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold">Order #{order._id.slice(-8)}</h3>
+                  <p className="text-gray-600">
+                    Placed on {new Date(order.createdAt).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </p>
+                </div>
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
+                  {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <p className="text-gray-600">Total Amount</p>
+                  <p className="text-xl font-semibold">${order.total.toFixed(2)}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600">Items</p>
+                  <p className="font-medium">{order.items?.length || 0} item(s)</p>
+                </div>
+              </div>
+
+              {order.items && order.items.length > 0 && (
+                <div className="mb-4">
+                  <p className="text-gray-600 mb-2">Items:</p>
+                  <div className="space-y-2">
+                    {order.items.slice(0, 2).map((item: any, index: number) => (
+                      <div key={index} className="flex items-center space-x-3">
+                        <img
+                          src={item.image || '/images/placeholder.jpg'}
+                          alt={item.name}
+                          className="w-12 h-12 object-cover rounded"
+                        />
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">{item.name}</p>
+                          <p className="text-gray-600 text-sm">Qty: {item.quantity}</p>
+                        </div>
+                      </div>
+                    ))}
+                    {order.items.length > 2 && (
+                      <p className="text-gray-600 text-sm">
+                        +{order.items.length - 2} more item(s)
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex flex-wrap gap-2">
+                <Link
+                  to={`/order-tracking/${order._id}`}
+                  className="bg-blue-600 text-white px-4 py-2 text-sm font-medium rounded hover:bg-blue-700 transition-colors"
+                >
+                  Track Order
+                </Link>
+                <button
+                  onClick={() => setSelectedOrder(order)}
+                  className="bg-gray-600 text-white px-4 py-2 text-sm font-medium rounded hover:bg-gray-700 transition-colors"
+                >
+                  View Details
+                </button>
+                {order.status === 'delivered' && (
+                  <button
+                    onClick={() => handleReorder(order._id)}
+                    className="bg-green-600 text-white px-4 py-2 text-sm font-medium rounded hover:bg-green-700 transition-colors"
+                  >
+                    Reorder
+                  </button>
+                )}
+                {order.status === 'pending' && (
+                  <button
+                    onClick={() => handleCancelOrder(order._id)}
+                    className="bg-red-600 text-white px-4 py-2 text-sm font-medium rounded hover:bg-red-700 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>

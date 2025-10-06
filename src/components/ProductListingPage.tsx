@@ -379,8 +379,15 @@ const ProductListingPage: React.FC = () => {
             <img
               src={product.images[0]}
               alt={product.name}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              style={{ boxShadow: '0 0 10px rgba(0, 0, 0, 0.5)' }}
+              className="w-full h-full max-w-full max-h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              style={{
+                boxShadow: '0 0 10px rgba(0, 0, 0, 0.5)',
+                minHeight: '100%',
+                maxHeight: '100%',
+                minWidth: '100%',
+                maxWidth: '100%',
+                objectFit: 'cover'
+              }}
             />
           </div>
           
@@ -396,9 +403,9 @@ const ProductListingPage: React.FC = () => {
               <div className="flex flex-col gap-2">
                 {/* Price with discount */}
                 <div className="flex items-center gap-2">
-                  <span className="text-lg sm:text-xl font-semibold text-black">${product.price}</span>
+                  <span className="text-lg sm:text-xl font-semibold text-black">₹{product.price}</span>
                   {product.originalPrice && product.originalPrice > product.price && (
-                    <span className="text-sm text-gray-500 line-through">${product.originalPrice}</span>
+                    <span className="text-sm text-gray-500 line-through">₹{product.originalPrice}</span>
                   )}
                 </div>
 
@@ -465,8 +472,15 @@ const ProductListingPage: React.FC = () => {
           <img
             src={product.images[0]}
             alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            style={{ boxShadow: '0 0 10px rgba(0, 0, 0, 0.5)' }}
+            className="w-full h-full max-w-full max-h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            style={{
+              boxShadow: '0 0 10px rgba(0, 0, 0, 0.5)',
+              minHeight: '100%',
+              maxHeight: '100%',
+              minWidth: '100%',
+              maxWidth: '100%',
+              objectFit: 'cover'
+            }}
           />
           <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
             <button 
@@ -497,9 +511,9 @@ const ProductListingPage: React.FC = () => {
 
           {/* Price with discount */}
           <div className="flex items-center justify-center gap-2 mb-1">
-            <span className="text-sm sm:text-base font-semibold text-black">${product.price}</span>
+            <span className="text-sm sm:text-base font-semibold text-black">₹{product.price}</span>
             {product.originalPrice && product.originalPrice > product.price && (
-              <span className="text-xs text-gray-500 line-through">${product.originalPrice}</span>
+              <span className="text-xs text-gray-500 line-through">₹{product.originalPrice}</span>
             )}
           </div>
 
@@ -614,8 +628,15 @@ const ProductListingPage: React.FC = () => {
                 <img
                   src={product.images ? product.images[0] : '/images/placeholder.png'}
                   alt={product.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                  style={{ boxShadow: '0 0 5px rgba(0, 0, 0, 0.5)' }}
+                  className="w-full h-full max-w-full max-h-full object-cover group-hover:scale-105 transition-transform"
+                  style={{
+                    boxShadow: '0 0 5px rgba(0, 0, 0, 0.5)',
+                    minHeight: '100%',
+                    maxHeight: '100%',
+                    minWidth: '100%',
+                    maxWidth: '100%',
+                    objectFit: 'cover'
+                  }}
                 />
               </div>
               <div className="flex-1">
@@ -623,9 +644,9 @@ const ProductListingPage: React.FC = () => {
                   {product.name}
                 </h4>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="text-sm font-semibold text-black">${product.price}</span>
+                  <span className="text-sm font-semibold text-black">₹{product.price}</span>
                   {product.originalPrice && (
-                    <span className="text-xs text-gray-500 line-through">${product.originalPrice}</span>
+                    <span className="text-xs text-gray-500 line-through">₹{product.originalPrice}</span>
                   )}
                 </div>
               </div>
@@ -692,7 +713,14 @@ const ProductListingPage: React.FC = () => {
               <img
                 src={`/images/${img}`}
                 alt={`Gallery ${index + 1}`}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                className="w-full h-full max-w-full max-h-full object-cover group-hover:scale-105 transition-transform"
+                style={{
+                  minHeight: '100%',
+                  maxHeight: '100%',
+                  minWidth: '100%',
+                  maxWidth: '100%',
+                  objectFit: 'cover'
+                }}
               />
             </div>
           ))}

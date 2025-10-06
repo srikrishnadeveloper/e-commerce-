@@ -152,10 +152,15 @@ const DealCard: React.FC<DealCardProps> = ({ deal, onColorSelect, onCloseDeal })
         <img
           src={resolveImageSrc(activeImage)}
           alt={deal.name}
-          className="w-full h-full object-cover"
-          style={{ 
+          className="w-full h-full max-w-full max-h-full object-cover"
+          style={{
             fontFamily: "'Albert Sans', sans-serif",
-            boxShadow: '0 0 10px rgba(239, 68, 68, 0.5)'
+            boxShadow: '0 0 10px rgba(239, 68, 68, 0.5)',
+            minHeight: '100%',
+            maxHeight: '100%',
+            minWidth: '100%',
+            maxWidth: '100%',
+            objectFit: 'cover'
           }}
           onError={handleImageError}
           onLoad={handleImageLoad}
@@ -186,11 +191,11 @@ const DealCard: React.FC<DealCardProps> = ({ deal, onColorSelect, onCloseDeal })
         {/* Price */}
         <div>
           <span className="text-black" style={{ fontSize: '16px', fontFamily: "'Albert Sans', sans-serif", fontWeight: '600' }}>
-            ${activePrice}
+            ₹{activePrice}
           </span>
           {activeOriginalPrice && (
             <span className="text-gray-600 line-through ml-2" style={{ fontSize: '16px', fontFamily: "'Albert Sans', sans-serif", fontWeight: '600' }}>
-              ${activeOriginalPrice}
+              ₹{activeOriginalPrice}
             </span>
           )}
         </div>

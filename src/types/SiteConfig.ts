@@ -94,10 +94,30 @@ export interface HomePage {
   testimonialSection: TestimonialSection;
 }
 
+export interface SocialMediaLink {
+  name: string;
+  url: string;
+  icon: string;
+}
+
+export interface ContactUs {
+  pageTitle: string;
+  sectionTitle: string;
+  formTitle: string;
+  formDescription: string;
+  address: string;
+  phone: string;
+  email: string;
+  businessHoursTitle: string;
+  businessHours: string;
+  socialMedia: SocialMediaLink[];
+}
+
 export interface SiteConfig {
   branding: Branding;
   announcementBar: AnnouncementBar;
   hero: Hero;
   homePage: HomePage;
+  contactUs: ContactUs;
   [key: string]: any; // For other config properties
 }

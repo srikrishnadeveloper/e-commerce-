@@ -267,16 +267,16 @@ const CartPage = () => {
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-700">Subtotal ({cart.totalItems} items)</span>
-                    <span className="text-black">${cart.subtotal.toFixed(2)}</span>
+                    <span className="text-black">₹{cart.subtotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-700">Shipping</span>
-                    <span className="text-black">{cart.shipping === 0 ? 'Free' : `$${cart.shipping.toFixed(2)}`}</span>
+                    <span className="text-black">{cart.shipping === 0 ? 'Free' : `₹${cart.shipping.toFixed(2)}`}</span>
                   </div>
                   <div className="border-t pt-3">
                     <div className="flex justify-between font-semibold">
                       <span className="text-black">Total</span>
-                      <span className="text-black">${cart.total.toFixed(2)}</span>
+                      <span className="text-black">₹{cart.total.toFixed(2)}</span>
                     </div>
                   </div>
                 </div>

@@ -15,6 +15,8 @@ import AccountPage from './components/AccountPage.tsx'
 import WishlistPage from './pages/WishlistPage'
 import LogoutPage from './pages/LogoutPage'
 import CartPage from './pages/CartPage'
+import BillingPage from './pages/BillingPage'
+import OrderConfirmationPage from './pages/OrderConfirmationPage'
 import WelcomePopup from './components/WelcomePopup'
 import './App.css'
 import authService from './services/authService'
@@ -98,6 +100,8 @@ const App: React.FC = () => {
           <Route path="/wishlist" element={<WishlistPage />} />
           <Route path="/logout" element={<LogoutPage />} />
           <Route path="/cart" element={<CartPage />} />
+          <Route path="/billing" element={<BillingPage />} />
+          <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
         </Routes>
         <Footer />
         
