@@ -133,11 +133,11 @@ const DealCard: React.FC<DealCardProps> = ({ deal, onColorSelect, onCloseDeal })
         {/* Price */}
         <div>
           <span className="text-black" style={{ fontSize: '16px', fontFamily: "'Albert Sans', sans-serif", fontWeight: '600' }}>
-            ${deal.price}
+            ₹{deal.price}
           </span>
           {deal.originalPrice && (
             <span className="text-gray-600 line-through ml-2" style={{ fontSize: '16px', fontFamily: "'Albert Sans', sans-serif", fontWeight: '600' }}>
-              ${deal.originalPrice}
+              ₹{deal.originalPrice}
             </span>
           )}
         </div>

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { getSiteConfig } from '../services/dataService';
 
 interface FormData {
   name: string;
@@ -12,6 +13,23 @@ const ContactUs: React.FC = () => {
     email: '',
     message: ''
   });
+  const [siteConfig, setSiteConfig] = useState<any>({});
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadSiteConfig = async () => {
+      try {
+        const config = await getSiteConfig();
+        setSiteConfig(config);
+      } catch (error) {
+        console.error('Error loading site config:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadSiteConfig();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void => {
     setFormData({
@@ -26,6 +44,30 @@ const ContactUs: React.FC = () => {
     // Handle form submission here
   };
 
+  // Get contact us configuration with fallbacks
+  const contactUs = siteConfig.contactUs || {};
+  const pageTitle = contactUs.pageTitle || 'Contact Us';
+  const sectionTitle = contactUs.sectionTitle || 'Visit Our Store';
+  const formTitle = contactUs.formTitle || 'Get in Touch';
+  const formDescription = contactUs.formDescription || "If you've got great products your making or looking to work with us then drop us a line.";
+  const address = contactUs.address || '66 Mott St, New York, New York, Zip Code: 10006, AS';
+  const phone = contactUs.phone || '(623) 934-2400';
+  const email = contactUs.email || 'EComposer@example.com';
+  const businessHoursTitle = contactUs.businessHoursTitle || 'Open Time';
+  const businessHours = contactUs.businessHours || 'Our store has re-opened for shopping,\nexchange Every day 11am to 7pm';
+  const socialMedia = contactUs.socialMedia || [];
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading contact information...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
       {/* Main Content */}
@@ -36,7 +78,7 @@ const ContactUs: React.FC = () => {
           height: '194px'
         }}>
           <h1 className="text-black" style={{ fontSize: '42px', fontWeight: 'normal', fontFamily: "'Albert Sans', sans-serif" }}>
-            Contact Us
+            {pageTitle}
           </h1>
         </div>
       </div>
@@ -50,15 +92,15 @@ const ContactUs: React.FC = () => {
           <div className="space-y-8">
             <div>
               <h2 className="text-xl md:text-2xl font-bold text-black mb-6">
-                Visit Our Store
+                {sectionTitle}
               </h2>
-              
+
               <div className="space-y-6">
                 {/* Address */}
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">Address</h3>
                   <p className="text-gray-600 leading-relaxed">
-                    66 Mott St, New York, New York, Zip Code: 10006, AS
+                    {address}
                   </p>
                 </div>
 
@@ -66,7 +108,7 @@ const ContactUs: React.FC = () => {
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">Phone</h3>
                   <p className="text-gray-600">
-                    (623) 934-2400
+                    {phone}
                   </p>
                 </div>
 
@@ -74,22 +116,43 @@ const ContactUs: React.FC = () => {
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">Email</h3>
                   <p className="text-gray-600">
-                    EComposer@example.com
+                    {email}
                   </p>
                 </div>
 
                 {/* Open Time */}
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Open Time</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">{businessHoursTitle}</h3>
                   <p className="text-gray-600 leading-relaxed">
-                    Our store has re-opened for shopping,<br />
-                    exchange Every day 11am to 7pm
+                    {businessHours.split('\n').map((line: string, index: number) => (
+                      <span key={index}>
+                        {line}
+                        {index < businessHours.split('\n').length - 1 && <br />}
+                      </span>
+                    ))}
                   </p>
                 </div>
 
                 {/* Social Media Icons */}
-                <div className="flex space-x-4 pt-4">
-                  <a href="#" className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors duration-200">
+                {socialMedia.length > 0 && (
+                  <div className="flex space-x-4 pt-4">
+                    {socialMedia.map((social: any, index: number) => (
+                      <a
+                        key={index}
+                        href={social.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors duration-200"
+                        title={social.name}
+                      >
+                        <span className="w-5 h-5 text-gray-600 text-sm font-medium flex items-center justify-center">
+                          {social.name.charAt(0).toUpperCase()}
+                        </span>
+                      </a>
+                    ))}
+                  </div>
+                )}
+
                     <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/>
                     </svg>
@@ -118,10 +181,10 @@ const ContactUs: React.FC = () => {
           <div className="space-y-8">
             <div>
               <h2 className="text-xl md:text-2xl font-bold text-black mb-6">
-                Get in Touch
+                {formTitle}
               </h2>
               <p className="text-gray-600 mb-8">
-                If you've got great products your making or looking to work with us then drop us a line.
+                {formDescription}
               </p>
 
               <form onSubmit={handleSubmit} className="space-y-6">

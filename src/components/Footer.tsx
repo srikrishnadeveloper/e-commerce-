@@ -28,9 +28,9 @@ const Footer = () => {
           <div className="flex flex-col sm:col-span-1 lg:col-span-1">
             {/* Logo */}
             <div className="mb-4 sm:mb-5 md:mb-6">
-              <img 
-                src={brandData.logo?.light || '/images/placeholder.svg'} 
-                alt={brandData.logo?.alt || 'Logo'} 
+              <img
+                src={brandData.logo?.url || '/images/placeholder.svg'}
+                alt={brandData.logo?.alt || 'Logo'}
                 className="h-4 sm:h-5 md:h-6 lg:h-6 xl:h-7 w-auto border-2 border-red-400 rounded"
               />
             </div>

@@ -29,12 +29,12 @@ const LogoutPage = () => {
             Log out
           </button>
         ) : (
-          <a
-            href="/login"
+          <button
+            onClick={() => window.dispatchEvent(new Event('auth:openLogin'))}
             className="inline-block bg-black text-white py-3 px-6 rounded-md font-medium hover:bg-gray-800"
           >
-            Go to Login
-          </a>
+            Open Login
+          </button>
         )}
 
         {/* Logout Confirmation Modal */}

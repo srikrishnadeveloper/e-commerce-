@@ -243,7 +243,7 @@ export const calculateDiscountPercentage = (originalPrice, currentPrice) => {
  * @param {string} currency - Currency symbol
  * @returns {string} Formatted price string
  */
-export const formatPrice = (price, currency = '$') => {
+export const formatPrice = (price, currency = '₹') => {
   return `${currency}${price.toFixed(2)}`;
 };
 

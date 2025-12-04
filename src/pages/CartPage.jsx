@@ -12,7 +12,9 @@ const CartPage = () => {
 
   useEffect(() => {
     if (!authService.isAuthenticated() && !authService.autoLogin()) {
-      window.location.href = '/login';
+      // Request opening the login modal instead of redirecting
+      window.dispatchEvent(new Event('auth:openLogin'));
+      setLoading(false);
       return;
     }
     fetchCart();
@@ -97,6 +99,16 @@ const CartPage = () => {
     );
   }
 
+  if (!authService.isAuthenticated() && !authService.autoLogin()) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="mt-4 text-gray-600">Please log in to view your cart.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -155,7 +167,7 @@ const CartPage = () => {
                           </button>
                         </div>
                         <div className="text-right">
-                          <p className="text-lg font-medium">${item.itemTotal.toFixed(2)}</p>
+                          <p className="text-lg font-medium">₹{item.itemTotal.toFixed(2)}</p>
                           <button
                             onClick={() => handleRemoveItem(item._id)}
                             className="text-red-600 hover:text-red-800 text-sm"
@@ -190,16 +202,16 @@ const CartPage = () => {
                     <div className="space-y-3">
                       <div className="flex justify-between">
                         <span>Subtotal ({cart.totalItems} items)</span>
-                        <span>${cart.subtotal.toFixed(2)}</span>
+                        <span>₹{cart.subtotal.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Shipping</span>
-                        <span>{cart.shipping === 0 ? 'Free' : `$${cart.shipping.toFixed(2)}`}</span>
+                        <span>{cart.shipping === 0 ? 'Free' : `₹${cart.shipping.toFixed(2)}`}</span>
                       </div>
                       <div className="border-t pt-3">
                         <div className="flex justify-between font-semibold">
                           <span>Total</span>
-                          <span>${cart.total.toFixed(2)}</span>
+                          <span>₹{cart.total.toFixed(2)}</span>
                         </div>
                       </div>
                     </div>
@@ -210,7 +222,7 @@ const CartPage = () => {
                     
                     {cart.shipping > 0 && (
                       <p className="text-sm text-gray-600 mt-2 text-center">
-                        Add ${(50 - cart.subtotal).toFixed(2)} more for free shipping
+                        Add ₹{(50 - cart.subtotal).toFixed(2)} more for free shipping
                       </p>
                     )}
                   </div>

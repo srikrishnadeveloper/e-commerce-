@@ -18,6 +18,40 @@ api.interceptors.request.use((config) => {
 });
 
 class CartService {
+  constructor() {
+    this._ids = new Set();
+    this._ready = false;
+    try {
+      window.addEventListener('cart:changed', () => {
+        this.refreshIds().catch(() => {});
+      });
+    } catch {}
+  }
+
+  async refreshIds() {
+    try {
+      const data = await this.getCart();
+      const items = data?.data?.items || [];
+      this._ids = new Set(items.map((it) => String(it.product?._id || it.product)));
+      this._ready = true;
+      return this._ids;
+    } catch (e) {
+      this._ids.clear();
+      this._ready = false;
+      return this._ids;
+    }
+  }
+
+  async getCartIds() {
+    if (!this._ready) {
+      await this.refreshIds();
+    }
+    return this._ids;
+  }
+
+  isInCartSync(productId) {
+    return this._ids.has(String(productId));
+  }
   async getCart() {
     try {
       const response = await api.get('/cart');

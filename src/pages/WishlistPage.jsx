@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import wishlistService from '../services/wishlistService';
+import cartService from '../services/cartService';
 import authService from '../services/authService';
 
 const WishlistPage = () => {
@@ -10,7 +11,8 @@ const WishlistPage = () => {
 
   useEffect(() => {
     if (!authService.isAuthenticated() && !authService.autoLogin()) {
-      window.location.href = '/login';
+      window.dispatchEvent(new Event('auth:openLogin'));
+      setLoading(false);
       return;
     }
     fetchWishlist();
@@ -41,12 +43,35 @@ const WishlistPage = () => {
     }
   };
 
+  const handleAddToCart = async (productId) => {
+    try {
+      if (!authService.isAuthenticated()) {
+        window.dispatchEvent(new Event('auth:openLogin'));
+        return;
+      }
+      await cartService.addToCart(productId, 1);
+      // cartService already dispatches 'cart:changed'
+    } catch (err) {
+      setError(err.message || 'Failed to add to cart');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading your wishlist...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!authService.isAuthenticated() && !authService.autoLogin()) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="mt-4 text-gray-600">Please log in to view your wishlist.</p>
         </div>
       </div>
     );
@@ -81,14 +106,14 @@ const WishlistPage = () => {
                 {wishlist.map((product) => (
                   <div key={product._id} className="border border-gray-200 rounded-lg p-4">
                     <img
-                      src={product.image || '/images/placeholder.jpg'}
+                      src={(product.images && product.images[0]) || '/images/placeholder.jpg'}
                       alt={product.name}
                       className="w-full h-48 object-cover rounded"
                     />
                     <h3 className="text-lg font-medium text-gray-900 mt-2">{product.name}</h3>
                     <p className="text-lg font-medium text-gray-900">${product.price}</p>
                     <div className="mt-4 flex space-x-2">
-                      <button className="flex-1 bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700">
+                      <button onClick={() => handleAddToCart(product._id)} className="flex-1 bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700">
                         Add to Cart
                       </button>
                       <button

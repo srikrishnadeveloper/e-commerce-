@@ -1,0 +1,48 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Backend API",
+            "type": "shell",
+            "command": "npm run dev",
+            "options": { "cwd": "${workspaceFolder}/backend" },
+            "isBackground": true,
+            "presentation": { "reveal": "always", "panel": "dedicated", "group": "workspace" },
+            "problemMatcher": []
+        },
+        {
+            "label": "Frontend Store",
+            "type": "shell",
+            "command": "npm run dev",
+            "options": { "cwd": "${workspaceFolder}/frontend" },
+            "isBackground": true,
+            "presentation": { "reveal": "always", "panel": "dedicated", "group": "workspace" },
+            "problemMatcher": []
+        },
+        {
+            "label": "Admin Dashboard",
+            "type": "shell",
+            "command": "npm run dev",
+            "options": { "cwd": "${workspaceFolder}/adminfrontend" },
+            "isBackground": true,
+            "presentation": { "reveal": "always", "panel": "dedicated", "group": "workspace" },
+            "problemMatcher": []
+        },
+        {
+            "label": "Admin Backend UI",
+            "type": "shell",
+            "command": "npm run dev",
+            "options": { "cwd": "${workspaceFolder}/adminbackend" },
+            "isBackground": true,
+            "presentation": { "reveal": "always", "panel": "dedicated", "group": "workspace" },
+            "problemMatcher": []
+        },
+        {
+            "label": "Start Workspace",
+            "dependsOn": ["Backend API", "Frontend Store", "Admin Dashboard", "Admin Backend UI"],
+            "dependsOrder": "parallel",
+            "problemMatcher": [],
+            "runOptions": { "runOn": "default" }
+        }
+    ]
+}

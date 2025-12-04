@@ -45,7 +45,7 @@ const TwoBoxSection: React.FC = () => {
         {/* Mobile Carousel View */}
         <div className="block sm:hidden px-4">
           {/* Current Collection Card */}
-          <div className="relative overflow-hidden bg-gray-100 rounded-lg aspect-[5/4] transition-transform duration-300 hover:scale-[1.02]">
+          <div className="relative overflow-hidden bg-gray-100 rounded-lg aspect-[4/3] transition-transform duration-300 hover:scale-[1.02]">
             {/* Background Image */}
             <div
               className="absolute inset-0 bg-cover bg-center transition-transform duration-700"
@@ -116,7 +116,7 @@ const TwoBoxSection: React.FC = () => {
             {featuredCollections.collections.map((collection: Collection) => (
               <div
                 key={collection.id}
-                className="group relative overflow-hidden bg-gray-100 aspect-[5/4] transition-transform duration-300 hover:scale-[1.02]"
+                className="group relative overflow-hidden bg-gray-100 aspect-[4/3] transition-transform duration-300 hover:scale-[1.02]"
               >
                 {/* Background Image */}
                 <div

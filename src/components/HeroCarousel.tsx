@@ -16,7 +16,7 @@ const HeroCarousel: React.FC = () => {
   const slidesRef = useRef<(HTMLDivElement | null)[]>([]);
   const contentRef = useRef<(HTMLDivElement | null)[]>([]);
   const imageRef = useRef<(HTMLImageElement | null)[]>([]);
-  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const buttonRef = useRef<HTMLAnchorElement | null>(null);
   const tl = useRef<gsap.core.Timeline | null>(null);
 
   useEffect(() => {
@@ -325,25 +325,26 @@ const HeroCarousel: React.FC = () => {
               
               {/* Button - only show on active slide */}
               {index === activeIndex && (
-                <button 
+                <a
+                  href={slide.buttonLink || '/products'}
                   ref={buttonRef}
                   className="inline-flex items-center border-2 border-black px-4 sm:px-8 py-2 sm:py-3 rounded-full text-sm sm:text-lg font-medium transition-all duration-300 hover:bg-black hover:text-white group text-black"
                 >
                   {slide.button}
-                  <svg 
-                    width="12" 
-                    height="12" 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    strokeWidth="2.5" 
-                    strokeLinecap="round" 
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
                     strokeLinejoin="round"
                     className="ml-2 transition-transform group-hover:translate-x-1 sm:w-4 sm:h-4"
                   >
                     <path d="m9 18 6-6-6-6"/>
                   </svg>
-                </button>
+                </a>
               )}
             </div>
             

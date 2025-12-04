@@ -83,6 +83,40 @@ const siteConfigService = new SiteConfigService();
 siteConfigService.refreshConfig = async () => {};
 siteConfigService.refreshAll = async () => {};
 siteConfigService.clearCache = () => {};
-siteConfigService.getMultipleConfigs = async () => ({});
+
+// Fetch multiple config keys in a single request to avoid many parallel calls
+siteConfigService.getMultipleConfigs = async (keys = []) => {
+  try {
+    // If no keys requested, return entire config map
+    if (!Array.isArray(keys) || keys.length === 0) {
+      const all = await siteConfigService.getAllConfigs();
+      return all || {};
+    }
+
+    // Request consolidated config once and pick keys
+    const allConfigs = await apiRequest('/siteconfig');
+    const configMap = (allConfigs && allConfigs.data) ? allConfigs.data : allConfigs || {};
+    const result = {};
+    keys.forEach((k) => {
+      const key = String(k).toLowerCase();
+      result[key] = configMap[key];
+    });
+    return result;
+  } catch (error) {
+    console.error('[siteConfigService] ❌ getMultipleConfigs failed:', error?.message || error);
+    // Fallback: attempt individual fetches (best-effort)
+    const result = {};
+    await Promise.all(keys.map(async (k) => {
+      try {
+        const r = await siteConfigService.getConfig(k);
+        result[String(k).toLowerCase()] = r;
+      } catch (e) {
+        result[String(k).toLowerCase()] = null;
+      }
+    }));
+    return result;
+  }
+};
+
 siteConfigService.healthCheck = async () => ({ status: 'unknown' });
 export default siteConfigService;

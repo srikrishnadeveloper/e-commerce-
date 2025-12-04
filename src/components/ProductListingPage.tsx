@@ -1,14 +1,12 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Product, Color, SiteConfig, Category } from '../types';
+import { Product, Color, SiteConfig } from '../types';
 // CENTRALIZED DATA SERVICE - Single source for all product data
 import { 
   getProducts, 
   getCategories, 
   getSiteConfig, 
-  getDealsProducts,
-  filterProductsByPriceRange,
-  sortProducts 
+  getDealsProducts
 } from '../services/dataService';
 
 interface CategoryWithCount {
@@ -18,13 +16,13 @@ interface CategoryWithCount {
 
 interface ProductCardProps {
   product: Product;
-  viewMode: 'grid' | 'list';
+  viewMode: ViewMode;
 }
 
 type ViewMode = 'grid' | 'list';
 type SortBy = 'default' | 'price-low' | 'price-high' | 'name';
 
-const ProductListingPage: React.FC = () => {
+function ProductListingPage() {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
@@ -99,7 +97,7 @@ const ProductListingPage: React.FC = () => {
   }, [selectedCategory, priceRange, sortBy, products]);
   
   // Reset page when filters change
-  React.useEffect(() => {
+  useEffect(() => {
     setCurrentPage(1);
   }, [selectedCategory, priceRange, sortBy]);
   
@@ -138,7 +136,7 @@ const ProductListingPage: React.FC = () => {
     return colorMap[color] || 'bg-gray-300';
   };
 
-  const ProductCard: React.FC<ProductCardProps> = ({ product, viewMode }) => {
+  const ProductCard = ({ product, viewMode }: ProductCardProps) => {
     if (viewMode === 'list') {
       return (
         <Link to={`/product/${product.id}`} className="flex flex-col sm:flex-row gap-3 sm:gap-4 p-3 sm:p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow group block">
@@ -147,6 +145,7 @@ const ProductListingPage: React.FC = () => {
               src={product.images[0]}
               alt={product.name}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              loading="lazy"
               style={{ boxShadow: '0 0 10px rgba(0, 0, 0, 0.5)' }}
             />
           </div>
@@ -166,6 +165,8 @@ const ProductListingPage: React.FC = () => {
                   {product.colors.map((color: Color, index: number) => (
                     <button
                       key={index}
+                      type="button"
+                      aria-label={`Color: ${color.name}`}
                       className={`w-4 h-4 rounded-full border ${getColorClass(color.name)} hover:scale-110 transition-transform`}
                       title={color.name}
                       onClick={(e) => e.preventDefault()}
@@ -176,14 +177,17 @@ const ProductListingPage: React.FC = () => {
               
               <div className="flex gap-2 justify-end sm:justify-start">
                 <button 
+                  type="button"
                   onClick={(e) => e.preventDefault()}
                   className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
+                  aria-label="Add to wishlist"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                   </svg>
                 </button>
                 <button 
+                  type="button"
                   onClick={(e) => e.preventDefault()}
                   className="px-3 sm:px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors text-sm sm:text-base"
                 >
@@ -203,21 +207,25 @@ const ProductListingPage: React.FC = () => {
           <img
             src={product.images[0]}
             alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 border-2 border-gray-400"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            loading="lazy"
             style={{ boxShadow: '0 0 10px rgba(0, 0, 0, 0.5)' }}
           />
           <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
             <button 
+              type="button"
               onClick={(e) => e.preventDefault()}
               className="p-1.5 sm:p-2 bg-white rounded-full shadow-md hover:bg-gray-50"
+              aria-label="Add to wishlist"
             >
-              <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
               </svg>
             </button>
           </div>
           <div className="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
             <button 
+              type="button"
               onClick={(e) => e.preventDefault()}
               className="w-full py-1.5 sm:py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors text-xs sm:text-sm"
             >
@@ -237,6 +245,8 @@ const ProductListingPage: React.FC = () => {
             {product.colors.slice(0, 4).map((color: Color, index: number) => (
               <button
                 key={index}
+                type="button"
+                aria-label={`Color: ${color.name}`}
                 className={`w-3 h-3 sm:w-4 sm:h-4 rounded-full border ${getColorClass(color.name)} hover:scale-110 transition-transform`}
                 title={color.name}
               />
@@ -250,11 +260,11 @@ const ProductListingPage: React.FC = () => {
     );
   };
 
-  const Sidebar: React.FC = () => (
+  const Sidebar = () => (
     <div className="space-y-8">
       {/* Filter Button */}
       <div className="flex items-center gap-2 pb-4 border-b">
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707v4.586a1 1 0 01-.553.894l-4 2A1 1 0 019 21V14.414a1 1 0 00-.293-.707L2.293 7.293A1 1 0 012 6.586V4z" />
         </svg>
         <span className="text-sm font-medium">Filter</span>
@@ -267,6 +277,7 @@ const ProductListingPage: React.FC = () => {
           {categories.map((category) => (
             <button
               key={category.name}
+              type="button"
               onClick={() => setSelectedCategory(category.name)}
               className={`w-full flex items-center justify-between p-2 text-left rounded transition-colors ${
                 selectedCategory === category.name
@@ -303,10 +314,8 @@ const ProductListingPage: React.FC = () => {
             />
           </div>
           <button
-            onClick={() => {
-              // Apply price filter (already handled by useMemo)
-              console.log('Price filter applied:', priceRange);
-            }}
+            type="button"
+            onClick={() => {}}
             className="w-full py-2 bg-black text-white rounded-md text-sm hover:bg-gray-800 transition-colors"
           >
             Apply Filter
@@ -324,7 +333,8 @@ const ProductListingPage: React.FC = () => {
                 <img
                   src={product.images ? product.images[0] : '/images/placeholder.png'}
                   alt={product.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform border-2 border-gray-400"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                  loading="lazy"
                   style={{ boxShadow: '0 0 5px rgba(0, 0, 0, 0.5)' }}
                 />
               </div>
@@ -350,7 +360,7 @@ const ProductListingPage: React.FC = () => {
         <div className="space-y-4">
           <div className="flex items-start gap-3">
             <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
               </svg>
             </div>
@@ -362,7 +372,7 @@ const ProductListingPage: React.FC = () => {
           
           <div className="flex items-start gap-3">
             <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
@@ -374,7 +384,7 @@ const ProductListingPage: React.FC = () => {
           
           <div className="flex items-start gap-3">
             <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
             </div>
@@ -403,6 +413,7 @@ const ProductListingPage: React.FC = () => {
                 src={`/images/${img}`}
                 alt={`Gallery ${index + 1}`}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                loading="lazy"
               />
             </div>
           ))}
@@ -424,6 +435,7 @@ const ProductListingPage: React.FC = () => {
               key={social.icon}
               href={social.href}
               className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
+              aria-label={social.icon}
             >
               <svg className="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
@@ -458,10 +470,11 @@ const ProductListingPage: React.FC = () => {
               <div className="flex items-center justify-between sm:justify-start gap-4">
                 {/* Mobile Filter Button */}
                 <button
+                  type="button"
                   onClick={() => setIsSidebarOpen(true)}
                   className="filter-hide:hidden flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707v4.586a1 1 0 01-.553.894l-4 2A1 1 0 019 21V14.414a1 1 0 00-.293-.707L2.293 7.293A1 1 0 012 6.586V4z" />
                   </svg>
                   <span className="text-xs sm:text-sm font-medium">Filter</span>
@@ -470,24 +483,28 @@ const ProductListingPage: React.FC = () => {
                 {/* View Toggle */}
                 <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
                   <button
+                    type="button"
                     onClick={() => setViewMode('grid')}
                     className={`p-2 rounded-md transition-colors ${
                       viewMode === 'grid' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-200'
                     }`}
                     title="Grid View"
+                    aria-label="Grid View"
                   >
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path d="M3 3h7v7H3V3zm0 11h7v7H3v-7zm11-11h7v7h-7V3zm0 11h7v7h-7v-7z"/>
                     </svg>
                   </button>
                   <button
+                    type="button"
                     onClick={() => setViewMode('list')}
                     className={`p-2 rounded-md transition-colors ${
                       viewMode === 'list' ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-200'
                     }`}
                     title="List View"
+                    aria-label="List View"
                   >
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path d="M3 3h18v4H3V3zm0 7h18v4H3v-4zm0 7h18v4H3v-4z"/>
                     </svg>
                   </button>
@@ -518,7 +535,9 @@ const ProductListingPage: React.FC = () => {
                 : 'space-y-4'
             }`}>
               {paginatedProducts.map((product) => (
-                <ProductCard key={product.id} product={product} viewMode={viewMode} />
+                <React.Fragment key={product.id}>
+                  <ProductCard product={product} viewMode={viewMode} />
+                </React.Fragment>
               ))}
             </div>
 
@@ -537,11 +556,13 @@ const ProductListingPage: React.FC = () => {
             {totalPages > 1 && (
               <div className="flex justify-center items-center gap-1 sm:gap-2 flex-wrap px-2">
                 <button
+                  type="button"
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
                   className="p-2 sm:px-3 sm:py-2 text-gray-700 hover:bg-gray-100 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label="Previous page"
                 >
-                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
@@ -561,12 +582,14 @@ const ProductListingPage: React.FC = () => {
                   return (
                     <button
                       key={page}
+                      type="button"
                       onClick={() => setCurrentPage(page)}
                       className={`px-2 sm:px-3 py-2 rounded-md font-medium transition-colors text-sm sm:text-base ${
                         currentPage === page
                           ? 'bg-black text-white'
                           : 'text-gray-700 hover:bg-gray-100'
                       }`}
+                      aria-label={`Page ${page}`}
                     >
                       {page}
                     </button>
@@ -577,8 +600,10 @@ const ProductListingPage: React.FC = () => {
                   <>
                     <span className="px-2 text-gray-500 text-sm">...</span>
                     <button
+                      type="button"
                       onClick={() => setCurrentPage(totalPages)}
                       className="px-2 sm:px-3 py-2 rounded-md font-medium transition-colors text-sm sm:text-base text-gray-700 hover:bg-gray-100"
+                      aria-label={`Page ${totalPages}`}
                     >
                       {totalPages}
                     </button>
@@ -586,11 +611,13 @@ const ProductListingPage: React.FC = () => {
                 )}
                 
                 <button
+                  type="button"
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
                   className="p-2 sm:px-3 sm:py-2 text-gray-700 hover:bg-gray-100 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label="Next page"
                 >
-                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
@@ -612,10 +639,12 @@ const ProductListingPage: React.FC = () => {
         <div className="flex items-center justify-between p-4 border-b">
           <h2 className="text-lg font-semibold">Filters</h2>
           <button 
+            type="button"
             onClick={() => setIsSidebarOpen(false)} 
             className="p-2 hover:bg-gray-100 rounded-full"
+            aria-label="Close filters"
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
               <line x1="18" y1="6" x2="6" y2="18"/>
               <line x1="6" y1="6" x2="18" y2="18"/>
             </svg>

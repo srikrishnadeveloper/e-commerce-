@@ -16,10 +16,33 @@ const Navbar: React.FC = () => {
   const [cartCount, setCartCount] = useState(0);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [announcementBarHeight, setAnnouncementBarHeight] = useState(0);
   
   // Use real-time site configuration
   const { data: navigation, loading: navLoading, error: navError } = useNavigation();
   const { data: branding, loading: brandLoading, error: brandError } = useBranding();
+
+  // Listen for announcement bar height changes
+  useEffect(() => {
+    const updateHeight = () => {
+      const announcementBar = document.querySelector('[class*="animate-scroll"]')?.closest('div[class*="w-full"]');
+      if (announcementBar) {
+        setAnnouncementBarHeight((announcementBar as HTMLElement).offsetHeight || 48);
+      } else {
+        setAnnouncementBarHeight(0);
+      }
+    };
+    
+    updateHeight();
+    window.addEventListener('resize', updateHeight);
+    // Small delay to catch dynamic announcement bar rendering
+    const timer = setTimeout(updateHeight, 100);
+    
+    return () => {
+      window.removeEventListener('resize', updateHeight);
+      clearTimeout(timer);
+    };
+  }, []);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -76,9 +99,22 @@ const Navbar: React.FC = () => {
     // Also listen to a custom login event to update navbar immediately after login
     const handleAuthEvent = () => checkAuth();
     window.addEventListener('auth:changed', handleAuthEvent);
+    // Listen for global requests to open auth modals
+    const openLoginHandler = () => {
+      setShowRegisterModal(false);
+      setShowLoginModal(true);
+    };
+    const openRegisterHandler = () => {
+      setShowLoginModal(false);
+      setShowRegisterModal(true);
+    };
+    window.addEventListener('auth:openLogin', openLoginHandler);
+    window.addEventListener('auth:openRegister', openRegisterHandler);
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('auth:changed', handleAuthEvent);
+      window.removeEventListener('auth:openLogin', openLoginHandler);
+      window.removeEventListener('auth:openRegister', openRegisterHandler);
     };
   }, []);
 
@@ -113,8 +149,7 @@ const Navbar: React.FC = () => {
 
   const brandData = branding || {
     logo: {
-      light: "/images/placeholder.svg",
-      dark: "/images/placeholder.svg",
+      url: "/images/placeholder.svg",
       alt: "Logo"
     }
   };
@@ -148,9 +183,9 @@ const Navbar: React.FC = () => {
         {/* Logo - Centered on mobile, left on desktop */}
         <div className="flex items-center lg:justify-start justify-center flex-1 lg:flex-none">
           <Link to="/">
-            <img 
-              src={brandData.logo.light} 
-              alt={brandData.logo.alt} 
+            <img
+              src={brandData.logo.url}
+              alt={brandData.logo.alt}
               className="h-4 sm:h-5 md:h-6 w-auto border-2 border-red-400 rounded"
             />
           </Link>
@@ -194,26 +229,50 @@ const Navbar: React.FC = () => {
 
           {/* Account Icon - Hidden on mobile */}
           {isAuthenticated ? (
-            <Link 
-              to="/account"
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200 hidden lg:block" 
-              aria-label="Account"
-            >
-              <svg 
-                width="20" 
-                height="20" 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth="2.5" 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                className="text-gray-700 hover:text-gray-900"
+            <div className="hidden lg:flex items-center gap-2">
+              <Link 
+                to="/account"
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200" 
+                aria-label="Account"
               >
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                <circle cx="12" cy="7" r="4"/>
-              </svg>
-            </Link>
+                <svg 
+                  width="20" 
+                  height="20" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2.5" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  className="text-gray-700 hover:text-gray-900"
+                >
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+              </Link>
+              <button
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
+                onClick={() => authService.logout()}
+                aria-label="Logout"
+                title="Logout"
+              >
+                <svg 
+                  width="20" 
+                  height="20" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2.5" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  className="text-gray-700 hover:text-gray-900"
+                >
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                  <polyline points="16 17 21 12 16 7"/>
+                  <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+              </button>
+            </div>
           ) : (
             <button 
               className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200 hidden lg:block" 
@@ -237,29 +296,7 @@ const Navbar: React.FC = () => {
             </button>
           )}
 
-          {/* Compare Icon - Hidden on mobile and tablet */}
-          <button 
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200 hidden lg:block" 
-            aria-label="Compare"
-          >
-            <svg 
-              width="20" 
-              height="20" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="2.5" 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              className="text-gray-700 hover:text-gray-900"
-            >
-              <path d="M9 12l2 2 4-4"/>
-              <path d="M21 12c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1z"/>
-              <path d="M3 12c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1z"/>
-              <path d="M12 21c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1z"/>
-              <path d="M12 3c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1z"/>
-            </svg>
-          </button>
+          {/* Removed Compare icon button as it had no purpose */}
 
           {/* Heart Icon - Hidden on mobile */}
           {isAuthenticated ? (
@@ -365,23 +402,32 @@ const Navbar: React.FC = () => {
         </div>
       </nav>
 
-      {/* Mobile Sidebar Overlay */}
+      {/* Mobile Sidebar Overlay - starts below announcement bar */}
       {isSidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-x-0 bottom-0 bg-black bg-opacity-50 z-[90] lg:hidden"
+          style={{ top: `${announcementBarHeight}px` }}
           onClick={toggleSidebar}
         />
       )}
 
-      {/* Mobile Sidebar */}
-      <div className={`fixed top-0 left-0 h-full w-80 bg-white z-50 transform transition-transform duration-300 ease-in-out lg:hidden ${
-        isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      }`} style={{ fontFamily: "'Albert Sans', sans-serif" }}>
+      {/* Mobile Sidebar - positioned below announcement bar */}
+      <div 
+        className={`fixed left-0 w-80 bg-white z-[100] transform transition-transform duration-300 ease-in-out lg:hidden flex flex-col ${
+          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`} 
+        style={{ 
+          fontFamily: "'Albert Sans', sans-serif",
+          top: `${announcementBarHeight}px`,
+          height: `calc(100vh - ${announcementBarHeight}px)`,
+          maxHeight: `calc(100vh - ${announcementBarHeight}px)`
+        }}
+      >
         {/* Sidebar Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <img 
-            src={brandData.logo.dark} 
-            alt={brandData.logo.alt} 
+          <img
+            src={brandData.logo.url}
+            alt={brandData.logo.alt}
             className="h-6 w-auto border-2 border-red-400 rounded"
           />
           <button 
@@ -406,26 +452,19 @@ const Navbar: React.FC = () => {
           </button>
         </div>
 
-        {/* Sidebar Content */}
+        {/* Sidebar Content - scrollable */}
         <div className="flex-1 overflow-y-auto">
           {/* Navigation Menu */}
           <div className="p-4">
             {/* Home */}
             <div className="mb-4">
-              <button 
-                onClick={() => toggleAccordion('home')}
+              <Link 
+                to="/"
                 className="w-full flex items-center justify-between py-3 text-left font-medium text-gray-900 hover:text-red-500 transition-colors"
+                onClick={() => setIsSidebarOpen(false)}
               >
                 <span className="text-red-500">Home</span>
-                <svg 
-                  className={`w-5 h-5 transform transition-transform ${openAccordion === 'home' ? 'rotate-180' : ''}`}
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
+              </Link>
             </div>
 
             {/* Products */}
@@ -436,25 +475,7 @@ const Navbar: React.FC = () => {
                 onClick={() => setIsSidebarOpen(false)}
               >
                 <span>Products</span>
-                <svg 
-                  className="w-5 h-5"
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
               </Link>
-            </div>
-
-            {/* About */}
-            <div className="mb-4">
-              <a 
-                href="#" 
-                className="block py-3 text-left font-medium text-gray-900 hover:text-red-500 transition-colors"
-              >
-                About
-              </a>
             </div>
 
             {/* Contact */}
@@ -470,19 +491,27 @@ const Navbar: React.FC = () => {
 
             {/* Quick Actions */}
             <div className="flex gap-4 mb-6">
-              <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+              <Link 
+                to="/wishlist"
+                className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                onClick={() => setIsSidebarOpen(false)}
+              >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
                 </svg>
                 <span className="text-sm font-medium">Wishlist</span>
-              </button>
-              <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+              </Link>
+              <Link 
+                to="/products"
+                className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                onClick={() => setIsSidebarOpen(false)}
+              >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="11" cy="11" r="8"/>
                   <path d="m21 21-4.35-4.35"/>
                 </svg>
                 <span className="text-sm font-medium">Search</span>
-              </button>
+              </Link>
             </div>
 
             {/* Contact Info Section */}
@@ -545,19 +574,7 @@ const Navbar: React.FC = () => {
             </button>
           )}
 
-          {/* Language and Currency */}
-          <div className="flex gap-4">
-            <select className="flex-1 py-2 px-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
-              <option value="USD">🇺🇸 USD</option>
-              <option value="EUR">🇪🇺 EUR</option>
-              <option value="GBP">🇬🇧 GBP</option>
-            </select>
-            <select className="flex-1 py-2 px-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
-              <option value="English">English</option>
-              <option value="Spanish">Español</option>
-              <option value="French">Français</option>
-            </select>
-          </div>
+          {/* Language and Currency - Removed as per request */}
         </div>
       </div>
 
@@ -568,6 +585,7 @@ const Navbar: React.FC = () => {
         onSuccess={(response) => {
           console.log('Login successful:', response);
           // The auth:changed event will automatically update the navbar
+          setShowLoginModal(false);
         }}
         onSwitchToRegister={() => {
           setShowLoginModal(false);
@@ -582,6 +600,7 @@ const Navbar: React.FC = () => {
         onSuccess={(response) => {
           console.log('Registration successful:', response);
           // The auth:changed event will automatically update the navbar
+          setShowRegisterModal(false);
         }}
         onSwitchToLogin={() => {
           setShowRegisterModal(false);

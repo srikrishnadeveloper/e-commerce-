@@ -240,11 +240,11 @@ const ProductDetailPage: React.FC = () => {
 
             {/* Pricing Row */}
             <div className="flex items-center gap-4">
-              <span className="text-2xl lg:text-3xl font-bold text-black" style={{ fontFamily: "'Albert Sans', sans-serif" }}>${currentProduct.price}</span>
+              <span className="text-2xl lg:text-3xl font-bold text-black" style={{ fontFamily: "'Albert Sans', sans-serif" }}>₹{currentProduct.price}</span>
               <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
                 25% OFF
               </span>
-              <span className="text-lg text-gray-600 line-through" style={{ fontFamily: "'Albert Sans', sans-serif" }}>${currentProduct.originalPrice}</span>
+              <span className="text-lg text-gray-600 line-through" style={{ fontFamily: "'Albert Sans', sans-serif" }}>₹{currentProduct.originalPrice}</span>
             </div>
 
             {/* Sales & Urgency Prompts */}
@@ -337,7 +337,7 @@ const ProductDetailPage: React.FC = () => {
               {/* Action Buttons */}
               <div className="space-y-4">
                 <button className="w-full bg-black text-white py-4 px-6 rounded-lg font-bold text-lg hover:bg-gray-800 transition-colors" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
-                  Add to Cart - ${(currentProduct.price * quantity).toFixed(2)}
+                  Add to Cart - ₹{(currentProduct.price * quantity).toFixed(2)}
                 </button>
                 <button className="w-full bg-yellow-400 text-black py-4 px-6 rounded-lg font-bold text-lg hover:bg-yellow-500 transition-colors" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
                   Buy with PayPal
@@ -665,8 +665,8 @@ const ProductDetailPage: React.FC = () => {
                       </div>
                       <h3 className="font-semibold text-black mb-2" style={{ fontFamily: "'Albert Sans', sans-serif" }}>{product.name}</h3>
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="font-bold text-black" style={{ fontFamily: "'Albert Sans', sans-serif" }}>${product.price}</span>
-                        <span className="text-sm text-gray-600 line-through" style={{ fontFamily: "'Albert Sans', sans-serif" }}>${product.originalPrice}</span>
+                        <span className="font-bold text-black" style={{ fontFamily: "'Albert Sans', sans-serif" }}>₹{product.price}</span>
+                        <span className="text-sm text-gray-600 line-through" style={{ fontFamily: "'Albert Sans', sans-serif" }}>₹{product.originalPrice}</span>
                       </div>
                       <div className="flex gap-1">
                         {product.colors.map((color, colorIndex) => (
@@ -714,8 +714,8 @@ const ProductDetailPage: React.FC = () => {
                       </div>
                       <h3 className="font-semibold text-black mb-2" style={{ fontFamily: "'Albert Sans', sans-serif" }}>{product.name}</h3>
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="font-bold text-black" style={{ fontFamily: "'Albert Sans', sans-serif" }}>${product.price}</span>
-                        <span className="text-sm text-gray-600 line-through" style={{ fontFamily: "'Albert Sans', sans-serif" }}>${product.originalPrice}</span>
+                        <span className="font-bold text-black" style={{ fontFamily: "'Albert Sans', sans-serif" }}>₹{product.price}</span>
+                        <span className="text-sm text-gray-600 line-through" style={{ fontFamily: "'Albert Sans', sans-serif" }}>₹{product.originalPrice}</span>
                       </div>
                       <div className="flex gap-1">
                         {product.colors.map((color, colorIndex) => (
@@ -759,8 +759,8 @@ const ProductDetailPage: React.FC = () => {
                   </div>
                   <h3 className="font-semibold text-black mb-2" style={{ fontFamily: "'Albert Sans', sans-serif" }}>{product.name}</h3>
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="font-bold text-black" style={{ fontFamily: "'Albert Sans', sans-serif" }}>${product.price}</span>
-                    <span className="text-sm text-gray-600 line-through" style={{ fontFamily: "'Albert Sans', sans-serif" }}>${product.originalPrice}</span>
+                    <span className="font-bold text-black" style={{ fontFamily: "'Albert Sans', sans-serif" }}>₹{product.price}</span>
+                    <span className="text-sm text-gray-600 line-through" style={{ fontFamily: "'Albert Sans', sans-serif" }}>₹{product.originalPrice}</span>
                   </div>
                   <div className="flex gap-1">
                     {product.colors.map((color, colorIndex) => (
