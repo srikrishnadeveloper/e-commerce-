@@ -1,11 +1,82 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import authService from '../services/authService';
-import orderService from '../services/orderService';
-import wishlistService from '../services/wishlistService';
+import { Link, useNavigate } from 'react-router-dom';
+import addressService from '../services/addressService';
+import { Address, AddressFormData } from '../types/Address';
+import LogoutConfirmation from './LogoutConfirmation';
+
+interface UserData {
+  _id: string;
+  name: string;
+  email: string;
+  phone?: string;
+}
+
+interface Order {
+  _id: string;
+  orderNumber: string;
+  createdAt: string;
+  status: string;
+  total: number;
+  totalAmount?: number; // legacy field
+  items: Array<{
+    product?: {
+      name: string;
+      images: string[];
+    };
+    name: string;
+    image: string;
+    quantity: number;
+    price: number;
+  }>;
+}
 
 const AccountPage = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('dashboard');
+  
+  // User state
+  const [user, setUser] = useState<UserData | null>(null);
+  const [loading, setLoading] = useState(true);
+  
+  // Address state
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [addressLoading, setAddressLoading] = useState(false);
+  const [showAddressForm, setShowAddressForm] = useState(false);
+  const [editingAddress, setEditingAddress] = useState<Address | null>(null);
+  const [addressFormData, setAddressFormData] = useState<AddressFormData>({
+    label: 'home',
+    fullName: '',
+    phone: '',
+    addressLine1: '',
+    addressLine2: '',
+    city: '',
+    state: '',
+    postalCode: '',
+    country: 'India',
+    isDefault: false
+  });
+  const [addressErrors, setAddressErrors] = useState<Record<string, string>>({});
+  
+  // Orders state
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [showOrderModal, setShowOrderModal] = useState(false);
+  
+  // Account details state
+  const [accountForm, setAccountForm] = useState({
+    firstName: '',
+    lastName: '',
+    displayName: '',
+    email: '',
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [accountSaving, setAccountSaving] = useState(false);
+  
+  // Logout state
+  const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
 
   const sidebarItems = [
     { id: 'dashboard', label: 'Dashboard' },
@@ -16,74 +87,276 @@ const AccountPage = () => {
     { id: 'logout', label: 'Logout' }
   ];
 
-  const [user, setUser] = useState<any>(null);
-  const [orders, setOrders] = useState<any[]>([]);
-  const [wishlist, setWishlist] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [selectedOrder, setSelectedOrder] = useState<any>(null);
-
-  // Form state for account details
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [displayName, setDisplayName] = useState('');
-  const [email, setEmail] = useState('');
-  // Password fields
-  const [passwordCurrent, setPasswordCurrent] = useState('');
-  const [password, setPassword] = useState('');
-  const [passwordConfirm, setPasswordConfirm] = useState('');
-
+  // Check auth and fetch user data
   useEffect(() => {
-    if (!authService.isAuthenticated()) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/');
       window.dispatchEvent(new Event('auth:openLogin'));
       return;
     }
-    loadUserData();
-  }, []);
+    fetchUserData();
+  }, [navigate]);
 
-  const loadUserData = async () => {
+  // Fetch addresses when addresses tab is active
+  useEffect(() => {
+    if (activeTab === 'addresses' && user) {
+      fetchAddresses();
+    }
+  }, [activeTab, user]);
+
+  // Fetch orders when orders tab is active
+  useEffect(() => {
+    if (activeTab === 'orders' && user) {
+      fetchOrders();
+    }
+  }, [activeTab, user]);
+
+  const fetchUserData = async () => {
     try {
-      setLoading(true);
-      const [userData, ordersData, wishlistData] = await Promise.all([
-        authService.getCurrentUser(),
-        orderService.getMyOrders(),
-        wishlistService.getWishlist()
-      ]);
-  setUser(userData.data);
-  // Initialize form fields from user
-  const fullName = userData.data?.name || '';
-  const parts = fullName.split(' ');
-  setFirstName(parts[0] || '');
-  setLastName(parts.slice(1).join(' ') || '');
-  setDisplayName(fullName);
-  setEmail(userData.data?.email || '');
-      setOrders(ordersData.data || []);
-      setWishlist(wishlistData.data || []);
-    } catch (err) {
-      setError('Failed to load account data');
-      console.error('Account data error:', err);
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5001/api/auth/me', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          navigate('/');
+          window.dispatchEvent(new Event('auth:openLogin'));
+          return;
+        }
+        throw new Error('Failed to fetch user data');
+      }
+      
+      const data = await response.json();
+      const userData = data.data || data;
+      setUser(userData);
+      
+      // Populate account form
+      const nameParts = (userData.name || '').split(' ');
+      setAccountForm(prev => ({
+        ...prev,
+        firstName: nameParts[0] || '',
+        lastName: nameParts.slice(1).join(' ') || '',
+        displayName: userData.name || '',
+        email: userData.email || ''
+      }));
+    } catch (error) {
+      console.error('Error fetching user:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleRemoveFromWishlist = async (wishlistId: string) => {
+  const fetchAddresses = async () => {
+    setAddressLoading(true);
     try {
-      await wishlistService.removeFromWishlist(wishlistId);
-      setWishlist(prev => prev.filter(item => item._id !== wishlistId));
-    } catch (err) {
-      console.error('Failed to remove from wishlist:', err);
-      setError('Failed to remove item from wishlist');
+      const data = await addressService.getAddresses();
+      // Ensure we always have an array
+      setAddresses(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Error fetching addresses:', error);
+      setAddresses([]);
+    } finally {
+      setAddressLoading(false);
     }
   };
 
   const fetchOrders = async () => {
+    setOrdersLoading(true);
     try {
-      const ordersData = await orderService.getMyOrders();
-      setOrders(ordersData.data || []);
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5001/api/orders', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const ordersData = data.data || data || [];
+        setOrders(Array.isArray(ordersData) ? ordersData : []);
+      } else {
+        setOrders([]);
+      }
     } catch (error) {
       console.error('Error fetching orders:', error);
+      setOrders([]);
+    } finally {
+      setOrdersLoading(false);
+    }
+  };
+
+  const handleAddressSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const validation = addressService.validateAddress(addressFormData as Address);
+    if (!validation.isValid) {
+      setAddressErrors(validation.errors);
+      return;
+    }
+    
+    setAddressLoading(true);
+    try {
+      if (editingAddress) {
+        await addressService.updateAddress(editingAddress._id!, addressFormData);
+      } else {
+        await addressService.addAddress(addressFormData);
+      }
+      await fetchAddresses();
+      resetAddressForm();
+    } catch (error: any) {
+      console.error('Error saving address:', error);
+      alert(error.message || 'Failed to save address');
+    } finally {
+      setAddressLoading(false);
+    }
+  };
+
+  const handleDeleteAddress = async (addressId: string) => {
+    if (!confirm('Are you sure you want to delete this address?')) return;
+    
+    try {
+      await addressService.deleteAddress(addressId);
+      await fetchAddresses();
+    } catch (error: any) {
+      console.error('Error deleting address:', error);
+      alert(error.message || 'Failed to delete address');
+    }
+  };
+
+  const handleSetDefault = async (addressId: string) => {
+    try {
+      await addressService.setDefaultAddress(addressId);
+      await fetchAddresses();
+    } catch (error: any) {
+      console.error('Error setting default:', error);
+    }
+  };
+
+  const handleEditAddress = (address: Address) => {
+    setEditingAddress(address);
+    setAddressFormData({
+      label: address.label,
+      fullName: address.fullName,
+      phone: address.phone,
+      addressLine1: address.addressLine1,
+      addressLine2: address.addressLine2 || '',
+      city: address.city,
+      state: address.state,
+      postalCode: address.postalCode,
+      country: address.country,
+      isDefault: address.isDefault
+    });
+    setShowAddressForm(true);
+  };
+
+  const resetAddressForm = () => {
+    setShowAddressForm(false);
+    setEditingAddress(null);
+    setAddressFormData({
+      label: 'home',
+      fullName: '',
+      phone: '',
+      addressLine1: '',
+      addressLine2: '',
+      city: '',
+      state: '',
+      postalCode: '',
+      country: 'India',
+      isDefault: false
+    });
+    setAddressErrors({});
+  };
+
+  const handleAccountSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAccountSaving(true);
+    
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Update profile using correct endpoint (PATCH /api/auth/updateMe)
+      const profileResponse = await fetch('http://localhost:5001/api/auth/updateMe', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: `${accountForm.firstName} ${accountForm.lastName}`.trim(),
+          email: accountForm.email
+        })
+      });
+      
+      if (!profileResponse.ok) {
+        throw new Error('Failed to update profile');
+      }
+      
+      // Update password if provided
+      if (accountForm.currentPassword && accountForm.newPassword) {
+        if (accountForm.newPassword !== accountForm.confirmPassword) {
+          alert('New passwords do not match');
+          setAccountSaving(false);
+          return;
+        }
+        
+        // Use correct endpoint (PATCH /api/auth/updatePassword)
+        const passwordResponse = await fetch('http://localhost:5001/api/auth/updatePassword', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            currentPassword: accountForm.currentPassword,
+            newPassword: accountForm.newPassword,
+            newPasswordConfirm: accountForm.confirmPassword
+          })
+        });
+        
+        if (!passwordResponse.ok) {
+          const data = await passwordResponse.json();
+          throw new Error(data.message || 'Failed to change password');
+        }
+      }
+      
+      alert('Changes saved successfully!');
+      setAccountForm(prev => ({
+        ...prev,
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      }));
+      
+      // Update local storage
+      const updatedUser = { ...user, name: `${accountForm.firstName} ${accountForm.lastName}`.trim() };
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      window.dispatchEvent(new Event('auth:changed'));
+      
+    } catch (error: any) {
+      console.error('Error saving account:', error);
+      alert(error.message || 'Failed to save changes');
+    } finally {
+      setAccountSaving(false);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.dispatchEvent(new Event('auth:changed'));
+    navigate('/');
+  };
+
+  const handleTabClick = (tabId: string) => {
+    if (tabId === 'logout') {
+      setShowLogoutConfirmation(true);
+    } else {
+      setActiveTab(tabId);
     }
   };
 
@@ -98,46 +371,6 @@ const AccountPage = () => {
     }
   };
 
-  // Handle logout tab
-  useEffect(() => {
-    if (activeTab === 'logout') {
-      authService.logout();
-      setActiveTab('dashboard');
-    }
-  }, [activeTab]);
-
-  const handleSaveAccount = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
-    try {
-      // Update profile if name/email changed
-      const newName = displayName?.trim() || `${firstName} ${lastName}`.trim();
-      const profilePayload = {
-        name: newName,
-        email,
-      };
-      await authService.updateProfile(profilePayload);
-
-      // Update password if provided
-      if (passwordCurrent || password || passwordConfirm) {
-        if (!passwordCurrent || !password || !passwordConfirm) {
-          throw { message: 'Please fill all password fields' };
-        }
-        if (password !== passwordConfirm) {
-          throw { message: 'New passwords do not match' };
-        }
-        await authService.updatePassword({ passwordCurrent, password, passwordConfirm });
-      }
-
-      setSuccess('Account updated successfully');
-      await loadUserData();
-    } catch (err) {
-      const msg = err?.message || err?.error || 'Failed to update account';
-      setError(msg);
-    }
-  };
-
   const renderDashboard = () => (
     <div className="text-left">
       <h2 className="text-2xl font-semibold mb-4">Hello {user?.name || 'User'}</h2>
@@ -147,7 +380,7 @@ const AccountPage = () => {
           onClick={() => setActiveTab('orders')}
           className="text-red-500 hover:text-red-600 underline"
         >
-          recent orders ({orders.length})
+          recent orders
         </button>
         , manage your{' '}
         <button 
@@ -168,147 +401,114 @@ const AccountPage = () => {
     </div>
   );
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'processing': return 'bg-blue-100 text-blue-800';
-      case 'shipped': return 'bg-purple-100 text-purple-800';
-      case 'delivered': return 'bg-green-100 text-green-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const handleReorder = async (orderId: string) => {
-    try {
-      const response = await orderService.reorderFromOrder(orderId);
-      if (response.success) {
-        alert('Reorder created successfully!');
-        // Refresh orders
-        fetchOrders();
-      }
-    } catch (error: any) {
-      alert(error.message || 'Failed to create reorder');
-    }
-  };
-
-  const handleCancelOrder = async (orderId: string) => {
-    if (window.confirm('Are you sure you want to cancel this order?')) {
-      try {
-        const response = await orderService.cancelOrder(orderId);
-        if (response.success) {
-          alert('Order cancelled successfully');
-          // Refresh orders
-          fetchOrders();
-        }
-      } catch (error: any) {
-        alert(error.message || 'Failed to cancel order');
-      }
-    }
-  };
-
   const renderOrders = () => (
     <div>
-      {orders.length === 0 ? (
-        <div className="text-center py-12">
-          <h3 className="text-lg font-semibold mb-2">No orders yet</h3>
-          <p className="text-gray-600">You haven't placed any orders yet. Start shopping to see your orders here.</p>
-          <Link
-            to="/"
-            className="inline-block mt-4 bg-black text-white px-6 py-3 font-medium hover:bg-gray-800 transition-colors"
-          >
-            Start Shopping
-          </Link>
-        </div>
-      ) : (
-        <div className="space-y-6">
-          {orders.map((order) => (
-            <div key={order._id} className="bg-white border border-gray-200 rounded-lg p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="text-lg font-semibold">Order #{order._id.slice(-8)}</h3>
-                  <p className="text-gray-600">
-                    Placed on {new Date(order.createdAt).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
-                  </p>
-                </div>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
-                  {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                </span>
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="border-b">
+              <th className="text-left py-4 px-0 font-medium text-gray-700">Order</th>
+              <th className="text-left py-4 px-4 font-medium text-gray-700">Date</th>
+              <th className="text-left py-4 px-4 font-medium text-gray-700">Status</th>
+              <th className="text-left py-4 px-4 font-medium text-gray-700">Total</th>
+              <th className="text-left py-4 px-4 font-medium text-gray-700">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {ordersLoading ? (
+              <tr>
+                <td colSpan={5} className="py-8 text-center text-gray-500">Loading orders...</td>
+              </tr>
+            ) : orders.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="py-8 text-center text-gray-500">No orders found</td>
+              </tr>
+            ) : (
+              orders.map((order) => (
+                <tr key={order._id} className="border-b hover:bg-gray-50">
+                  <td className="py-4 px-0">#{order.orderNumber || order._id.slice(-6)}</td>
+                  <td className="py-4 px-4">{new Date(order.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</td>
+                  <td className="py-4 px-4 capitalize">{order.status}</td>
+                  <td className="py-4 px-4">₹{(order.total || order.totalAmount || 0).toFixed(2)} for {order.items?.length || 0} Items</td>
+                  <td className="py-4 px-4">
+                    <button 
+                      onClick={() => {
+                        setSelectedOrder(order);
+                        setShowOrderModal(true);
+                      }}
+                      className="bg-black text-white px-4 py-2 font-medium hover:bg-gray-800 transition-colors"
+                    >
+                      View
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+      
+      {/* Order Details Modal */}
+      {showOrderModal && selectedOrder && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold">Order #{selectedOrder.orderNumber || selectedOrder._id.slice(-6)}</h2>
+                <button onClick={() => setShowOrderModal(false)} className="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                  <p className="text-gray-600">Total Amount</p>
-                  <p className="text-xl font-semibold">${order.total.toFixed(2)}</p>
+              
+              <div className="space-y-4">
+                <div className="flex justify-between border-b pb-4">
+                  <span className="text-gray-600">Date:</span>
+                  <span>{new Date(selectedOrder.createdAt).toLocaleDateString()}</span>
                 </div>
-                <div>
-                  <p className="text-gray-600">Items</p>
-                  <p className="font-medium">{order.items?.length || 0} item(s)</p>
+                <div className="flex justify-between border-b pb-4">
+                  <span className="text-gray-600">Status:</span>
+                  <span className="capitalize font-medium">{selectedOrder.status}</span>
                 </div>
-              </div>
-
-              {order.items && order.items.length > 0 && (
-                <div className="mb-4">
-                  <p className="text-gray-600 mb-2">Items:</p>
-                  <div className="space-y-2">
-                    {order.items.slice(0, 2).map((item: any, index: number) => (
-                      <div key={index} className="flex items-center space-x-3">
-                        <img
-                          src={item.image || '/images/placeholder.jpg'}
-                          alt={item.name}
-                          className="w-12 h-12 object-cover rounded"
+                <div className="flex justify-between border-b pb-4">
+                  <span className="text-gray-600">Total:</span>
+                  <span className="font-semibold">₹{(selectedOrder.total || selectedOrder.totalAmount || 0).toFixed(2)}</span>
+                </div>
+                
+                <div className="mt-6">
+                  <h3 className="font-medium mb-4">Items</h3>
+                  {selectedOrder.items?.map((item, index) => (
+                    <div key={index} className="flex items-center gap-4 py-3 border-b">
+                      <div className="w-16 h-16 bg-gray-100 rounded overflow-hidden">
+                        <img 
+                          src={item.image || item.product?.images?.[0] || '/images/placeholder.svg'} 
+                          alt={item.name || item.product?.name || 'Product'}
+                          className="w-full h-full object-cover"
                         />
-                        <div className="flex-1">
-                          <p className="font-medium text-sm">{item.name}</p>
-                          <p className="text-gray-600 text-sm">Qty: {item.quantity}</p>
-                        </div>
                       </div>
-                    ))}
-                    {order.items.length > 2 && (
-                      <p className="text-gray-600 text-sm">
-                        +{order.items.length - 2} more item(s)
-                      </p>
-                    )}
-                  </div>
+                      <div className="flex-1">
+                        <p className="font-medium">{item.name || item.product?.name || 'Product'}</p>
+                        <p className="text-gray-500 text-sm">Qty: {item.quantity}</p>
+                      </div>
+                      <p className="font-medium">₹{item.price?.toFixed(2)}</p>
+                    </div>
+                  ))}
                 </div>
-              )}
-
-              <div className="flex flex-wrap gap-2">
-                <Link
-                  to={`/order-tracking/${order._id}`}
-                  className="bg-blue-600 text-white px-4 py-2 text-sm font-medium rounded hover:bg-blue-700 transition-colors"
-                >
-                  Track Order
-                </Link>
-                <button
-                  onClick={() => setSelectedOrder(order)}
-                  className="bg-gray-600 text-white px-4 py-2 text-sm font-medium rounded hover:bg-gray-700 transition-colors"
-                >
-                  View Details
-                </button>
-                {order.status === 'delivered' && (
-                  <button
-                    onClick={() => handleReorder(order._id)}
-                    className="bg-green-600 text-white px-4 py-2 text-sm font-medium rounded hover:bg-green-700 transition-colors"
+                
+                <div className="mt-6 flex gap-3">
+                  <Link 
+                    to={`/order-tracking/${selectedOrder._id}`}
+                    className="bg-black text-white px-6 py-2 font-medium hover:bg-gray-800 transition-colors"
                   >
-                    Reorder
-                  </button>
-                )}
-                {order.status === 'pending' && (
-                  <button
-                    onClick={() => handleCancelOrder(order._id)}
-                    className="bg-red-600 text-white px-4 py-2 text-sm font-medium rounded hover:bg-red-700 transition-colors"
+                    Track Order
+                  </Link>
+                  <button 
+                    onClick={() => setShowOrderModal(false)}
+                    className="border border-black px-6 py-2 font-medium hover:bg-gray-50 transition-colors"
                   >
-                    Cancel
+                    Close
                   </button>
-                )}
+                </div>
               </div>
             </div>
-          ))}
+          </div>
         </div>
       )}
     </div>
@@ -316,31 +516,202 @@ const AccountPage = () => {
 
   const renderAddresses = () => (
     <div>
-      <button className="bg-black text-white px-6 py-3 font-medium mb-8 hover:bg-gray-800 transition-colors">
+      <button 
+        onClick={() => setShowAddressForm(true)}
+        className="bg-black text-white px-6 py-3 font-medium mb-8 hover:bg-gray-800 transition-colors"
+      >
         Add a new address
       </button>
-      {user?.address ? (
-        <div className="bg-white border border-gray-200 p-6 max-w-md">
-          <h3 className="font-semibold mb-4">Default</h3>
-          <div className="text-gray-700 mb-4 leading-relaxed">
-            <p>{user.address.street}, {user.address.city},</p>
-            <p>{user.address.state} {user.address.zipCode}</p>
-            <p className="mt-2">Email: {user.email}</p>
-            <p>Phone: {user.address.phone || 'Not provided'}</p>
-          </div>
-          <div className="flex gap-3">
-            <button className="bg-black text-white px-4 py-2 font-medium hover:bg-gray-800 transition-colors">
-              Edit
-            </button>
-            <button className="border border-black text-black px-4 py-2 font-medium hover:bg-gray-50 transition-colors">
-              Delete
-            </button>
-          </div>
-        </div>
+      
+      {addressLoading ? (
+        <div className="text-gray-500">Loading addresses...</div>
+      ) : addresses.length === 0 ? (
+        <div className="text-gray-500">No addresses saved yet.</div>
       ) : (
-        <div className="bg-white border border-gray-200 p-6 max-w-md">
-          <h3 className="font-semibold mb-4">No Address Saved</h3>
-          <p className="text-gray-600">You haven't added any addresses yet. Click "Add a new address" to get started.</p>
+        <div className="space-y-6">
+          {addresses.map((address) => (
+            <div key={address._id} className="bg-white border border-gray-200 p-6 max-w-md">
+              <h3 className="font-semibold mb-4 capitalize">
+                {address.label}
+                {address.isDefault && <span className="ml-2 text-sm text-green-600 font-normal">(Default)</span>}
+              </h3>
+              <div className="text-gray-700 mb-4 leading-relaxed">
+                <p className="font-medium">{address.fullName}</p>
+                <p>{address.addressLine1}</p>
+                {address.addressLine2 && <p>{address.addressLine2}</p>}
+                <p>{address.city}, {address.state} {address.postalCode}</p>
+                <p>{address.country}</p>
+                <p className="mt-2">Phone: {address.phone}</p>
+              </div>
+              <div className="flex gap-3 flex-wrap">
+                <button 
+                  onClick={() => handleEditAddress(address)}
+                  className="bg-black text-white px-4 py-2 font-medium hover:bg-gray-800 transition-colors"
+                >
+                  Edit
+                </button>
+                <button 
+                  onClick={() => handleDeleteAddress(address._id!)}
+                  className="border border-black text-black px-4 py-2 font-medium hover:bg-gray-50 transition-colors"
+                >
+                  Delete
+                </button>
+                {!address.isDefault && (
+                  <button 
+                    onClick={() => handleSetDefault(address._id!)}
+                    className="border border-green-600 text-green-600 px-4 py-2 font-medium hover:bg-green-50 transition-colors"
+                  >
+                    Set as Default
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      
+      {/* Address Form Modal */}
+      {showAddressForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold">{editingAddress ? 'Edit Address' : 'Add New Address'}</h2>
+                <button onClick={resetAddressForm} className="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+              </div>
+              
+              <form onSubmit={handleAddressSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Address Label *</label>
+                  <select
+                    value={addressFormData.label}
+                    onChange={(e) => setAddressFormData({...addressFormData, label: e.target.value as 'home' | 'work' | 'other'})}
+                    className="w-full border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                  >
+                    <option value="home">Home</option>
+                    <option value="work">Work</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
+                  <input
+                    type="text"
+                    value={addressFormData.fullName}
+                    onChange={(e) => setAddressFormData({...addressFormData, fullName: e.target.value})}
+                    className="w-full border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                  {addressErrors.fullName && <p className="text-red-500 text-sm mt-1">{addressErrors.fullName}</p>}
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Phone *</label>
+                  <input
+                    type="tel"
+                    value={addressFormData.phone}
+                    onChange={(e) => setAddressFormData({...addressFormData, phone: e.target.value})}
+                    className="w-full border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                  {addressErrors.phone && <p className="text-red-500 text-sm mt-1">{addressErrors.phone}</p>}
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Address Line 1 *</label>
+                  <input
+                    type="text"
+                    value={addressFormData.addressLine1}
+                    onChange={(e) => setAddressFormData({...addressFormData, addressLine1: e.target.value})}
+                    className="w-full border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                  {addressErrors.addressLine1 && <p className="text-red-500 text-sm mt-1">{addressErrors.addressLine1}</p>}
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Address Line 2</label>
+                  <input
+                    type="text"
+                    value={addressFormData.addressLine2}
+                    onChange={(e) => setAddressFormData({...addressFormData, addressLine2: e.target.value})}
+                    className="w-full border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">City *</label>
+                    <input
+                      type="text"
+                      value={addressFormData.city}
+                      onChange={(e) => setAddressFormData({...addressFormData, city: e.target.value})}
+                      className="w-full border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    />
+                    {addressErrors.city && <p className="text-red-500 text-sm mt-1">{addressErrors.city}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">State *</label>
+                    <input
+                      type="text"
+                      value={addressFormData.state}
+                      onChange={(e) => setAddressFormData({...addressFormData, state: e.target.value})}
+                      className="w-full border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    />
+                    {addressErrors.state && <p className="text-red-500 text-sm mt-1">{addressErrors.state}</p>}
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Postal Code *</label>
+                    <input
+                      type="text"
+                      value={addressFormData.postalCode}
+                      onChange={(e) => setAddressFormData({...addressFormData, postalCode: e.target.value})}
+                      className="w-full border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    />
+                    {addressErrors.postalCode && <p className="text-red-500 text-sm mt-1">{addressErrors.postalCode}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Country</label>
+                    <input
+                      type="text"
+                      value={addressFormData.country}
+                      onChange={(e) => setAddressFormData({...addressFormData, country: e.target.value})}
+                      className="w-full border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="isDefault"
+                    checked={addressFormData.isDefault}
+                    onChange={(e) => setAddressFormData({...addressFormData, isDefault: e.target.checked})}
+                    className="w-4 h-4"
+                  />
+                  <label htmlFor="isDefault" className="text-sm text-gray-700">Set as default address</label>
+                </div>
+                
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="submit"
+                    disabled={addressLoading}
+                    className="bg-black text-white px-6 py-2 font-medium hover:bg-gray-800 transition-colors disabled:bg-gray-400"
+                  >
+                    {addressLoading ? 'Saving...' : (editingAddress ? 'Update Address' : 'Add Address')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={resetAddressForm}
+                    className="border border-black px-6 py-2 font-medium hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -348,57 +719,64 @@ const AccountPage = () => {
 
   const renderWishlist = () => (
     <div>
-      {wishlist.length === 0 ? (
-        <div className="text-center py-12">
-          <h3 className="text-lg font-semibold mb-2">Your wishlist is empty</h3>
-          <p className="text-gray-600">Start adding products to your wishlist to see them here.</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {/* Product 1 */}
+        <div className="group">
+          <div className="relative mb-4 bg-gray-100 aspect-square overflow-hidden">
+            <img 
+              src="/images/IMAGE_1.png" 
+              alt="Ribbed Tank Top"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+          </div>
+          <h3 className="font-semibold mb-2">Ribbed Tank Top</h3>
+          <p className="font-medium mb-3">$16.95</p>
+          <div className="flex gap-2">
+            <button className="w-5 h-5 rounded-full bg-orange-400 border-2 border-orange-400"></button>
+            <button className="w-5 h-5 rounded-full bg-black border-2 border-gray-300"></button>
+          </div>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {wishlist.map((item) => (
-            <div key={item._id} className="group">
-              <div className="relative mb-4 bg-gray-100 aspect-square overflow-hidden">
-                <img 
-                  src={item.product?.images?.[0] || '/images/placeholder.svg'} 
-                  alt={item.product?.name || 'Product'}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <button 
-                  onClick={() => handleRemoveFromWishlist(item._id)}
-                  className="absolute top-4 right-4 bg-white p-2 rounded-full shadow-md hover:bg-gray-50 transition-colors"
-                >
-                  <svg className="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
-                </button>
-              </div>
-              <h3 className="font-semibold mb-2">{item.product?.name || 'Product'}</h3>
-              <p className="font-medium mb-3">${item.product?.price || '0.00'}</p>
-              <div className="flex gap-2">
-                {item.product?.colors?.slice(0, 3).map((color, index) => (
-                  <button 
-                    key={index}
-                    className={`w-5 h-5 rounded-full border-2 border-gray-300`}
-                    style={{ backgroundColor: color }}
-                  ></button>
-                ))}
-              </div>
+
+        {/* Product 2 */}
+        <div className="group">
+          <div className="relative mb-4 bg-gray-100 aspect-square overflow-hidden">
+            <img 
+              src="/images/IMAGE_2.png" 
+              alt="Ribbed Modal T-shirt"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+            <div className="absolute top-4 right-4 bg-white px-2 py-1 text-sm font-medium">
+              You are good to go!
             </div>
-          ))}
+          </div>
+          <h3 className="font-semibold mb-2">Ribbed Modal T-shirt</h3>
+          <p className="font-medium mb-3">$18.95</p>
+          <div className="flex gap-2">
+            <button className="w-5 h-5 rounded-full bg-green-400 border-2 border-green-400"></button>
+            <button className="w-5 h-5 rounded-full bg-pink-300 border-2 border-gray-300"></button>
+            <button className="w-5 h-5 rounded-full bg-green-200 border-2 border-gray-300"></button>
+          </div>
         </div>
-      )}
+
+        {/* Product 3 */}
+        <div className="group">
+          <div className="relative mb-4 bg-gray-100 aspect-square overflow-hidden">
+            <img 
+              src="/images/IMAGE_3.png" 
+              alt="Oversized Printed T-shirt"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+          </div>
+          <h3 className="font-semibold mb-2">Oversized Printed T-shirt</h3>
+          <p className="font-medium mb-3">$10.00</p>
+        </div>
+      </div>
     </div>
   );
 
   const renderAccountDetails = () => (
     <div>
-      {error && (
-        <div className="max-w-2xl mb-4 p-3 rounded bg-red-50 text-red-700 border border-red-200">{error}</div>
-      )}
-      {success && (
-        <div className="max-w-2xl mb-4 p-3 rounded bg-green-50 text-green-700 border border-green-200">{success}</div>
-      )}
-      <form className="max-w-2xl" onSubmit={handleSaveAccount}>
+      <form onSubmit={handleAccountSubmit} className="max-w-2xl">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -406,8 +784,8 @@ const AccountPage = () => {
             </label>
             <input
               type="text"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
+              value={accountForm.firstName}
+              onChange={(e) => setAccountForm({...accountForm, firstName: e.target.value})}
               className="w-full border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
             />
           </div>
@@ -417,8 +795,8 @@ const AccountPage = () => {
             </label>
             <input
               type="text"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
+              value={accountForm.lastName}
+              onChange={(e) => setAccountForm({...accountForm, lastName: e.target.value})}
               className="w-full border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
             />
           </div>
@@ -430,8 +808,8 @@ const AccountPage = () => {
           </label>
           <input
             type="text"
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
+            value={accountForm.displayName}
+            onChange={(e) => setAccountForm({...accountForm, displayName: e.target.value})}
             className="w-full border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
           />
         </div>
@@ -442,8 +820,8 @@ const AccountPage = () => {
           </label>
           <input
             type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={accountForm.email}
+            onChange={(e) => setAccountForm({...accountForm, email: e.target.value})}
             className="w-full border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
           />
         </div>
@@ -456,8 +834,8 @@ const AccountPage = () => {
           </label>
           <input
             type="password"
-            value={passwordCurrent}
-            onChange={(e) => setPasswordCurrent(e.target.value)}
+            value={accountForm.currentPassword}
+            onChange={(e) => setAccountForm({...accountForm, currentPassword: e.target.value})}
             className="w-full border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
           />
         </div>
@@ -468,8 +846,8 @@ const AccountPage = () => {
           </label>
           <input
             type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            value={accountForm.newPassword}
+            onChange={(e) => setAccountForm({...accountForm, newPassword: e.target.value})}
             className="w-full border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
           />
         </div>
@@ -480,17 +858,18 @@ const AccountPage = () => {
           </label>
           <input
             type="password"
-            value={passwordConfirm}
-            onChange={(e) => setPasswordConfirm(e.target.value)}
+            value={accountForm.confirmPassword}
+            onChange={(e) => setAccountForm({...accountForm, confirmPassword: e.target.value})}
             className="w-full border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
           />
         </div>
 
         <button
           type="submit"
-          className="bg-black text-white px-8 py-3 font-medium hover:bg-gray-800 transition-colors"
+          disabled={accountSaving}
+          className="bg-black text-white px-8 py-3 font-medium hover:bg-gray-800 transition-colors disabled:bg-gray-400"
         >
-          Save Changes
+          {accountSaving ? 'Saving...' : 'Save Changes'}
         </button>
       </form>
     </div>
@@ -503,10 +882,17 @@ const AccountPage = () => {
       case 'addresses': return renderAddresses();
       case 'wishlist': return renderWishlist();
       case 'account-details': return renderAccountDetails();
-      case 'logout': return <div>Logging out...</div>;
       default: return renderDashboard();
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-gray-500">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white">
@@ -528,7 +914,7 @@ const AccountPage = () => {
               {sidebarItems.map((item) => (
                 <button
                   key={item.id}
-                  onClick={() => setActiveTab(item.id)}
+                  onClick={() => handleTabClick(item.id)}
                   className={`w-full text-left px-6 py-3 font-medium transition-colors ${
                     activeTab === item.id
                       ? 'bg-red-50 text-red-600 border-l-4 border-red-600'
@@ -547,6 +933,13 @@ const AccountPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      <LogoutConfirmation
+        isOpen={showLogoutConfirmation}
+        onClose={() => setShowLogoutConfirmation(false)}
+        onConfirm={handleLogout}
+      />
     </div>
   );
 };

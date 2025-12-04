@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
 import { Product } from '../types';
-import { getDealsProducts, calculateDiscountPercentage, getProducts } from '../services/dataService';
+import { getHotDealProducts, calculateDiscountPercentage } from '../services/dataService';
 import siteConfigService from '../services/siteConfigService';
 
 // Icon Props interface
@@ -323,9 +323,9 @@ const HotDealsSection: React.FC = () => {
     // CENTRALIZED DATA LOADING - Load all data from single service
     const loadData = async () => {
       try {
-        const [homepageConfig, dealsProducts] = await Promise.all([
+        const [homepageConfig, hotDealProducts] = await Promise.all([
           siteConfigService.getHomepage(),
-          getDealsProducts()
+          getHotDealProducts()
         ]);
         setHomepage(homepageConfig);
 
@@ -336,25 +336,8 @@ const HotDealsSection: React.FC = () => {
           return;
         }
 
-        let deals = Array.isArray(dealsProducts) ? dealsProducts : [];
-
-        // Fallback: if API doesn't support onSale filter, derive deals locally
-        if (!deals.length) {
-          const all = await getProducts();
-          deals = (all || []).filter(p => (p as any).originalPrice && (p as any).price && (p as any).originalPrice > (p as any).price);
-          // Optional: sort by highest discount first
-          deals.sort((a: any, b: any) => {
-            const ad = (a.originalPrice || 0) - (a.price || 0);
-            const bd = (b.originalPrice || 0) - (b.price || 0);
-            return bd - ad;
-          });
-        }
-
-        // If specific products are assigned in admin, filter to only those
-        if (homepageConfig?.hotDealsSection?.productIds?.length > 0) {
-          const assignedIds = homepageConfig.hotDealsSection.productIds;
-          deals = deals.filter(p => assignedIds.includes((p as any)._id || (p as any).id));
-        }
+        // Only show products marked as hotDeal
+        let deals = Array.isArray(hotDealProducts) ? hotDealProducts : [];
 
         setProducts(deals);
         setIsLoading(false);

@@ -126,7 +126,7 @@ html, body {
   animation-delay: 0.3s;
 }
 
-/* Announcement Bar Animation */
+/* Announcement Bar Animation - Seamless infinite scroll */
 @keyframes scrollLeft {
   0% {
     transform: translateX(0);
@@ -136,8 +136,17 @@ html, body {
   }
 }
 
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
 .animate-scroll-left {
-  animation: scrollLeft 25s linear infinite;
+  animation: scrollLeft linear infinite;
 }
 
 .animate-scroll {
@@ -146,7 +155,7 @@ html, body {
 
 /* Testimonial Container Width - 3px extra at each end compared to divider */
 .testimonial-container {
-  width: calc(75% + 6px);
+  width: calc(92% + 6px);
 }
 
 @media (min-width: 640px) {

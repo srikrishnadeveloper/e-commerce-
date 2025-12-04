@@ -1,13 +1,30 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import siteConfigService from '../services/siteConfigService';
 import { Collection } from '../types';
+
+// Backend API URL for images
+const API_BASE_URL = 'http://localhost:5001';
+
+// Helper to normalize image URL
+const getImageUrl = (imagePath: string): string => {
+  if (!imagePath) return '/images/placeholder.jpg';
+  // If already absolute URL, use as-is
+  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    return imagePath;
+  }
+  // Prepend backend URL for relative paths
+  return `${API_BASE_URL}${imagePath.startsWith('/') ? '' : '/'}${imagePath}`;
+};
 
 const TwoBoxSection: React.FC = () => {
   const [currentSlide, setCurrentSlide] = useState<number>(0);
   const [featuredCollections, setFeaturedCollections] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchConfig = async () => {
+      setIsLoading(true);
       try {
         const config = await siteConfigService.getHomepage();
         if (config && config.featuredCollections) {
@@ -42,13 +59,33 @@ const TwoBoxSection: React.FC = () => {
             }
           ]
         });
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchConfig();
   }, []);
 
-  if (!featuredCollections) return <div>Loading...</div>;
+  // Loading state
+  if (isLoading) {
+    return (
+      <section className="py-16 bg-white">
+        <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-1/4 mb-6 ml-[8.33%]"></div>
+            <div className="w-5/6 h-[2px] bg-gray-200 mx-auto mb-12"></div>
+            <div className="w-5/6 mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="aspect-[5/4] bg-gray-200 rounded"></div>
+              <div className="aspect-[5/4] bg-gray-200 rounded"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (!featuredCollections) return null;
 
   // Check if section is disabled by admin
   if (featuredCollections.enabled === false) {
@@ -82,7 +119,7 @@ const TwoBoxSection: React.FC = () => {
             <div
               className="absolute inset-0 bg-cover bg-center transition-transform duration-700"
               style={{
-                backgroundImage: `url(${featuredCollections.collections[currentSlide].image})`,
+                backgroundImage: `url(${getImageUrl(featuredCollections.collections[currentSlide].image)})`,
                 boxShadow: '0 0 10px rgba(0, 0, 0, 0.5)'
               }}
             />
@@ -110,7 +147,10 @@ const TwoBoxSection: React.FC = () => {
                 </p>
 
                 {/* Button */}
-                <button className="inline-flex items-center gap-2 bg-white text-black px-4 py-2 text-sm font-medium transition-all duration-300 hover:bg-gray-100 group/btn rounded">
+                <Link 
+                  to={featuredCollections.collections[currentSlide].buttonLink || '#'}
+                  className="inline-flex items-center gap-2 bg-white text-black px-4 py-2 text-sm font-medium transition-all duration-300 hover:bg-gray-100 group/btn rounded"
+                >
                   <span style={{ fontFamily: "'Albert Sans', sans-serif" }}>
                     {featuredCollections.collections[currentSlide].buttonText}
                   </span>
@@ -122,7 +162,7 @@ const TwoBoxSection: React.FC = () => {
                   >
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
-                </button>
+                </Link>
               </div>
             </div>
           </div>
@@ -154,7 +194,7 @@ const TwoBoxSection: React.FC = () => {
                 <div
                   className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
                   style={{
-                    backgroundImage: `url(${collection.image})`,
+                    backgroundImage: `url(${getImageUrl(collection.image)})`,
                     boxShadow: '0 0 10px rgba(0, 0, 0, 0.5)'
                   }}
                 />
@@ -190,7 +230,10 @@ const TwoBoxSection: React.FC = () => {
                     </p>
 
                     {/* Button */}
-                    <button className="inline-flex items-center gap-2 bg-white text-black px-6 py-3 text-sm font-medium transition-all duration-300 hover:bg-gray-100 group/btn">
+                    <Link 
+                      to={collection.buttonLink || '#'}
+                      className="inline-flex items-center gap-2 bg-white text-black px-6 py-3 text-sm font-medium transition-all duration-300 hover:bg-gray-100 group/btn"
+                    >
                       <span style={{ fontFamily: "'Albert Sans', sans-serif" }}>
                         {collection.buttonText}
                       </span>
@@ -202,7 +245,7 @@ const TwoBoxSection: React.FC = () => {
                       >
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                       </svg>
-                    </button>
+                    </Link>
                   </div>
                 </div>
               </div>

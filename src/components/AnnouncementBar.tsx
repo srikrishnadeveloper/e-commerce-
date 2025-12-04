@@ -1,10 +1,14 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { useAnnouncementBar } from '../hooks/useSiteConfig';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 
 const AnnouncementBar: React.FC = () => {
   const { data, loading, error } = useAnnouncementBar();
   // Do NOT persist dismissal so it shows again on refresh
   const [dismissed, setDismissed] = useState<boolean>(false);
+  const [currentIndex, setCurrentIndex] = useState(1);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
 
   const barRef = useRef<HTMLDivElement | null>(null);
 
@@ -17,7 +21,28 @@ const AnnouncementBar: React.FC = () => {
     [announcementData]
   );
 
-  const showBar = !dismissed && isEnabled && !loading && !error;
+  const announcements = useMemo(() => {
+    if (announcementData?.announcements && announcementData.announcements.length > 0) {
+      return announcementData.announcements.filter((a: string) => a && a.trim().length > 0);
+    }
+    return [
+      'Welcome to our store - Free shipping on orders over $50!',
+      'Summer Sale - Up to 50% off selected items!',
+      'New arrivals just landed - Shop the latest trends!'
+    ];
+  }, [announcementData?.announcements]);
+
+  // Create extended array for infinite loop effect [last, ...original, first]
+  const extendedAnnouncements = useMemo(() => {
+    if (announcements.length < 2) return announcements;
+    return [
+      announcements[announcements.length - 1],
+      ...announcements,
+      announcements[0]
+    ];
+  }, [announcements]);
+
+  const showBar = !dismissed && isEnabled && !loading && !error && announcements.length > 0;
 
   // Optimized height notification with useCallback
   const notifyHeight = useCallback(() => {
@@ -37,26 +62,48 @@ const AnnouncementBar: React.FC = () => {
     };
   }, [showBar, notifyHeight]);
 
+  const handleNext = useCallback(() => {
+    if (isTransitioning || announcements.length <= 1) return;
+    setIsTransitioning(true);
+    setCurrentIndex((prev) => prev + 1);
+  }, [isTransitioning, announcements.length]);
+
+  const handlePrevious = useCallback(() => {
+    if (isTransitioning || announcements.length <= 1) return;
+    setIsTransitioning(true);
+    setCurrentIndex((prev) => prev - 1);
+  }, [isTransitioning, announcements.length]);
+
+  // Auto-advance
+  useEffect(() => {
+    if (!showBar || announcements.length <= 1 || isPaused) return;
+
+    const interval = setInterval(() => {
+      handleNext();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [showBar, announcements.length, isPaused, handleNext]);
+
+  const handleTransitionEnd = () => {
+    setIsTransitioning(false);
+    
+    // Handle infinite loop jumps
+    if (currentIndex === 0) {
+      // Jump to real last item
+      setCurrentIndex(extendedAnnouncements.length - 2);
+    } else if (currentIndex === extendedAnnouncements.length - 1) {
+      // Jump to real first item
+      setCurrentIndex(1);
+    }
+  };
+
   const handleClose = useCallback(() => {
     setDismissed(true);
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('announcementbar:height', { detail: 0 }));
     }
   }, []);
-
-  // Memoize announcements and styling for performance
-  const announcements = useMemo(() => {
-    if (announcementData?.announcements && announcementData.announcements.length > 0) {
-      return announcementData.announcements.filter(announcement =>
-        announcement && announcement.trim().length > 0
-      );
-    }
-    return [
-      'Welcome to our store - Free shipping on orders over $50!',
-      'Summer Sale - Up to 50% off selected items!',
-      'New arrivals just landed - Shop the latest trends!'
-    ];
-  }, [announcementData?.announcements]);
 
   const backgroundColor = useMemo(() =>
     announcementData?.backgroundColor || '#2c3bc5',
@@ -68,22 +115,8 @@ const AnnouncementBar: React.FC = () => {
     [announcementData?.textColor]
   );
 
-  // Memoize the announcement items for better performance
-  const announcementItems = useMemo(() =>
-    announcements.map((announcement, index) => (
-      <span
-        key={`announcement-${index}`}
-        className="text-sm font-medium px-8"
-        style={{ color: textColor }}
-      >
-        {announcement}
-      </span>
-    )),
-    [announcements, textColor]
-  );
-
   // After all hooks, decide to render or not
-  if (!showBar || announcements.length === 0) {
+  if (!showBar) {
     return null;
   }
 
@@ -93,52 +126,70 @@ const AnnouncementBar: React.FC = () => {
       role="region"
       aria-label="Site announcements"
       aria-live="polite"
-      className="w-full h-12 flex items-center fixed -top-px inset-x-0 z-[60] overflow-hidden relative pr-12"
+      className="w-full h-10 flex items-center justify-center fixed -top-px inset-x-0 z-[60] relative transition-colors duration-300"
       style={{
         fontFamily: "'Albert Sans', sans-serif",
         backgroundColor: backgroundColor,
         color: textColor
       }}
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
     >
-      {/* Left gradient fade */}
-      <div
-        className="absolute left-0 top-0 w-20 h-full z-10 pointer-events-none"
-        style={{
-          background: `linear-gradient(to right, transparent, ${backgroundColor})`
-        }}
-      ></div>
-      {/* Right gradient fade */}
-      <div
-        className="absolute right-0 top-0 w-20 h-full z-10 pointer-events-none"
-        style={{
-          background: `linear-gradient(to left, transparent, ${backgroundColor})`
-        }}
-      ></div>
-      {/* Optimized infinite scrolling container */}
-      <div className="absolute inset-0 flex items-center">
-        <div
-          className="animate-scroll-left flex items-center whitespace-nowrap"
-          style={{
-            animationDuration: `${Math.max(20, announcements.length * 4)}s`,
-            willChange: 'transform'
-          }}
+      {/* Navigation Arrows - Only show if multiple announcements */}
+      {announcements.length > 1 && (
+        <button
+          onClick={(e) => { e.stopPropagation(); handlePrevious(); }}
+          className="absolute left-4 p-1 rounded-full hover:bg-black/10 transition-colors hidden md:flex items-center justify-center z-20"
+          aria-label="Previous announcement"
         >
-          {/* First set of announcements */}
-          {announcementItems}
-          {/* Duplicate set for seamless loop */}
-          {announcementItems}
+          <ChevronLeft size={16} />
+        </button>
+      )}
+
+      {/* Content */}
+      <div className="flex-1 overflow-hidden h-full relative mx-12">
+        <div 
+          className="flex h-full items-center absolute top-0 left-0 w-full"
+          style={{
+            transform: `translateX(-${currentIndex * 100}%)`,
+            transition: isTransitioning ? 'transform 0.3s ease-in-out' : 'none'
+          }}
+          onTransitionEnd={handleTransitionEnd}
+        >
+          {extendedAnnouncements.map((announcement, index) => (
+            <div 
+              key={index} 
+              className="w-full flex-shrink-0 flex items-center justify-center px-4"
+              style={{ width: '100%' }}
+            >
+              <p className="text-sm font-medium text-center truncate">
+                {announcement}
+              </p>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* Close (X) button */}
+      {/* Navigation Arrows - Only show if multiple announcements */}
+      {announcements.length > 1 && (
+        <button
+          onClick={(e) => { e.stopPropagation(); handleNext(); }}
+          className="absolute right-10 md:right-12 p-1 rounded-full hover:bg-black/10 transition-colors hidden md:flex items-center justify-center z-20"
+          aria-label="Next announcement"
+        >
+          <ChevronRight size={16} />
+        </button>
+      )}
+
+      {/* Close Button */}
       <button
         type="button"
         aria-label="Dismiss announcements"
         onClick={handleClose}
-        className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center rounded hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white/60 z-20"
+        className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-black/10 transition-colors flex items-center justify-center z-20"
         style={{ color: textColor }}
       >
-        <span aria-hidden="true" className="text-xl leading-none">×</span>
+        <X size={16} />
       </button>
     </div>
   );

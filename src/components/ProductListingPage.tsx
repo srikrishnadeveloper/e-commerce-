@@ -322,6 +322,12 @@ const ProductListingPage: React.FC = () => {
     useEffect(() => {
       let mounted = true;
       const refresh = async () => {
+        // Only fetch cart/wishlist if user is authenticated
+        if (!authService.isAuthenticated()) {
+          setInCart(false);
+          setInWishlist(false);
+          return;
+        }
         const [cartIds, wishIds] = await Promise.all([
           cartService.getCartIds(),
           wishlistService.getWishlistIds(),

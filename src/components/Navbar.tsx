@@ -7,10 +7,10 @@ import cartService from '../services/cartService';
 import LoginModal from './LoginModal.tsx';
 import RegisterModal from './RegisterModal.tsx';
 import SearchSidebar from './SearchSidebar';
+import LogoutConfirmation from './LogoutConfirmation';
 
 const Navbar: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [openAccordion, setOpenAccordion] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [wishlistCount, setWishlistCount] = useState(0);
@@ -18,6 +18,8 @@ const Navbar: React.FC = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
+  const [announcementBarHeight, setAnnouncementBarHeight] = useState(0);
   const sidebarRef = useRef<HTMLDivElement | null>(null);
   const toggleButtonRef = useRef<HTMLButtonElement | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -27,13 +29,33 @@ const Navbar: React.FC = () => {
   const { data: navigation, loading: navLoading, error: navError } = useNavigation();
   const { data: branding, loading: brandLoading, error: brandError } = useBranding();
 
+  // Listen for announcement bar height changes
+  useEffect(() => {
+    const updateHeight = () => {
+      const announcementBar = document.querySelector('[class*="animate-scroll"]')?.closest('div[class*="w-full"]');
+      if (announcementBar) {
+        setAnnouncementBarHeight((announcementBar as HTMLElement).offsetHeight || 48);
+      } else {
+        setAnnouncementBarHeight(0);
+      }
+    };
+    
+    updateHeight();
+    window.addEventListener('resize', updateHeight);
+    // Small delay to catch dynamic announcement bar rendering
+    const timer = setTimeout(updateHeight, 100);
+    
+    return () => {
+      window.removeEventListener('resize', updateHeight);
+      clearTimeout(timer);
+    };
+  }, []);
+
   const toggleSidebar = useCallback(() => {
     setIsSidebarOpen((prev) => !prev);
   }, []);
 
-  const toggleAccordion = (section: string) => {
-    setOpenAccordion(openAccordion === section ? null : section);
-  };
+  // No accordion behavior on mobile sidenav, so no state needed here
 
   // Check authentication status and load user data
   useEffect(() => {
@@ -315,7 +337,7 @@ const Navbar: React.FC = () => {
               </Link>
               <button
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
-                onClick={() => authService.logout()}
+                onClick={() => setShowLogoutConfirmation(true)}
                 aria-label="Logout"
                 title="Logout"
               >
@@ -465,18 +487,31 @@ const Navbar: React.FC = () => {
         </div>
       </nav>
 
-      {/* Mobile Sidebar Overlay */}
+      {/* Mobile Sidebar Overlay - starts below announcement bar */}
       {isSidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-x-0 bottom-0 bg-black bg-opacity-50 z-[90] lg:hidden"
+          style={{ top: `${announcementBarHeight}px` }}
           onClick={toggleSidebar}
         />
       )}
 
-      {/* Mobile Sidebar */}
-      <div ref={sidebarRef} role="dialog" aria-modal="true" aria-label="Mobile menu" className={`fixed top-0 left-0 h-full w-80 bg-white z-50 transform transition-transform duration-300 ease-in-out lg:hidden ${
-        isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      }`} style={{ fontFamily: "'Albert Sans', sans-serif" }}>
+      {/* Mobile Sidebar - positioned below announcement bar */}
+      <div 
+        ref={sidebarRef} 
+        role="dialog" 
+        aria-modal="true" 
+        aria-label="Mobile menu" 
+        className={`fixed left-0 w-80 bg-white z-[100] transform transition-transform duration-300 ease-in-out lg:hidden flex flex-col ${
+          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`} 
+        style={{ 
+          fontFamily: "'Albert Sans', sans-serif",
+          top: `${announcementBarHeight}px`,
+          height: `calc(100vh - ${announcementBarHeight}px)`,
+          maxHeight: `calc(100vh - ${announcementBarHeight}px)`
+        }}
+      >
         {/* Sidebar Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <img
@@ -507,26 +542,19 @@ const Navbar: React.FC = () => {
           </button>
         </div>
 
-        {/* Sidebar Content */}
+        {/* Sidebar Content - scrollable */}
         <div className="flex-1 overflow-y-auto">
           {/* Navigation Menu */}
           <div className="p-4">
             {/* Home */}
             <div className="mb-4">
-              <button 
-                onClick={() => toggleAccordion('home')}
+              <Link 
+                to="/"
                 className="w-full flex items-center justify-between py-3 text-left font-medium text-gray-900 hover:text-black transition-colors"
+                onClick={() => setIsSidebarOpen(false)}
               >
                 <span className="text-black">Home</span>
-                <svg 
-                  className={`w-5 h-5 transform transition-transform ${openAccordion === 'home' ? 'rotate-180' : ''}`}
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
+              </Link>
             </div>
 
             {/* Products */}
@@ -537,14 +565,6 @@ const Navbar: React.FC = () => {
                 onClick={() => setIsSidebarOpen(false)}
               >
                 <span>Products</span>
-                <svg 
-                  className="w-5 h-5"
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
               </Link>
             </div>
 
@@ -633,7 +653,7 @@ const Navbar: React.FC = () => {
               </Link>
               <button 
                 className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                onClick={() => { authService.logout(); setIsSidebarOpen(false); }}
+                onClick={() => { setIsSidebarOpen(false); setShowLogoutConfirmation(true); }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
@@ -659,19 +679,7 @@ const Navbar: React.FC = () => {
             </button>
           )}
 
-          {/* Language and Currency */}
-          <div className="flex gap-4">
-            <select className="flex-1 py-2 px-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black">
-              <option value="USD">🇺🇸 USD</option>
-              <option value="EUR">🇪🇺 EUR</option>
-              <option value="GBP">🇬🇧 GBP</option>
-            </select>
-            <select className="flex-1 py-2 px-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black">
-              <option value="English">English</option>
-              <option value="Spanish">Español</option>
-              <option value="French">Français</option>
-            </select>
-          </div>
+          {/* Language and Currency removed as requested */}
         </div>
       </div>
 
@@ -705,6 +713,18 @@ const Navbar: React.FC = () => {
         onSwitchToLogin={() => {
           setShowRegisterModal(false);
           setShowLoginModal(true);
+        }}
+      />
+
+      {/* Logout Confirmation Modal */}
+      <LogoutConfirmation
+        isOpen={showLogoutConfirmation}
+        onClose={() => setShowLogoutConfirmation(false)}
+        onConfirm={() => {
+          setShowLogoutConfirmation(false);
+          authService.logout();
+          // Refresh the page after logout
+          window.location.href = '/';
         }}
       />
     </>

@@ -34,6 +34,36 @@ api.interceptors.response.use(
 );
 
 class AuthService {
+  // Send OTP for email verification
+  async sendOTP(email) {
+    try {
+      const response = await api.post('/auth/send-otp', { email });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Failed to send verification code' };
+    }
+  }
+
+  // Verify OTP
+  async verifyOTP(email, otp) {
+    try {
+      const response = await api.post('/auth/verify-otp', { email, otp });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'OTP verification failed' };
+    }
+  }
+
+  // Resend OTP
+  async resendOTP(email) {
+    try {
+      const response = await api.post('/auth/resend-otp', { email });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Failed to resend verification code' };
+    }
+  }
+
   // Register new user
   async signup(userData) {
     try {

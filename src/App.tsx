@@ -8,6 +8,7 @@ import TwoBoxSection from './components/TwoBoxSection.tsx'
 import TestimonialSection from './components/TestimonialSection.tsx'
 import Footer from './components/Footer.tsx'
 import ContactUs from './components/ContactUs.tsx'
+import AboutUs from './components/AboutUs.tsx'
 import FAQPage from './components/FAQPage.tsx'
 import ProductListingPage from './components/ProductListingPage.tsx'
 import ProductDetailPage from './components/ProductDetailPage.tsx'
@@ -15,9 +16,16 @@ import AccountPage from './components/AccountPage.tsx'
 import WishlistPage from './pages/WishlistPage'
 import LogoutPage from './pages/LogoutPage'
 import CartPage from './pages/CartPage'
+import CheckoutPage from './pages/CheckoutPage'
 import BillingPage from './pages/BillingPage'
 import OrderConfirmationPage from './pages/OrderConfirmationPage'
+import OrderTracking from './components/OrderTracking'
 import WelcomePopup from './components/WelcomePopup'
+import ResetPasswordPage from './pages/ResetPasswordPage'
+import RefundPolicyPage from './pages/RefundPolicyPage'
+import TermsConditionsPage from './pages/TermsConditionsPage'
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
+import NotFoundPage from './pages/NotFoundPage'
 import './App.css'
 import authService from './services/authService'
 
@@ -90,6 +98,7 @@ const App: React.FC = () => {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/contact" element={<ContactUs />} />
+          <Route path="/about" element={<AboutUs />} />
           <Route path="/home" element={<HomePage />} />
           <Route path="/faq" element={<FAQPage />} />
           <Route path="/products" element={<ProductListingPage />} />
@@ -100,8 +109,16 @@ const App: React.FC = () => {
           <Route path="/wishlist" element={<WishlistPage />} />
           <Route path="/logout" element={<LogoutPage />} />
           <Route path="/cart" element={<CartPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/billing" element={<BillingPage />} />
           <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
+          <Route path="/order-tracking/:orderId" element={<OrderTracking />} />
+          <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+          <Route path="/refund-policy" element={<RefundPolicyPage />} />
+          <Route path="/terms-conditions" element={<TermsConditionsPage />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+          {/* Catch-all route for 404 */}
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
         <Footer />
         

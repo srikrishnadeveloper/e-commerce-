@@ -1,5 +1,4 @@
 import React from 'react';
-import authService from '../services/authService';
 
 interface LogoutConfirmationProps {
   isOpen: boolean;
@@ -12,7 +11,6 @@ const LogoutConfirmation: React.FC<LogoutConfirmationProps> = ({ isOpen, onClose
 
   const handleLogout = () => {
     onConfirm();
-    authService.logout();
   };
 
   return (

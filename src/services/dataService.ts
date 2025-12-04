@@ -113,21 +113,21 @@ export const getProductsByCategory = async (categoryId: string): Promise<Product
 };
 
 /**
- * Get featured products
- * Backend: API call to GET /api/products?featured=true
+ * Get hot deal products
+ * Backend: API call to GET /api/products/hotdeals
  */
-export const getFeaturedProducts = async (): Promise<Product[]> => {
+export const getHotDealProducts = async (): Promise<Product[]> => {
   try {
-    const response = await apiRequest('/products?featured=true');
+    const response = await apiRequest('/products/hotdeals');
   return normalizeProducts(response.data || []);
   } catch (error) {
-    console.error('Error fetching featured products:', error);
+    console.error('Error fetching hot deal products:', error);
     return [];
   }
 };
 
 /**
- * Get products on sale (deals)
+ * Get products on sale (deals) - products with discount
  * Backend: API call to GET /api/products?onSale=true
  */
 export const getDealsProducts = async (): Promise<Product[]> => {

@@ -2,3 +2,4 @@
 export * from './Product';
 export * from './SiteConfig';
 export * from './Components';
+export * from './Address';

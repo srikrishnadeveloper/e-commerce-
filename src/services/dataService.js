@@ -154,6 +154,22 @@ export const getBestsellerProducts = async (limit = 8) => {
 // Backward-compatible alias (camel-cased with capital S)
 export const getBestSellerProducts = getBestsellerProducts;
 
+/**
+ * Get hot deal products
+ * @param {number} limit - Number of hot deal products to return
+ * @returns {Promise<Array>} Array of hot deal products
+ */
+export const getHotDealProducts = async (limit = 8) => {
+  try {
+    const response = await apiRequest(`/products/hotdeals?limit=${limit}`);
+    console.log('✅ Hot deal products fetched from backend:', response.data?.length || 0, 'products');
+    return response.data || response || [];
+  } catch (error) {
+    console.error('❌ Error fetching hot deal products from backend:', error);
+    throw error; // Don't fallback to static data, let the error propagate
+  }
+};
+
 // =============================================================================
 // CATEGORY DATA FUNCTIONS
 // =============================================================================
@@ -366,6 +382,7 @@ export default {
   getProductsByCategory,
   getBestsellerProducts,
   getBestSellerProducts,
+  getHotDealProducts,
   getDealsProducts,
   
   // Category functions

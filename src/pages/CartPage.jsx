@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import cartService from '../services/cartService';
-import orderService from '../services/orderService';
 import authService from '../services/authService';
 
 const CartPage = () => {
+  const navigate = useNavigate();
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -73,18 +73,9 @@ const CartPage = () => {
     }
   };
 
-  const handleCheckout = async () => {
-    try {
-      setError('');
-      const response = await orderService.createOrderFromCart();
-      if (response.success) {
-        const orderId = response.data?._id;
-        const target = orderId ? `/account?tab=orders&id=${orderId}` : `/account?tab=orders`;
-        window.location.href = target;
-      }
-    } catch (err) {
-      setError(err.message || 'Failed to create order');
-    }
+  const handleCheckout = () => {
+    // Navigate to checkout page
+    navigate('/checkout');
   };
 
   const FREE_SHIPPING_THRESHOLD = 50; // keep UI consistent with backend free shipping rule

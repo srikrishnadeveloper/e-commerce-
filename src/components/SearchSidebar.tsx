@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Product, Category } from '../types';
-import { searchProducts, getCategories, getFeaturedProducts, getBestsellerProducts, getProducts } from '../services/dataService';
+import { searchProducts, getCategories, getHotDealProducts, getBestsellerProducts, getProducts } from '../services/dataService';
 import cartService from '../services/cartService';
 import wishlistService from '../services/wishlistService';
 import authService from '../services/authService';
@@ -38,6 +38,14 @@ const fuzzyMatch = (text: string, query: string): number => {
   return score;
 };
 
+// Placeholder image for products without images
+const PLACEHOLDER_IMAGE = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"%3E%3Crect fill="%23f3f4f6" width="100" height="100"/%3E%3Ctext fill="%239ca3af" font-family="sans-serif" font-size="12" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3ENo Image%3C/text%3E%3C/svg%3E';
+
+// Helper to get product image with fallback
+const getProductImage = (product: Product): string => {
+  return product.images?.[0] || PLACEHOLDER_IMAGE;
+};
+
 interface SearchSidebarProps {
   isOpen: boolean;
   onClose: () => void;
@@ -47,11 +55,14 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [trending, setTrending] = useState<Product[]>([]);
   const [cartIds, setCartIds] = useState<Set<string>>(new Set());
   const [wishIds, setWishIds] = useState<Set<string>>(new Set());
+  const [announcementBarHeight, setAnnouncementBarHeight] = useState(0);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
   const resultsCacheRef = useRef<Map<string, Product[]>>(new Map());
@@ -71,16 +82,38 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
     mobile: ['phone', 'smartphone'],
   };
 
+  // Listen for announcement bar height changes
+  useEffect(() => {
+    const handleAnnouncementBarHeight = (e: CustomEvent<number>) => {
+      setAnnouncementBarHeight(e.detail || 0);
+    };
+    
+    // Try to get initial height from existing announcement bar
+    const announcementBar = document.querySelector('[role="region"][aria-label="Site announcements"]');
+    if (announcementBar) {
+      setAnnouncementBarHeight((announcementBar as HTMLElement).offsetHeight || 48);
+    }
+    
+    window.addEventListener('announcementbar:height', handleAnnouncementBarHeight as EventListener);
+    return () => {
+      window.removeEventListener('announcementbar:height', handleAnnouncementBarHeight as EventListener);
+    };
+  }, []);
+
   // Load categories and current cart/wishlist ids when opening
   useEffect(() => {
     let mounted = true;
     const loadStatic = async () => {
+      setInitialLoading(true);
+      setError(null);
       try {
-        const [cats, cids, wids, feat, best, all] = await Promise.all([
+        // Only fetch cart/wishlist if authenticated
+        const isAuth = authService.isAuthenticated();
+        const [cats, cids, wids, hotDeals, best, all] = await Promise.all([
           getCategories(),
-          cartService.getCartIds(),
-          wishlistService.getWishlistIds(),
-          getFeaturedProducts(),
+          isAuth ? cartService.getCartIds() : Promise.resolve(new Set<string>()),
+          isAuth ? wishlistService.getWishlistIds() : Promise.resolve(new Set<string>()),
+          getHotDealProducts(),
           getBestsellerProducts(),
           getProducts(),
         ]);
@@ -88,9 +121,9 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
         setCategories(cats || []);
         setCartIds(new Set(cids));
         setWishIds(new Set(wids));
-        // Build a unique trending pool from featured + bestseller
+        // Build a unique trending pool from hot deals + bestseller
         const map = new Map<string, Product>();
-        [...(feat || []), ...(best || [])].forEach(p => {
+        [...(hotDeals || []), ...(best || [])].forEach(p => {
           const id = String(p._id || p.id);
           if (!map.has(id)) map.set(id, p);
         });
@@ -98,6 +131,9 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
         allProductsRef.current = all || [];
       } catch (e) {
         console.error('SearchSidebar init error:', e);
+        if (mounted) setError('Failed to load search data. Please try again.');
+      } finally {
+        if (mounted) setInitialLoading(false);
       }
     };
     if (isOpen) {
@@ -113,6 +149,12 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
   // Listen to cart/wishlist change events to keep badges in sync
   useEffect(() => {
     const refreshIds = async () => {
+      // Only refresh if authenticated
+      if (!authService.isAuthenticated()) {
+        setCartIds(new Set());
+        setWishIds(new Set());
+        return;
+      }
       try {
         const [cids, wids] = await Promise.all([
           cartService.getCartIds(),
@@ -166,8 +208,9 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
       return;
     }
     let cancelled = false;
-    // serve cached results immediately if present
-    const cached = resultsCacheRef.current.get(q.toLowerCase());
+    // serve cached results immediately if present (include sortBy in cache key)
+    const cacheKey = `${q.toLowerCase()}_${sortBy}`;
+    const cached = resultsCacheRef.current.get(cacheKey);
     if (cached) {
       setResults(cached);
       setLoading(false);
@@ -176,6 +219,7 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
     }
     const t = setTimeout(async () => {
       try {
+        // Clear cache for this query when sort changes to ensure fresh sorted results
         // Expand query with synonyms to improve recall
         const expanded = new Set<string>([q]);
         const qTokens = q.toLowerCase().split(/\s+/).filter(Boolean);
@@ -202,8 +246,8 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
               maxScore = Math.max(maxScore, score);
             }
             
-            // Only include products with decent match scores
-            if (maxScore > 10) {
+            // Only include products with decent match scores (30+ ensures relevance)
+            if (maxScore > 30) {
               searchResults.push({ product, score: maxScore });
             }
           }
@@ -244,7 +288,7 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
             sorted.sort((a: any, b: any) => (b.reviews || 0) - (a.reviews || 0));
           }
           setResults(sorted);
-          resultsCacheRef.current.set(q.toLowerCase(), sorted);
+          resultsCacheRef.current.set(cacheKey, sorted);
         }
       } catch (e) {
         if (!cancelled) {
@@ -254,17 +298,17 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
       } finally {
         if (!cancelled) setLoading(false);
       }
-    }, 100);
+    }, 300);
     return () => {
       cancelled = true;
       clearTimeout(t);
     };
   }, [query, isOpen, sortBy]);
 
-  // Persist recent searches
+  // Persist recent searches only when results are found
   useEffect(() => {
     const q = query.trim();
-    if (!q) return;
+    if (!q || results.length === 0) return;
     // update after small idle window post-search
     const t = setTimeout(() => {
       setRecentSearches(prev => {
@@ -274,7 +318,7 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
       });
     }, 400);
     return () => clearTimeout(t);
-  }, [results]);
+  }, [results, query]);
 
   const handleAddToCart = useCallback(async (pid: string) => {
     if (!authService.isAuthenticated()) {
@@ -354,22 +398,28 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
 
   return (
     <>
-      {/* Overlay */}
+      {/* Overlay - starts below announcement bar */}
       <div
-        className={`fixed inset-0 bg-black/50 transition-opacity duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'} z-40`}
+        className={`fixed inset-x-0 bottom-0 bg-black/50 transition-opacity duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'} z-40`}
+        style={{ top: `${announcementBarHeight}px` }}
         aria-hidden="true"
       />
-      {/* Panel */}
+      {/* Panel - positioned below announcement bar */}
       <div
         ref={panelRef}
-        className={`fixed top-0 right-0 h-full w-full sm:w-[420px] md:w-[520px] bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
-        style={{ fontFamily: "'Albert Sans', sans-serif" }}
+        className={`fixed right-0 w-full sm:w-[420px] md:w-[480px] lg:w-[520px] bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'} flex flex-col`}
+        style={{ 
+          fontFamily: "'Albert Sans', sans-serif",
+          top: `${announcementBarHeight}px`,
+          height: `calc(100vh - ${announcementBarHeight}px)`,
+          maxHeight: `calc(100vh - ${announcementBarHeight}px)`
+        }}
         role="dialog"
         aria-modal="true"
         aria-label="Search"
       >
         {/* Header with input */}
-        <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center gap-2">
+        <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center gap-2 flex-shrink-0">
           <div className="relative flex-1">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -399,7 +449,7 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
               </button>
             )}
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-md" aria-label="Close search">
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-md flex-shrink-0" aria-label="Close search">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="18" y1="6" x2="6" y2="18"/>
               <line x1="6" y1="6" x2="18" y2="18"/>
@@ -407,10 +457,31 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
           </button>
         </div>
 
-        {/* Body */}
-        <div className="h-[calc(100%-64px)] overflow-y-auto p-3 sm:p-4">
+        {/* Body - scrollable content */}
+        <div className="flex-1 overflow-y-auto p-3 sm:p-4 overscroll-contain">
+          {/* Loading state for initial data */}
+          {initialLoading && !hasQuery && (
+            <div className="py-10 text-center">
+              <div className="inline-block w-6 h-6 border-2 border-gray-300 border-t-black rounded-full animate-spin mb-2"></div>
+              <p className="text-sm text-gray-500">Loading...</p>
+            </div>
+          )}
+
+          {/* Error state */}
+          {error && !hasQuery && (
+            <div className="py-10 text-center">
+              <p className="text-sm text-red-500 mb-2">{error}</p>
+              <button 
+                onClick={() => window.location.reload()} 
+                className="text-sm text-blue-600 hover:underline"
+              >
+                Try again
+              </button>
+            </div>
+          )}
+
           {/* When there's no query, show recent searches, categories, and trending */}
-          {!hasQuery && (
+          {!hasQuery && !initialLoading && !error && (
             <div className="space-y-6">
               {recentSearches.length > 0 && (
                 <div>
@@ -454,7 +525,7 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
                         <li key={pid} className="p-2.5">
                           <div className="flex items-center gap-3">
                             <Link to={`/product/${pid}`} className="w-12 h-12 rounded-md overflow-hidden bg-gray-100 flex-shrink-0" onClick={onClose}>
-                              <img src={p.images?.[0]} alt={p.name} className="w-full h-full object-cover" />
+                              <img src={getProductImage(p)} alt={p.name} className="w-full h-full object-cover" loading="lazy" />
                             </Link>
                             <div className="flex-1 min-w-0">
                               <Link to={`/product/${pid}`} className="block text-sm text-gray-900 truncate hover:underline" onClick={onClose}>
@@ -574,7 +645,7 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
                       <li key={pid} className="py-3">
                         <div className="flex items-center gap-3">
                           <Link to={`/product/${pid}`} className="w-14 h-14 flex-shrink-0 rounded-md overflow-hidden bg-gray-100" onClick={onClose}>
-                            <img src={p.images?.[0]} alt={p.name} className="w-full h-full object-cover" />
+                            <img src={getProductImage(p)} alt={p.name} className="w-full h-full object-cover" loading="lazy" />
                           </Link>
                           <div className="flex-1 min-w-0">
                             <Link to={`/product/${pid}`} className="block text-sm font-medium text-gray-900 truncate hover:underline" onClick={onClose}>

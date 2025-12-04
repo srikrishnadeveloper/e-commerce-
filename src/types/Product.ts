@@ -29,7 +29,7 @@ export interface Product {
   specifications: Specifications;
   tags: string[];
   bestseller: boolean;
-  featured: boolean;
+  hotDeal: boolean;
   onSale?: boolean;
   dealText?: string;
 }
