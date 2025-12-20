@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react'
-import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 import AnnouncementBar from './components/AnnouncementBar.tsx'
 import Navbar from './components/Navbar.tsx'
 import HeroCarousel from './components/HeroCarousel.tsx'
+import ServiceFeaturesSection from './components/ServiceFeaturesSection.tsx'
 import HotDealsSection from './components/HotDealsSection.tsx'
 import TwoBoxSection from './components/TwoBoxSection.tsx'
 import TestimonialSection from './components/TestimonialSection.tsx'
@@ -28,10 +29,26 @@ import NotFoundPage from './pages/NotFoundPage'
 import './App.css'
 import authService from './services/authService'
 
+// Scroll to top component - scrolls to top on route change
+const ScrollToTop: React.FC = () => {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'instant'
+    });
+  }, [pathname]);
+
+  return null;
+};
+
 // Home page component
 const HomePage: React.FC = () => (
   <>
     <HeroCarousel />
+    <ServiceFeaturesSection />
     <HotDealsSection />
     <TwoBoxSection />
     <TestimonialSection />
@@ -91,6 +108,7 @@ const App: React.FC = () => {
 
   return (
     <Router>
+      <ScrollToTop />
       <div className="min-h-screen bg-white">
         <AnnouncementBar />
         <Navbar />

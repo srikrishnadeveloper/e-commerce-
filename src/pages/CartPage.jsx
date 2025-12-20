@@ -130,62 +130,121 @@ const CartPage = () => {
               <div className="space-y-4 sm:space-y-5">
                 {cart.items.map((item) => (
                   <div key={item._id} className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5">
-                    <div className="grid grid-cols-[72px_1fr] sm:grid-cols-[96px_1fr_auto] items-center gap-4 sm:gap-5">
-                      {/* Image */}
-                      <div className="relative w-[72px] h-[72px] sm:w-24 sm:h-24 rounded-lg overflow-hidden border border-gray-200">
-                        <img
-                          src={(item.product.images && item.product.images[0]) || '/images/placeholder.jpg'}
-                          alt={item.product.name}
-                          className="absolute inset-0 w-full h-full object-cover"
-                        />
+                    {/* Mobile Layout */}
+                    <div className="sm:hidden">
+                      <div className="flex gap-4">
+                        {/* Image */}
+                        <div className="relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
+                          <img
+                            src={(item.product.images && item.product.images[0]) || '/images/placeholder.jpg'}
+                            alt={item.product.name}
+                            className="absolute inset-0 w-full h-full object-cover"
+                          />
+                        </div>
+
+                        {/* Product Info */}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-base text-black font-medium line-clamp-2 leading-snug">{item.product.name}</h3>
+                          <p className="text-gray-600 text-sm mt-1">₹{item.product.price}</p>
+                          {(item.selectedColor || item.selectedSize) && (
+                            <p className="text-gray-500 text-xs mt-1">
+                              {item.selectedColor && <span>Color: {item.selectedColor}</span>}
+                              {item.selectedColor && item.selectedSize && <span> • </span>}
+                              {item.selectedSize && <span>Size: {item.selectedSize}</span>}
+                            </p>
+                          )}
+                        </div>
                       </div>
 
-                      {/* Title + unit price + color/size */}
-                      <div className="min-w-0">
-                        <h3 className="text-base sm:text-lg lg:text-xl text-black font-medium truncate">{item.product.name}</h3>
-                        <p className="text-gray-600 text-sm sm:text-base mt-1">₹{item.product.price}</p>
-                        {(item.selectedColor || item.selectedSize) && (
-                          <p className="text-gray-500 text-xs sm:text-sm mt-1">
-                            {item.selectedColor && <span>Color: {item.selectedColor}</span>}
-                            {item.selectedColor && item.selectedSize && <span> • </span>}
-                            {item.selectedSize && <span>Size: {item.selectedSize}</span>}
-                          </p>
-                        )}
-                      </div>
+                      {/* Controls row for mobile */}
+                      <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
+                        {/* Quantity Controls */}
+                        <div className="flex items-center border border-gray-200 rounded-lg">
+                          <button
+                            onClick={() => handleQuantityChange(item._id, item.quantity - 1)}
+                            disabled={updatingItem === item._id}
+                            className="w-9 h-9 flex items-center justify-center text-gray-600 hover:bg-gray-50 disabled:opacity-50 rounded-l-lg"
+                            aria-label={`Decrease quantity of ${item.product.name}`}
+                          >
+                            −
+                          </button>
+                          <span className="w-10 text-center text-sm font-medium">{item.quantity}</span>
+                          <button
+                            onClick={() => handleQuantityChange(item._id, item.quantity + 1)}
+                            disabled={updatingItem === item._id}
+                            className="w-9 h-9 flex items-center justify-center text-gray-600 hover:bg-gray-50 disabled:opacity-50 rounded-r-lg"
+                            aria-label={`Increase quantity of ${item.product.name}`}
+                          >
+                            +
+                          </button>
+                        </div>
 
-                      {/* Item total on larger screens */}
-                      <p className="hidden sm:block text-lg font-medium text-black whitespace-nowrap">₹{item.itemTotal.toFixed(2)}</p>
+                        {/* Price and Remove */}
+                        <div className="flex items-center">
+                          <button
+                            onClick={() => handleRemoveItem(item._id)}
+                            className="text-red-500 hover:text-red-600 text-sm font-medium"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
                     </div>
 
-                    {/* Controls row: qty on the left, total + remove on the right (mobile) */}
-                    <div className="mt-4 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleQuantityChange(item._id, item.quantity - 1)}
-                          disabled={updatingItem === item._id}
-                          className="w-8 h-8 sm:w-9 sm:h-9 rounded-md border border-gray-300 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50"
-                          aria-label={`Decrease quantity of ${item.product.name}`}
-                        >
-                          –
-                        </button>
-                        <span className="w-6 sm:w-8 text-center">{item.quantity}</span>
-                        <button
-                          onClick={() => handleQuantityChange(item._id, item.quantity + 1)}
-                          disabled={updatingItem === item._id}
-                          className="w-8 h-8 sm:w-9 sm:h-9 rounded-md border border-gray-300 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50"
-                          aria-label={`Increase quantity of ${item.product.name}`}
-                        >
-                          +
-                        </button>
+                    {/* Desktop Layout */}
+                    <div className="hidden sm:block">
+                      <div className="grid grid-cols-[96px_1fr_auto] items-center gap-5">
+                        {/* Image */}
+                        <div className="relative w-24 h-24 rounded-lg overflow-hidden border border-gray-200">
+                          <img
+                            src={(item.product.images && item.product.images[0]) || '/images/placeholder.jpg'}
+                            alt={item.product.name}
+                            className="absolute inset-0 w-full h-full object-cover"
+                          />
+                        </div>
+
+                        {/* Title + unit price + color/size */}
+                        <div className="min-w-0">
+                          <h3 className="text-lg lg:text-xl text-black font-medium truncate">{item.product.name}</h3>
+                          <p className="text-gray-600 text-base mt-1">₹{item.product.price}</p>
+                          {(item.selectedColor || item.selectedSize) && (
+                            <p className="text-gray-500 text-sm mt-1">
+                              {item.selectedColor && <span>Color: {item.selectedColor}</span>}
+                              {item.selectedColor && item.selectedSize && <span> • </span>}
+                              {item.selectedSize && <span>Size: {item.selectedSize}</span>}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Item total */}
+                        <p className="text-lg font-medium text-black whitespace-nowrap">₹{item.itemTotal.toFixed(2)}</p>
                       </div>
 
-                      <div className="flex items-center gap-3 sm:gap-4">
-                        <span className="sm:hidden inline-flex items-center px-2.5 py-1 rounded-md bg-gray-100 text-black text-sm font-medium">
-                          + ₹{item.itemTotal.toFixed(2)}
-                        </span>
+                      {/* Controls row */}
+                      <div className="mt-4 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleQuantityChange(item._id, item.quantity - 1)}
+                            disabled={updatingItem === item._id}
+                            className="w-9 h-9 rounded-md border border-gray-300 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50"
+                            aria-label={`Decrease quantity of ${item.product.name}`}
+                          >
+                            –
+                          </button>
+                          <span className="w-8 text-center">{item.quantity}</span>
+                          <button
+                            onClick={() => handleQuantityChange(item._id, item.quantity + 1)}
+                            disabled={updatingItem === item._id}
+                            className="w-9 h-9 rounded-md border border-gray-300 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50"
+                            aria-label={`Increase quantity of ${item.product.name}`}
+                          >
+                            +
+                          </button>
+                        </div>
+
                         <button
                           onClick={() => handleRemoveItem(item._id)}
-                          className="text-red-600 hover:text-red-700 text-xs sm:text-sm"
+                          className="text-red-600 hover:text-red-700 text-sm"
                         >
                           Remove
                         </button>

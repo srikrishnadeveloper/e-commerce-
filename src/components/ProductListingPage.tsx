@@ -185,6 +185,8 @@ const ProductListingPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [sortBy, setSortBy] = useState<SortBy>('default');
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 100000]); // High default to show all products
+  const [minPriceInput, setMinPriceInput] = useState<string>('0');
+  const [maxPriceInput, setMaxPriceInput] = useState<string>('9999');
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [siteConfig, setSiteConfig] = useState<SiteConfig | null>(null);
@@ -568,7 +570,8 @@ const ProductListingPage: React.FC = () => {
     );
   };
 
-  const Sidebar: React.FC = () => (
+  // Sidebar content as JSX (not a component to avoid re-mounting on state changes)
+  const sidebarContent = (
     <div className="space-y-8">
       {/* Filter Button */}
       <div className="flex items-center gap-2 pb-4 border-b">
@@ -605,25 +608,42 @@ const ProductListingPage: React.FC = () => {
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
               placeholder="Min"
-              value={priceRange[0]}
-              onChange={(e) => setPriceRange([Number(e.target.value), priceRange[1]])}
+              value={minPriceInput}
+              onChange={(e) => {
+                const value = e.target.value;
+                // Allow empty string or numbers only
+                if (value === '' || /^\d*$/.test(value)) {
+                  setMinPriceInput(value);
+                }
+              }}
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-black"
             />
             <span className="text-gray-500">-</span>
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
               placeholder="Max"
-              value={priceRange[1]}
-              onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value)])}
+              value={maxPriceInput}
+              onChange={(e) => {
+                const value = e.target.value;
+                // Allow empty string or numbers only
+                if (value === '' || /^\d*$/.test(value)) {
+                  setMaxPriceInput(value);
+                }
+              }}
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-black"
             />
           </div>
           <button
             onClick={() => {
-              // Apply price filter (already handled by useMemo)
-              console.log('Price filter applied:', priceRange);
+              // Parse the input values, default to 0 for min and 100000 for max if empty
+              const minVal = minPriceInput === '' ? 0 : parseInt(minPriceInput, 10);
+              const maxVal = maxPriceInput === '' ? 100000 : parseInt(maxPriceInput, 10);
+              setPriceRange([minVal, maxVal]);
+              console.log('Price filter applied:', [minVal, maxVal]);
             }}
             className="w-full py-2 bg-black text-white rounded-md text-sm hover:bg-gray-800 transition-colors"
           >
@@ -743,7 +763,7 @@ const ProductListingPage: React.FC = () => {
         <div className="flex gap-4 lg:gap-8">
           {/* Desktop Sidebar - Hide at 1010px */}
           <div className="hidden filter-hide:block w-80 flex-shrink-0">
-            <Sidebar />
+            {sidebarContent}
           </div>
 
           {/* Main Product Area */}
@@ -892,11 +912,11 @@ const ProductListingPage: React.FC = () => {
 
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-40 filter-hide:hidden" onClick={() => setIsSidebarOpen(false)} />
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-[70] filter-hide:hidden" onClick={() => setIsSidebarOpen(false)} />
       )}
 
       {/* Mobile Sidebar */}
-      <div className={`fixed top-0 left-0 h-full w-full max-w-sm bg-white z-50 transform transition-transform duration-300 ease-in-out filter-hide:hidden overflow-y-auto ${
+      <div className={`fixed top-0 left-0 h-full w-full max-w-sm bg-white z-[80] transform transition-transform duration-300 ease-in-out filter-hide:hidden overflow-y-auto ${
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         <div className="flex items-center justify-between p-4 border-b">
@@ -912,7 +932,7 @@ const ProductListingPage: React.FC = () => {
           </button>
         </div>
         <div className="p-4">
-          <Sidebar />
+          {sidebarContent}
         </div>
       </div>
     </div>

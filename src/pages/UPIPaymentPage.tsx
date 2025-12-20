@@ -241,11 +241,6 @@ const UPIPaymentPage: React.FC = () => {
               {/* QR Section */}
               <div className="p-4 sm:p-6 lg:p-8">
                 <div className="flex flex-col items-center">
-                  {/* Store Name */}
-                  <p className="text-gray-500 text-xs sm:text-sm mb-4 sm:mb-6">
-                    Paying to <span className="font-medium text-gray-900">{upiSettings?.merchantName || 'TechCart Store'}</span>
-                  </p>
-
                   {/* QR Code */}
                   <div className="bg-white p-3 sm:p-4 rounded-2xl border-2 border-gray-200 shadow-md mb-4 sm:mb-6">
                     {upiSettings?.qrCodeImage ? (
@@ -263,10 +258,7 @@ const UPIPaymentPage: React.FC = () => {
                     )}
                   </div>
                   
-                  {/* Scan instruction for mobile */}
-                  <p className="text-center text-gray-500 text-xs mb-4 sm:hidden">
-                    📱 Tap and hold QR code to scan with your UPI app
-                  </p>
+                  // ...existing code...
 
                   {/* UPI ID */}
                   {upiSettings?.upiId && (
@@ -290,17 +282,6 @@ const UPIPaymentPage: React.FC = () => {
                       </button>
                     </div>
                   )}
-
-                  {/* Supported Apps */}
-                  <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 text-gray-400 text-xs">
-                    <span>Pay using</span>
-                    <div className="flex flex-wrap items-center justify-center gap-2">
-                      <span className="bg-gray-100 px-2.5 py-1 rounded-md text-gray-600 font-medium">GPay</span>
-                      <span className="bg-gray-100 px-2.5 py-1 rounded-md text-gray-600 font-medium">PhonePe</span>
-                      <span className="bg-gray-100 px-2.5 py-1 rounded-md text-gray-600 font-medium">Paytm</span>
-                      <span className="bg-gray-100 px-2.5 py-1 rounded-md text-gray-600 font-medium">Any UPI</span>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>

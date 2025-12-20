@@ -546,91 +546,46 @@ const Navbar: React.FC = () => {
         <div className="flex-1 overflow-y-auto">
           {/* Navigation Menu */}
           <div className="p-4">
-            {/* Home */}
-            <div className="mb-4">
-              <Link 
-                to="/"
-                className="w-full flex items-center justify-between py-3 text-left font-medium text-gray-900 hover:text-black transition-colors"
-                onClick={() => setIsSidebarOpen(false)}
-              >
-                <span className="text-black">Home</span>
-              </Link>
-            </div>
-
-            {/* Products */}
-            <div className="mb-4">
-              <Link 
-                to="/products"
-                className="w-full flex items-center justify-between py-3 text-left font-medium text-gray-900 hover:text-black transition-colors"
-                onClick={() => setIsSidebarOpen(false)}
-              >
-                <span>Products</span>
-              </Link>
-            </div>
-
-            {/* About */}
-            <div className="mb-4">
-              <a 
-                href="#" 
-                className="block py-3 text-left font-medium text-gray-900 hover:text-black transition-colors"
-              >
-                About
-              </a>
-            </div>
-
-            {/* Contact */}
-            <div className="mb-6">
-              <Link 
-                to="/contact" 
-                className="block py-3 text-left font-medium text-gray-900 hover:text-black transition-colors"
-                onClick={() => setIsSidebarOpen(false)}
-              >
-                Contact
-              </Link>
-            </div>
+            {/* Dynamic Navigation Links from siteConfig */}
+            {navData.mainMenu.map((item, index) => (
+              <div className="mb-4" key={index}>
+                <Link 
+                  to={item.link}
+                  className="w-full flex items-center justify-between py-3 text-left font-medium text-gray-900 hover:text-black transition-colors"
+                  onClick={() => { setIsSidebarOpen(false); window.scrollTo(0, 0); }}
+                >
+                  <span className="text-black">{item.name}</span>
+                </Link>
+              </div>
+            ))}
 
             {/* Quick Actions */}
-            <div className="flex gap-4 mb-6">
-              <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+            <div className="flex gap-4 mb-6 mt-6">
+              <Link 
+                to="/wishlist"
+                className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                onClick={() => { setIsSidebarOpen(false); window.scrollTo(0, 0); }}
+              >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
                 </svg>
                 <span className="text-sm font-medium">Wishlist</span>
-              </button>
-              <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                {wishlistCount > 0 && (
+                  <span className="bg-black text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {wishlistCount}
+                  </span>
+                )}
+              </Link>
+              <button 
+                className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                onClick={() => { setIsSidebarOpen(false); setIsSearchOpen(true); }}
+              >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="11" cy="11" r="8"/>
                   <path d="m21 21-4.35-4.35"/>
                 </svg>
                 <span className="text-sm font-medium">Search</span>
               </button>
-            </div>
-
-            {/* Contact Info Section */}
-            <div className="border-t border-gray-200 pt-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Need help ?</h3>
-              
-              <div className="space-y-3 text-sm text-gray-600">
-                <div>
-                  <p className="font-medium text-gray-900">Address:</p>
-                  <p>1234 Fashion Street, Suite 567,</p>
-                  <p>New York, NY 10001</p>
-                </div>
-                
-                <div>
-                  <p className="font-medium text-gray-900">Email:</p>
-                  <a href="mailto:info@fashionshop.com" className="text-blue-600 hover:text-blue-800">
-                    info@fashionshop.com
-                  </a>
-                </div>
-                
-                <div>
-                  <p className="font-medium text-gray-900">Phone:</p>
-                  <a href="tel:(212)555-1234" className="text-blue-600 hover:text-blue-800">
-                    (212) 555-1234
-                  </a>
-                </div>
-              </div>
             </div>
           </div>
         </div>

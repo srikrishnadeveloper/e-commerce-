@@ -5,6 +5,9 @@ import { useSiteConfig } from '../hooks/useSiteConfig';
 const Footer = () => {
   const [email, setEmail] = useState('');
   const [footerConfig, setFooterConfig] = useState(null);
+  const [isSubscribing, setIsSubscribing] = useState(false);
+  const [subscribeSuccess, setSubscribeSuccess] = useState(false);
+  const [subscribeMessage, setSubscribeMessage] = useState('');
 
   // Fetch the 'all' config which contains footer data
   const { data: siteConfig, loading: configLoading, error: configError } = useSiteConfig('all');
@@ -93,11 +96,29 @@ const Footer = () => {
     ]
   };
 
-  const handleSubscribe = (e) => {
+  const handleSubscribe = async (e) => {
     e.preventDefault();
-    // Handle newsletter subscription
-    console.log('Subscribing email:', email);
+    
+    if (!email || isSubscribing) return;
+    
+    setIsSubscribing(true);
+    setSubscribeSuccess(false);
+    setSubscribeMessage('');
+    
+    // Simulate API call with a small delay to feel realistic
+    await new Promise(resolve => setTimeout(resolve, 1200));
+    
+    // Show success message
+    setIsSubscribing(false);
+    setSubscribeSuccess(true);
+    setSubscribeMessage('Thank you for subscribing! Check your inbox for exclusive deals.');
     setEmail('');
+    
+    // Clear success message after 5 seconds
+    setTimeout(() => {
+      setSubscribeSuccess(false);
+      setSubscribeMessage('');
+    }, 5000);
   };
 
   // Show loading state
@@ -156,9 +177,9 @@ const Footer = () => {
                 <a
                   href={footerData.socialMedia?.facebook?.url || '#'}
                   aria-label="Facebook"
-                  className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 lg:w-10 lg:h-10 xl:w-11 xl:h-11 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
+                  className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
                 >
-                  <svg className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 lg:w-5 lg:h-5 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                   </svg>
                 </a>
@@ -248,22 +269,43 @@ const Footer = () => {
             </p>
             
             {/* Newsletter Form */}
-            <form onSubmit={handleSubscribe} className="relative mb-4 sm:mb-5 md:mb-6">
+            <form onSubmit={handleSubscribe} className="relative mb-2">
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder={footerData.newsletter?.placeholder || 'Enter your email'}
-                className="w-full px-3 sm:px-4 md:px-4 py-2 sm:py-3 md:py-3 pr-24 sm:pr-28 md:pr-32 text-xs sm:text-sm md:text-base border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-all duration-200"
+                className="w-full px-3 sm:px-4 md:px-4 py-2 sm:py-3 md:py-3 pr-24 sm:pr-28 md:pr-32 text-xs sm:text-sm md:text-base border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-all duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 required
+                disabled={isSubscribing}
               />
               <button
                 type="submit"
-                className="absolute right-1 top-1 bottom-1 bg-black text-white px-3 sm:px-4 md:px-6 text-xs sm:text-sm md:text-sm font-medium rounded-full hover:bg-gray-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
+                disabled={isSubscribing}
+                className="absolute right-1 top-1 bottom-1 bg-black text-white px-3 sm:px-4 md:px-6 text-xs sm:text-sm md:text-sm font-medium rounded-full hover:bg-gray-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 disabled:bg-gray-600 disabled:cursor-not-allowed flex items-center justify-center min-w-[80px] sm:min-w-[90px] md:min-w-[100px]"
               >
-                {footerData.newsletter?.buttonText || 'Subscribe'}
+                {isSubscribing ? (
+                  <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                ) : (
+                  footerData.newsletter?.buttonText || 'Subscribe'
+                )}
               </button>
             </form>
+            
+            {/* Success/Error Message */}
+            {subscribeMessage && (
+              <div className={`text-xs sm:text-sm mb-4 sm:mb-5 md:mb-6 flex items-center gap-2 ${subscribeSuccess ? 'text-green-600' : 'text-red-600'}`}>
+                {subscribeSuccess && (
+                  <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                )}
+                <span>{subscribeMessage}</span>
+              </div>
+            )}
           </div>
         </div>
         

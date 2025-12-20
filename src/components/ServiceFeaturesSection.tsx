@@ -1,58 +1,54 @@
 import React, { useState, useEffect } from "react";
-import { getSiteConfig } from '../services/dataService';
-import type { SiteConfig, FeaturesSection, FeatureItem } from '../types';
+import siteConfigService from '../services/siteConfigService';
+import type { FeaturesSection, FeatureItem } from '../types';
 
 interface IconMap {
   [key: string]: React.ReactElement;
 }
 
 const ServiceFeaturesSection: React.FC = () => {
-  const [config, setConfig] = useState<SiteConfig | null>(null);
+  const [featuresSection, setFeaturesSection] = useState<FeaturesSection | null>(null);
   const [currentSlide, setCurrentSlide] = useState<number>(0);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadSiteConfig = async () => {
+    const loadFeaturesSection = async () => {
       try {
-        const siteConfig = await getSiteConfig();
-        setConfig(siteConfig);
+        console.log('[ServiceFeaturesSection] 🔄 Loading...');
+        const homepage = await siteConfigService.getHomepage();
+        console.log('[ServiceFeaturesSection] 📦 Homepage response:', homepage);
+        console.log('[ServiceFeaturesSection] 📦 featuresSection:', homepage?.featuresSection);
+        console.log('[ServiceFeaturesSection] ✅ enabled:', homepage?.featuresSection?.enabled);
+        
+        if (homepage?.featuresSection) {
+          setFeaturesSection(homepage.featuresSection);
+        }
+        setLoading(false);
       } catch (error) {
-        console.error('Error loading site config:', error);
+        console.error('[ServiceFeaturesSection] ❌ Error:', error);
+        setLoading(false);
       }
     };
     
-    loadSiteConfig();
+    loadFeaturesSection();
   }, []);
 
-  if (!config) return <div>Loading...</div>;
+  if (loading) {
+    console.log('[ServiceFeaturesSection] ⏳ Still loading...');
+    return null;
+  }
 
-  // Add fallback data if featuresSection doesn't exist
-  const featuresSection: FeaturesSection = config.homePage?.featuresSection || {
-    // Removed heading/subtitle content for cleaner UI
-    title: "",
-    subtitle: "",
-    features: [
-      {
-        icon: "truck",
-        title: "Free Shipping",
-        description: "Free shipping on all orders over $50"
-      },
-      {
-        icon: "headphones",
-        title: "24/7 Support",
-        description: "Get help anytime with our customer service"
-      },
-      {
-        icon: "refresh",
-        title: "Easy Returns",
-        description: "30-day return policy for all products"
-      },
-      {
-        icon: "shield",
-        title: "Secure Payment",
-        description: "Your payment information is secure with us"
-      }
-    ]
-  };
+  if (!featuresSection) {
+    console.log('[ServiceFeaturesSection] ❌ No data found');
+    return null;
+  }
+
+  if (featuresSection.enabled === false) {
+    console.log('[ServiceFeaturesSection] 🚫 Section is DISABLED');
+    return null;
+  }
+
+  console.log('[ServiceFeaturesSection] ✅✅✅ RENDERING with', featuresSection.features?.length, 'features');
   
   const features: FeatureItem[] = featuresSection.features || [];
 
