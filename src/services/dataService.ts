@@ -73,9 +73,11 @@ const apiRequest = async (endpoint: string): Promise<any> => {
  * Get all products
  * Backend: API call to GET /api/products
  */
-export const getProducts = async (): Promise<Product[]> => {
+export const getProducts = async (params: Record<string, any> = {}): Promise<Product[]> => {
   try {
-    const response = await apiRequest('/products');
+    const queryString = new URLSearchParams(params).toString();
+    const endpoint = queryString ? `/products?${queryString}` : '/products';
+    const response = await apiRequest(endpoint);
   return normalizeProducts(response.data || []);
   } catch (error) {
     console.error('Error fetching products:', error);

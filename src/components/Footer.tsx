@@ -75,10 +75,19 @@ const Footer = () => {
     },
     sections: [
       {
-        title: 'About',
+        title: 'Company',
         links: [
           { name: 'About Us', link: '/about' },
-          { name: 'Careers', link: '/careers' }
+          { name: 'Shop', link: '/shop' },
+          { name: 'Contact Us', link: '/contact' }
+        ]
+      },
+      {
+        title: 'Support',
+        links: [
+          { name: 'FAQ', link: '/faq' },
+          { name: 'My Account', link: '/account' },
+          { name: 'Policies', link: '/policies' }
         ]
       }
     ]
@@ -126,7 +135,7 @@ const Footer = () => {
               <img
                 src={configData.branding?.logo?.url || '/images/placeholder.svg'}
                 alt={configData.branding?.logo?.alt || 'Logo'}
-                className="h-4 sm:h-5 md:h-6 lg:h-6 xl:h-7 w-auto border-2 border-black rounded"
+                className="h-4 sm:h-5 md:h-6 lg:h-6 xl:h-7 w-auto"
               />
             </div>
             
@@ -263,15 +272,34 @@ const Footer = () => {
         
         {/* Bottom Bar */}
         <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4 md:gap-6">
-          {/* Copyright */}
+          {/* Copyright and Policy Links */}
           <div className="text-center sm:text-left">
             <p className="text-xs sm:text-sm md:text-base lg:text-base text-gray-600">
               {footerData.copyright || '© 2024 All rights reserved.'}
             </p>
-            {/* Debug indicator */}
-            <p className="text-xs text-gray-400 mt-1">
-              {activeConfig.footer ? '✅ MongoDB Data' : '⚠️ Fallback Data'}
-            </p>
+            {/* Policy Links */}
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 sm:gap-3 mt-2">
+              <Link
+                to="/policies#refund"
+                className="text-xs sm:text-sm text-gray-500 hover:text-black hover:underline transition-colors"
+              >
+                Refund Policy
+              </Link>
+              <span className="text-gray-300">|</span>
+              <Link
+                to="/policies#terms"
+                className="text-xs sm:text-sm text-gray-500 hover:text-black hover:underline transition-colors"
+              >
+                Terms & Conditions
+              </Link>
+              <span className="text-gray-300">|</span>
+              <Link
+                to="/policies#privacy"
+                className="text-xs sm:text-sm text-gray-500 hover:text-black hover:underline transition-colors"
+              >
+                Privacy Policy
+              </Link>
+            </div>
           </div>
           
           {/* Payment Methods */}

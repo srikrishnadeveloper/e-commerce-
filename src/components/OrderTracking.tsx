@@ -229,6 +229,13 @@ const OrderTracking: React.FC = () => {
                 <div className="flex-1">
                   <h3 className="font-medium text-gray-900">{item.name}</h3>
                   <p className="text-gray-600">Quantity: {item.quantity}</p>
+                  {(item.selectedColor || item.selectedSize) && (
+                    <p className="text-gray-500 text-sm">
+                      {item.selectedColor && <span>Color: {item.selectedColor}</span>}
+                      {item.selectedColor && item.selectedSize && <span> • </span>}
+                      {item.selectedSize && <span>Size: {item.selectedSize}</span>}
+                    </p>
+                  )}
                 </div>
                 <div className="text-right">
                   <p className="font-medium">${item.price.toFixed(2)}</p>

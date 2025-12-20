@@ -78,8 +78,6 @@ const CartPage = () => {
     navigate('/checkout');
   };
 
-  const FREE_SHIPPING_THRESHOLD = 50; // keep UI consistent with backend free shipping rule
-
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -129,19 +127,12 @@ const CartPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
             {/* Left: Cart Items */}
             <div className="lg:col-span-2">
-              {/* Limited products notice */}
-              <div className="flex items-center gap-2 text-sm text-gray-700 mb-4">
-                <span className="text-red-500">🔥</span>
-                <span>These products are limited, checkout within</span>
-                <span className="inline-block w-24 h-[3px] bg-red-500 rounded-full align-middle"></span>
-              </div>
-
-              <div className="space-y-3">
+              <div className="space-y-4 sm:space-y-5">
                 {cart.items.map((item) => (
-                  <div key={item._id} className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4">
-                    <div className="grid grid-cols-[56px_1fr] sm:grid-cols-[96px_1fr_auto] items-center gap-3 sm:gap-4">
+                  <div key={item._id} className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5">
+                    <div className="grid grid-cols-[72px_1fr] sm:grid-cols-[96px_1fr_auto] items-center gap-4 sm:gap-5">
                       {/* Image */}
-                      <div className="relative w-14 h-14 sm:w-24 sm:h-24 rounded-lg overflow-hidden border border-gray-200">
+                      <div className="relative w-[72px] h-[72px] sm:w-24 sm:h-24 rounded-lg overflow-hidden border border-gray-200">
                         <img
                           src={(item.product.images && item.product.images[0]) || '/images/placeholder.jpg'}
                           alt={item.product.name}
@@ -149,18 +140,25 @@ const CartPage = () => {
                         />
                       </div>
 
-                      {/* Title + unit price */}
+                      {/* Title + unit price + color/size */}
                       <div className="min-w-0">
-                        <h3 className="text-sm sm:text-base lg:text-lg text-black truncate">{item.product.name}</h3>
-                        <p className="text-gray-600 text-xs sm:text-sm">${item.product.price}</p>
+                        <h3 className="text-base sm:text-lg lg:text-xl text-black font-medium truncate">{item.product.name}</h3>
+                        <p className="text-gray-600 text-sm sm:text-base mt-1">₹{item.product.price}</p>
+                        {(item.selectedColor || item.selectedSize) && (
+                          <p className="text-gray-500 text-xs sm:text-sm mt-1">
+                            {item.selectedColor && <span>Color: {item.selectedColor}</span>}
+                            {item.selectedColor && item.selectedSize && <span> • </span>}
+                            {item.selectedSize && <span>Size: {item.selectedSize}</span>}
+                          </p>
+                        )}
                       </div>
 
                       {/* Item total on larger screens */}
-                      <p className="hidden sm:block text-base font-medium text-black whitespace-nowrap">${item.itemTotal.toFixed(2)}</p>
+                      <p className="hidden sm:block text-lg font-medium text-black whitespace-nowrap">₹{item.itemTotal.toFixed(2)}</p>
                     </div>
 
                     {/* Controls row: qty on the left, total + remove on the right (mobile) */}
-                    <div className="mt-2 flex items-center justify-between">
+                    <div className="mt-4 flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => handleQuantityChange(item._id, item.quantity - 1)}
@@ -183,7 +181,7 @@ const CartPage = () => {
 
                       <div className="flex items-center gap-3 sm:gap-4">
                         <span className="sm:hidden inline-flex items-center px-2.5 py-1 rounded-md bg-gray-100 text-black text-sm font-medium">
-                          + ${item.itemTotal.toFixed(2)}
+                          + ₹{item.itemTotal.toFixed(2)}
                         </span>
                         <button
                           onClick={() => handleRemoveItem(item._id)}
@@ -198,22 +196,16 @@ const CartPage = () => {
               </div>
 
               {/* Footer actions and order note */}
-              <div className="mt-6 flex flex-col-reverse md:flex-row md:items-center md:justify-between gap-4">
+              <div className="mt-8">
                 <button
                   onClick={handleClearCart}
-                  className="text-red-600 hover:text-red-700 font-medium"
+                  className="w-full sm:w-auto px-6 py-3 text-red-600 hover:text-white hover:bg-red-600 border border-red-600 rounded-lg font-medium transition-colors"
                 >
                   Clear Cart
                 </button>
-                <Link
-                  to="/products"
-                  className="text-black hover:text-gray-800 font-medium"
-                >
-                  Continue Shopping
-                </Link>
               </div>
 
-              <div className="mt-6">
+              <div className="mt-8">
                 <h4 className="text-sm font-medium text-gray-900 mb-2">Add Order Note</h4>
                 <textarea
                   rows={4}
@@ -223,35 +215,8 @@ const CartPage = () => {
               </div>
             </div>
 
-            {/* Right: Summary + Free shipping progress */}
+            {/* Right: Summary */}
             <div className="lg:col-span-1 lg:sticky lg:top-24 self-start">
-              {/* Free Shipping Bar */}
-              <div className="bg-white border border-gray-200 rounded-xl p-5 mb-6">
-                {(() => {
-                  const progress = Math.min(100, Math.round((cart.subtotal / FREE_SHIPPING_THRESHOLD) * 100));
-                  const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD - cart.subtotal);
-                  return (
-                    <>
-                      <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden" aria-label="Free shipping progress" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
-                        <div
-                          className="h-2 bg-red-500"
-                          style={{ width: `${progress}%`, transition: 'width 300ms ease' }}
-                        />
-                      </div>
-                      <p className="mt-3 text-sm text-gray-700">
-                        {cart.shipping === 0 ? (
-                          <span className="text-green-600 font-medium">You’ve unlocked Free Shipping!</span>
-                        ) : (
-                          <>
-                            Buy <span className="font-medium">${remaining.toFixed(2)}</span> more to enjoy <span className="font-medium">Free Shipping</span>
-                          </>
-                        )}
-                      </p>
-                    </>
-                  );
-                })()}
-              </div>
-
               {/* Order Summary */}
               <div className="bg-white border border-gray-200 rounded-xl p-6">
                 <h2 className="text-lg font-semibold mb-4">Estimate Shipping</h2>
@@ -275,7 +240,7 @@ const CartPage = () => {
                 <div className="mt-4 flex items-start gap-2 text-sm text-gray-600">
                   <input id="agree" type="checkbox" className="mt-1 w-4 h-4 rounded border-gray-300" defaultChecked />
                   <label htmlFor="agree" className="select-none">
-                    I agree with the <span className="underline">terms and conditions</span>
+                    I agree with the <Link to="/terms-and-conditions" className="underline hover:text-black">terms and conditions</Link>
                   </label>
                 </div>
 

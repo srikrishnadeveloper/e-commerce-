@@ -62,9 +62,9 @@ const WishlistCard = ({
           <h3 className="text-base sm:text-lg text-gray-900 hover:underline line-clamp-2">{product.name}</h3>
         </Link>
         <div className="mt-2 flex items-center gap-2">
-          <span className="text-gray-900 font-semibold">${activePrice}</span>
+          <span className="text-gray-900 font-semibold">₹{activePrice}</span>
           {activeOriginal && activeOriginal > activePrice && (
-            <span className="text-gray-500 line-through">${activeOriginal}</span>
+            <span className="text-gray-500 line-through">₹{activeOriginal}</span>
           )}
         </div>
 

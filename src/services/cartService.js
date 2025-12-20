@@ -62,19 +62,31 @@ class CartService {
     }
   }
 
-  async addToCart(productId, quantity = 1) {
+  async addToCart(productId, quantity = 1, selectedColor = '', selectedSize = '') {
     try {
-      const response = await api.post(`/cart/${productId}`, { quantity });
+      // Optimistically add to local cache before API call
+      this._ids.add(String(productId));
+      const response = await api.post(`/cart/${productId}`, { 
+        quantity,
+        selectedColor,
+        selectedSize
+      });
       try { window.dispatchEvent(new Event('cart:changed')); } catch {}
       return response.data;
     } catch (error) {
+      // Revert optimistic update on failure
+      this._ids.delete(String(productId));
       throw error.response?.data || { message: 'Failed to add to cart' };
     }
   }
 
-  async updateCartItem(itemId, quantity) {
+  async updateCartItem(itemId, quantity, selectedColor = '', selectedSize = '') {
     try {
-      const response = await api.put(`/cart/item/${itemId}`, { quantity });
+      const response = await api.put(`/cart/item/${itemId}`, { 
+        quantity,
+        selectedColor,
+        selectedSize
+      });
       try { window.dispatchEvent(new Event('cart:changed')); } catch {}
       return response.data;
     } catch (error) {

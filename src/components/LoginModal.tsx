@@ -180,18 +180,18 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSuccess, onS
   if (view === 'forgotPassword') {
     return (
       <div 
-        className="fixed inset-0 bg-black bg-opacity-55 flex items-center justify-center z-50 p-4"
+        className="fixed inset-0 bg-black bg-opacity-55 flex items-center justify-center z-50 p-3 sm:p-4"
         onClick={handleOverlayClick}
         role="dialog"
         aria-modal="true"
       >
         <div 
           ref={modalRef}
-          className="bg-white rounded-lg shadow-xl w-full max-w-[560px] max-h-[90vh] overflow-y-auto"
+          className="bg-white rounded-lg shadow-xl w-full max-w-[560px] max-h-[90vh] overflow-y-auto mx-2 sm:mx-0"
           style={{ boxShadow: '0 16px 40px rgba(0,0,0,0.18)' }}
         >
-          <div className="flex items-center justify-between p-6 pb-4">
-            <h2 className="text-xl font-semibold text-gray-900">Reset your password</h2>
+          <div className="flex items-center justify-between p-4 sm:p-6 pb-3 sm:pb-4">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Reset your password</h2>
             <button
               onClick={onClose}
               className="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-gray-700 transition-colors rounded-full hover:bg-gray-100"
@@ -202,7 +202,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSuccess, onS
               </svg>
             </button>
           </div>
-          <div className="px-6 pb-6">
+          <div className="px-4 sm:px-6 pb-4 sm:pb-6">
             <p className="text-sm text-gray-600 mb-4">
               Enter your email address and we'll send you a link to reset your password.
             </p>
@@ -230,11 +230,11 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSuccess, onS
                 />
               </div>
 
-              <div className="flex items-center justify-between pt-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 pt-4">
                 <button
                   type="submit"
                   disabled={loading}
-                  className="h-11 px-5 bg-black text-white font-semibold rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="h-11 px-6 bg-black text-white font-semibold rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors w-full sm:w-auto"
                 >
                   {loading ? 'Sending...' : 'Send reset link'}
                 </button>
@@ -242,7 +242,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSuccess, onS
                 <button
                   type="button"
                   onClick={() => { setView('login'); setError(''); }}
-                  className="text-sm text-gray-600 hover:text-gray-900 hover:underline"
+                  className="text-sm text-gray-600 hover:text-gray-900 hover:underline text-center sm:text-right"
                 >
                   ← Back to login
                 </button>
@@ -257,7 +257,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSuccess, onS
   // Login Form View (default)
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-55 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black bg-opacity-55 flex items-center justify-center z-50 p-3 sm:p-4"
       onClick={handleOverlayClick}
       role="dialog"
       aria-modal="true"
@@ -265,13 +265,13 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSuccess, onS
     >
       <div 
         ref={modalRef}
-        className="bg-white rounded-lg shadow-xl w-full max-w-[560px] max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-lg shadow-xl w-full max-w-[560px] max-h-[90vh] overflow-y-auto mx-2 sm:mx-0"
         style={{
           boxShadow: '0 16px 40px rgba(0,0,0,0.18)'
         }}
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between p-6 pb-4">
+        <div className="flex items-center justify-between p-4 sm:p-6 pb-3 sm:pb-4">
           <h2 
             id="login-modal-title"
             className="text-xl font-semibold text-gray-900"
@@ -301,7 +301,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSuccess, onS
         </div>
 
         {/* Modal Body */}
-        <div className="px-6 pb-6">
+        <div className="px-4 sm:px-6 pb-4 sm:pb-6">
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm">
               {error}
@@ -382,11 +382,11 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSuccess, onS
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center justify-between pt-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 pt-4">
               <button
                 type="submit"
                 disabled={loading}
-                className="h-11 px-5 bg-black text-white font-semibold rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="h-11 px-6 bg-black text-white font-semibold rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors w-full sm:w-auto"
                 style={{
                   fontSize: '14px',
                   fontWeight: 600,
@@ -399,7 +399,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSuccess, onS
               <button
                 type="button"
                 onClick={onSwitchToRegister}
-                className="text-sm text-gray-700 hover:text-gray-900 hover:underline transition-colors"
+                className="text-sm text-gray-700 hover:text-gray-900 hover:underline transition-colors text-center sm:text-right"
                 style={{ fontSize: '13px' }}
               >
                 New customer? Create your account

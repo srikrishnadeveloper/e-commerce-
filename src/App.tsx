@@ -17,14 +17,13 @@ import WishlistPage from './pages/WishlistPage'
 import LogoutPage from './pages/LogoutPage'
 import CartPage from './pages/CartPage'
 import CheckoutPage from './pages/CheckoutPage'
-import BillingPage from './pages/BillingPage'
+import UPIPaymentPage from './pages/UPIPaymentPage'
 import OrderConfirmationPage from './pages/OrderConfirmationPage'
 import OrderTracking from './components/OrderTracking'
 import WelcomePopup from './components/WelcomePopup'
 import ResetPasswordPage from './pages/ResetPasswordPage'
-import RefundPolicyPage from './pages/RefundPolicyPage'
+import PoliciesPage from './pages/PoliciesPage'
 import TermsConditionsPage from './pages/TermsConditionsPage'
-import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
 import NotFoundPage from './pages/NotFoundPage'
 import './App.css'
 import authService from './services/authService'
@@ -110,13 +109,16 @@ const App: React.FC = () => {
           <Route path="/logout" element={<LogoutPage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
-          <Route path="/billing" element={<BillingPage />} />
+          <Route path="/upi-payment" element={<UPIPaymentPage />} />
           <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
           <Route path="/order-tracking/:orderId" element={<OrderTracking />} />
           <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
-          <Route path="/refund-policy" element={<RefundPolicyPage />} />
+          <Route path="/policies" element={<PoliciesPage />} />
+          {/* Policy pages */}
+          <Route path="/refund-policy" element={<PoliciesPage />} />
           <Route path="/terms-conditions" element={<TermsConditionsPage />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+          <Route path="/terms-and-conditions" element={<TermsConditionsPage />} />
+          <Route path="/privacy-policy" element={<PoliciesPage />} />
           {/* Catch-all route for 404 */}
           <Route path="*" element={<NotFoundPage />} />
         </Routes>

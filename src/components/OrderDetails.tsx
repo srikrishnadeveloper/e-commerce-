@@ -90,6 +90,13 @@ const OrderDetails: React.FC = () => {
               <div className="flex-1">
                 <div className="font-medium">{item.name}</div>
                 <div className="text-gray-600 text-sm">Qty: {item.quantity}</div>
+                {(item.selectedColor || item.selectedSize) && (
+                  <div className="text-gray-500 text-sm">
+                    {item.selectedColor && <span>Color: {item.selectedColor}</span>}
+                    {item.selectedColor && item.selectedSize && <span> • </span>}
+                    {item.selectedSize && <span>Size: {item.selectedSize}</span>}
+                  </div>
+                )}
               </div>
               <div className="text-right">
                 <div className="text-gray-900 font-medium">${item.price.toFixed(2)}</div>

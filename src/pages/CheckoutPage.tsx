@@ -41,6 +41,34 @@ interface OrderSuccessData {
   email: string;
 }
 
+interface RazorpaySuccessResponse {
+  razorpay_payment_id: string;
+  razorpay_order_id: string;
+  razorpay_signature: string;
+}
+
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
+
+const loadRazorpayScript = (): Promise<boolean> => {
+  return new Promise((resolve) => {
+    if (document.querySelector('#razorpay-sdk')) {
+      resolve(true);
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.id = 'razorpay-sdk';
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
+
 const CheckoutPage: React.FC = () => {
   const navigate = useNavigate();
   const [cart, setCart] = useState<Cart | null>(null);
@@ -50,7 +78,8 @@ const CheckoutPage: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [discountCode, setDiscountCode] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('bank_transfer');
+  const [paymentMode, setPaymentMode] = useState<'razorpay' | 'manual_upi'>('razorpay');
+  const [paymentMethod, setPaymentMethod] = useState('razorpay');
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [orderSuccessData, setOrderSuccessData] = useState<OrderSuccessData | null>(null);
@@ -76,14 +105,19 @@ const CheckoutPage: React.FC = () => {
     loadData();
   }, [navigate]);
 
+  useEffect(() => {
+    loadRazorpayScript();
+  }, []);
+
   const loadData = async () => {
     try {
       setLoading(true);
       
-      // Load cart and addresses in parallel
-      const [cartResponse, addresses] = await Promise.all([
+      // Load cart, addresses, and payment settings in parallel
+      const [cartResponse, addresses, paymentSettingsResponse] = await Promise.all([
         cartService.getCart(),
-        addressService.getAddresses()
+        addressService.getAddresses(),
+        fetch('http://localhost:5001/api/payment-settings/mode').then(r => r.json()).catch(() => ({ success: false }))
       ]);
       
       if (cartResponse.success && cartResponse.data) {
@@ -95,6 +129,11 @@ const CheckoutPage: React.FC = () => {
       } else {
         navigate('/cart');
         return;
+      }
+      
+      // Set payment mode from backend settings
+      if (paymentSettingsResponse.success && paymentSettingsResponse.data?.paymentMode) {
+        setPaymentMode(paymentSettingsResponse.data.paymentMode);
       }
       
       // Set saved addresses
@@ -243,27 +282,148 @@ const CheckoutPage: React.FC = () => {
       });
       
       const data = await response.json();
-      
-      if (data.success) {
-        // Show success popup
+      if (!data.success || !data.data?._id) {
+        throw new Error(data.message || 'Failed to place order');
+      }
+
+      const createdOrder = data.data;
+
+      // COD flow: confirm order without online payment
+      if (paymentMethod === 'cod') {
+        const codResponse = await fetch('http://localhost:5001/api/payments/cod', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({ orderId: createdOrder._id })
+        });
+
+        const codResult = await codResponse.json();
+        if (!codResult.success) {
+          throw new Error(codResult.message || 'Failed to confirm COD order');
+        }
+
         setOrderSuccessData({
-          order: data.data,
+          order: createdOrder,
           email: billingDetails.email
         });
         setShowSuccessPopup(true);
-      } else {
-        setError(data.message || 'Failed to place order');
+        setSubmitting(false);
+        return;
       }
+
+      // Manual UPI flow: Redirect to QR payment page
+      if (paymentMode === 'manual_upi' && paymentMethod === 'razorpay') {
+        navigate('/upi-payment', {
+          state: {
+            order: createdOrder,
+            billingEmail: billingDetails.email
+          }
+        });
+        setSubmitting(false);
+        return;
+      }
+
+      // Online payment flow: Razorpay
+      const sdkReady = await loadRazorpayScript();
+      if (!sdkReady || !window.Razorpay) {
+        throw new Error('Unable to load Razorpay checkout. Please refresh and try again.');
+      }
+
+      const rpOrderResponse = await fetch('http://localhost:5001/api/payments/razorpay/order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ orderId: createdOrder._id })
+      });
+
+      const rpOrderResult = await rpOrderResponse.json();
+      if (!rpOrderResult.success) {
+        throw new Error(rpOrderResult.message || 'Failed to start payment');
+      }
+
+      const { razorpayOrderId, amount, currency, keyId } = rpOrderResult.data;
+
+      const options = {
+        key: keyId,
+        amount,
+        currency,
+        name: 'E-Commerce Store',
+        description: `Order #${createdOrder._id?.slice(-8)}`,
+        order_id: razorpayOrderId,
+        prefill: {
+          name: `${billingDetails.firstName} ${billingDetails.lastName}`.trim(),
+          email: billingDetails.email,
+          contact: billingDetails.phone
+        },
+        notes: {
+          orderId: createdOrder._id
+        },
+        handler: async (response: RazorpaySuccessResponse) => {
+          try {
+            const verifyResponse = await fetch('http://localhost:5001/api/payments/razorpay/verify', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+              },
+              body: JSON.stringify({
+                orderId: createdOrder._id,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpayOrderId: response.razorpay_order_id,
+                razorpaySignature: response.razorpay_signature
+              })
+            });
+
+            const verifyResult = await verifyResponse.json();
+            if (!verifyResult.success) {
+              setError(verifyResult.message || 'Payment verification failed');
+              setSubmitting(false);
+              return;
+            }
+
+            setOrderSuccessData({
+              order: verifyResult.data?.order || createdOrder,
+              email: billingDetails.email
+            });
+            setShowSuccessPopup(true);
+          } catch (verifyErr: any) {
+            setError(verifyErr.message || 'Payment verification failed');
+          } finally {
+            setSubmitting(false);
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            setSubmitting(false);
+            setError('Payment was cancelled');
+          }
+        },
+        theme: { color: '#000000' }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', (response: any) => {
+        setError(response.error?.description || 'Payment failed');
+        setSubmitting(false);
+      });
+      rzp.open();
     } catch (err: any) {
       console.error('Order creation failed:', err);
       setError(err.message || 'Failed to place order. Please try again.');
-    } finally {
       setSubmitting(false);
     }
   };
 
   const formatPrice = (price: number) => {
-    return `$${price.toFixed(2)}`;
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 2
+    }).format(price);
   };
 
   if (loading) {
@@ -471,6 +631,13 @@ const CheckoutPage: React.FC = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-black truncate">{item.product.name}</p>
+                      {(item.selectedColor || item.selectedSize) && (
+                        <p className="text-xs text-gray-500">
+                          {item.selectedColor && <span>Color: {item.selectedColor}</span>}
+                          {item.selectedColor && item.selectedSize && <span> • </span>}
+                          {item.selectedSize && <span>Size: {item.selectedSize}</span>}
+                        </p>
+                      )}
                     </div>
                     <p className="text-sm font-medium text-black">{formatPrice(item.itemTotal)}</p>
                   </div>
@@ -506,12 +673,17 @@ const CheckoutPage: React.FC = () => {
                   <input
                     type="radio"
                     name="paymentMethod"
-                    value="bank_transfer"
-                    checked={paymentMethod === 'bank_transfer'}
+                    value="razorpay"
+                    checked={paymentMethod === 'razorpay'}
                     onChange={(e) => setPaymentMethod(e.target.value)}
                     className="w-5 h-5 text-red-500 border-gray-300 focus:ring-red-500"
                   />
-                  <span className="text-gray-700">Direct bank transfer</span>
+                  <span className="text-gray-700">
+                    {paymentMode === 'manual_upi' ? 'UPI (Scan & Pay)' : 'Razorpay (UPI/Card/Netbanking)'}
+                  </span>
+                  {paymentMode === 'manual_upi' && (
+                    <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Recommended</span>
+                  )}
                 </label>
                 <label className="flex items-center space-x-3 cursor-pointer">
                   <input

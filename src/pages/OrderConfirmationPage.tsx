@@ -59,7 +59,11 @@ const OrderConfirmationPage: React.FC = () => {
   }
 
   const formatPrice = (price: number) => {
-    return `$${price.toFixed(2)} USD`;
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 2
+    }).format(price);
   };
 
   const formatDate = (dateString: string) => {

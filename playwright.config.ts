@@ -1,4 +1,12 @@
 import { defineConfig, devices } from '@playwright/test';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const storageStatePath = path.resolve(__dirname, './tests/.auth/user.json');
+const hasStorageState = fs.existsSync(storageStatePath);
 
 /**
  * Playwright configuration for E-Commerce frontend tests
@@ -16,6 +24,7 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
+    storageState: hasStorageState ? storageStatePath : undefined,
   },
 
   projects: [

@@ -6,7 +6,6 @@ import {
   getProducts, 
   getCategories, 
   getSiteConfig, 
-  getDealsProducts,
   filterProductsByPriceRange,
   sortProducts 
 } from '../services/dataService';
@@ -185,28 +184,31 @@ const ProductListingPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [sortBy, setSortBy] = useState<SortBy>('default');
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 100]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 100000]); // High default to show all products
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [siteConfig, setSiteConfig] = useState<SiteConfig | null>(null);
-  const [saleProducts, setSaleProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<CategoryWithCount[]>([]);
   const [loading, setLoading] = useState(true);
-  const itemsPerPage = 12;
+  const itemsPerPage = 50;
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [productsData, configData, dealsData, categoriesData] = await Promise.all([
-          getProducts(),
+        const [productsData, configData, categoriesData] = await Promise.all([
+          getProducts({ limit: 1000 }), // Fetch all products (no pagination limit)
           getSiteConfig(),
-          getDealsProducts(),
           getCategories()
         ]);
         
         setProducts(productsData);
         setSiteConfig(configData);
-        setSaleProducts(dealsData.slice(0, 3));
+        
+        // Calculate max price from products for filter range
+        if (productsData.length > 0) {
+          const maxPrice = Math.ceil(Math.max(...productsData.map(p => p.price || 0)));
+          setPriceRange([0, maxPrice > 0 ? maxPrice : 100000]);
+        }
         
         // Build categories with count
         const categoriesList: CategoryWithCount[] = [
@@ -281,11 +283,9 @@ const ProductListingPage: React.FC = () => {
   }, [selectedCategory, priceRange, sortBy]);
   
   // Pagination calculations
-  const totalPages = Math.ceil(filteredAndSortedProducts.length / itemsPerPage);
-  const paginatedProducts = filteredAndSortedProducts.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  // Show all filtered products on a single page
+  const totalPages = 1;
+  const paginatedProducts = filteredAndSortedProducts;
 
   if (loading) {
     return <div>Loading...</div>;
@@ -355,10 +355,14 @@ const ProductListingPage: React.FC = () => {
         window.dispatchEvent(new Event('auth:openLogin'));
         return;
       }
+      // Optimistically update local state BEFORE the API call
+      setInCart(true);
       try {
         await cartService.addToCart(product._id || product.id, 1);
-        // cartService already dispatches 'cart:changed'
+        // cartService dispatches 'cart:changed' which will refresh the cache
       } catch (error) {
+        // Revert optimistic update on failure
+        setInCart(false);
         console.error('Failed to add to cart:', error);
       }
     };
@@ -370,10 +374,14 @@ const ProductListingPage: React.FC = () => {
         window.dispatchEvent(new Event('auth:openLogin'));
         return;
       }
+      // Optimistically update local state BEFORE the API call
+      setInWishlist(true);
       try {
         await wishlistService.addToWishlist(product._id || product.id);
-        // wishlistService already dispatches 'wishlist:changed'
+        // wishlistService dispatches 'wishlist:changed' which will refresh the cache
       } catch (error) {
+        // Revert optimistic update on failure
+        setInWishlist(false);
         console.error('Failed to add to wishlist:', error);
       }
     };
@@ -621,43 +629,6 @@ const ProductListingPage: React.FC = () => {
           >
             Apply Filter
           </button>
-        </div>
-      </div>
-
-      {/* Sale Products */}
-      <div>
-        <h3 className="text-base font-semibold text-black mb-4">Sale products</h3>
-        <div className="space-y-4">
-          {saleProducts.map((product) => (
-            <div key={(product._id || product.id)} className="flex gap-3 group cursor-pointer">
-              <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                <img
-                  src={product.images ? product.images[0] : '/images/placeholder.png'}
-                  alt={product.name}
-                  className="w-full h-full max-w-full max-h-full object-cover group-hover:scale-105 transition-transform"
-                  style={{
-                    boxShadow: '0 0 5px rgba(0, 0, 0, 0.5)',
-                    minHeight: '100%',
-                    maxHeight: '100%',
-                    minWidth: '100%',
-                    maxWidth: '100%',
-                    objectFit: 'cover'
-                  }}
-                />
-              </div>
-              <div className="flex-1">
-                <h4 className="text-sm text-black group-hover:text-gray-700 transition-colors line-clamp-2">
-                  {product.name}
-                </h4>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-sm font-semibold text-black">₹{product.price}</span>
-                  {product.originalPrice && (
-                    <span className="text-xs text-gray-500 line-through">₹{product.originalPrice}</span>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
         </div>
       </div>
 

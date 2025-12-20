@@ -115,7 +115,7 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
           isAuth ? wishlistService.getWishlistIds() : Promise.resolve(new Set<string>()),
           getHotDealProducts(),
           getBestsellerProducts(),
-          getProducts(),
+          getProducts({ limit: 1000 }), // Fetch all products
         ]);
         if (!mounted) return;
         setCategories(cats || []);

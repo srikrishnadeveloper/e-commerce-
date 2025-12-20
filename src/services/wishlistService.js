@@ -67,10 +67,14 @@ class WishlistService {
   // Add product to wishlist
   async addToWishlist(productId) {
     try {
+      // Optimistically add to local cache before API call
+      this._ids.add(String(productId));
       const response = await api.post(`/wishlist/${productId}`);
       try { window.dispatchEvent(new Event('wishlist:changed')); } catch {}
       return response.data;
     } catch (error) {
+      // Revert optimistic update on failure
+      this._ids.delete(String(productId));
       throw error.response?.data || { message: 'Failed to add to wishlist' };
     }
   }

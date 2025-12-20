@@ -385,7 +385,7 @@ const BillingPage: React.FC<BillingPageProps> = () => {
                 <p className="text-sm text-gray-600">
                   {orderSummary.shipping === 0 
                     ? 'Free standard shipping (5-7 business days)'
-                    : 'Standard shipping (5-7 business days) - $10.00'
+                    : 'Standard shipping (5-7 business days) - ₹10.00'
                   }
                 </p>
                 <p className="text-sm text-gray-600 mt-1">
