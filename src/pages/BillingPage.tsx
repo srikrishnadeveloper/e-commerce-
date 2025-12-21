@@ -379,19 +379,6 @@ const BillingPage: React.FC<BillingPageProps> = () => {
                 </div>
               </div>
 
-              {/* Shipping Info */}
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <h4 className="font-semibold text-gray-900 mb-2">Shipping Information</h4>
-                <p className="text-sm text-gray-600">
-                  {orderSummary.shipping === 0 
-                    ? 'Free standard shipping (5-7 business days)'
-                    : 'Standard shipping (5-7 business days) - ₹10.00'
-                  }
-                </p>
-                <p className="text-sm text-gray-600 mt-1">
-                  Express shipping available at checkout
-                </p>
-              </div>
             </div>
           </div>
         </div>

@@ -286,7 +286,14 @@ export const getRelatedProducts = async (currentProductId: string, categoryId: s
       return pid !== currentProductId;
     });
     
-    return relatedProducts.slice(0, limit);
+    // Shuffle array randomly using Fisher-Yates algorithm
+    const shuffled = [...relatedProducts];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    
+    return shuffled.slice(0, limit);
   } catch (error) {
     console.error('Error fetching related products:', error);
     return [];

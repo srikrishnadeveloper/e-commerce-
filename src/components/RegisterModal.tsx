@@ -293,7 +293,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSucces
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-55 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black bg-opacity-55 flex items-center justify-center z-[100] px-[1%] sm:px-4"
       onClick={handleOverlayClick}
       role="dialog"
       aria-modal="true"
@@ -301,14 +301,14 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSucces
     >
       <div 
         ref={modalRef}
-        className="bg-white rounded-lg shadow-xl w-full max-w-[560px] max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-lg shadow-xl w-[98%] sm:w-full max-w-[560px] max-h-[95vh] sm:max-h-[90vh] overflow-y-auto"
         style={{
           boxShadow: '0 16px 40px rgba(0,0,0,0.18)'
         }}
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between p-6 pb-2">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between p-4 sm:p-6 pb-2">
+          <div className="flex items-center gap-2 sm:gap-3">
             {step !== 'email' && (
               <button
                 onClick={step === 'otp' ? goBackToEmail : () => setStep('otp')}
@@ -350,8 +350,8 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSucces
         </div>
 
         {/* Step Indicator */}
-        <div className="px-6 pb-4">
-          <p className="text-sm text-gray-500 mb-4">{getStepSubtitle()}</p>
+        <div className="px-4 sm:px-6 pb-4">
+          <p className="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">{getStepSubtitle()}</p>
           <div className="flex items-center gap-2">
             {['email', 'otp', 'details'].map((s, i) => (
               <React.Fragment key={s}>
@@ -381,15 +381,15 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSucces
         </div>
 
         {/* Modal Body */}
-        <div className="px-6 pb-6">
+        <div className="px-4 sm:px-6 pb-4 sm:pb-6">
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm">
+            <div className="mb-3 sm:mb-4 p-2.5 sm:p-3 bg-red-50 border border-red-200 text-red-700 rounded-md text-xs sm:text-sm">
               {error}
             </div>
           )}
           
           {successMessage && !error && (
-            <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 rounded-md text-sm">
+            <div className="mb-3 sm:mb-4 p-2.5 sm:p-3 bg-green-50 border border-green-200 text-green-700 rounded-md text-xs sm:text-sm">
               {successMessage}
             </div>
           )}
@@ -449,12 +449,12 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSucces
 
           {/* Step 2: OTP Verification */}
           {step === 'otp' && (
-            <form onSubmit={handleVerifyOTP} className="space-y-4">
+            <form onSubmit={handleVerifyOTP} className="space-y-3 sm:space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2 sm:mb-3">
                   Enter verification code
                 </label>
-                <div className="flex justify-center gap-2">
+                <div className="flex justify-center gap-1.5 sm:gap-2">
                   {otp.map((digit, index) => (
                     <input
                       key={index}
@@ -465,7 +465,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSucces
                       value={digit}
                       onChange={(e) => handleOtpChange(index, e.target.value)}
                       onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                      className="w-12 h-14 text-center text-xl font-semibold border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 hover:border-gray-400 transition-colors"
+                      className="w-10 h-12 sm:w-12 sm:h-14 text-center text-lg sm:text-xl font-semibold border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 hover:border-gray-400 transition-colors"
                       style={{ borderRadius: '8px' }}
                     />
                   ))}

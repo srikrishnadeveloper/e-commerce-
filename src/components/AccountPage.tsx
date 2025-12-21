@@ -30,9 +30,21 @@ interface Order {
   }>;
 }
 
+// Chevron Icon Component
+const ChevronIcon = ({ isOpen }: { isOpen: boolean }) => (
+  <svg 
+    className={`w-5 h-5 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+    fill="none" 
+    stroke="currentColor" 
+    viewBox="0 0 24 24"
+  >
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+  </svg>
+);
+
 const AccountPage = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [expandedSection, setExpandedSection] = useState<string | null>('dashboard');
   
   // User state
   const [user, setUser] = useState<UserData | null>(null);
@@ -78,15 +90,6 @@ const AccountPage = () => {
   // Logout state
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
 
-  const sidebarItems = [
-    { id: 'dashboard', label: 'Dashboard' },
-    { id: 'orders', label: 'Orders' },
-    { id: 'addresses', label: 'Addresses' },
-    { id: 'account-details', label: 'Account Details' },
-    { id: 'wishlist', label: 'Wishlist' },
-    { id: 'logout', label: 'Logout' }
-  ];
-
   // Check auth and fetch user data
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -98,19 +101,19 @@ const AccountPage = () => {
     fetchUserData();
   }, [navigate]);
 
-  // Fetch addresses when addresses tab is active
+  // Fetch addresses when addresses section is expanded
   useEffect(() => {
-    if (activeTab === 'addresses' && user) {
+    if (expandedSection === 'addresses' && user) {
       fetchAddresses();
     }
-  }, [activeTab, user]);
+  }, [expandedSection, user]);
 
-  // Fetch orders when orders tab is active
+  // Fetch orders when orders section is expanded
   useEffect(() => {
-    if (activeTab === 'orders' && user) {
+    if (expandedSection === 'orders' && user) {
       fetchOrders();
     }
-  }, [activeTab, user]);
+  }, [expandedSection, user]);
 
   const fetchUserData = async () => {
     try {
@@ -352,46 +355,36 @@ const AccountPage = () => {
     navigate('/');
   };
 
-  const handleTabClick = (tabId: string) => {
-    if (tabId === 'logout') {
+  const handleSectionToggle = (sectionId: string) => {
+    if (sectionId === 'logout') {
       setShowLogoutConfirmation(true);
+    } else if (sectionId === 'wishlist') {
+      navigate('/wishlist');
     } else {
-      setActiveTab(tabId);
-    }
-  };
-
-  const getPageTitle = () => {
-    switch (activeTab) {
-      case 'dashboard': return 'My Account';
-      case 'orders': return 'My Orders';
-      case 'addresses': return 'My Account Address';
-      case 'wishlist': return 'My Account Wishlist';
-      case 'account-details': return 'My Account Details';
-      default: return 'My Account';
+      setExpandedSection(expandedSection === sectionId ? null : sectionId);
     }
   };
 
   const renderDashboard = () => (
-    <div className="text-left px-2 sm:px-0">
-      <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4">Hello {user?.name || 'User'}</h2>
+    <div className="text-left">
       <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
         From your account dashboard you can view your{' '}
         <button 
-          onClick={() => setActiveTab('orders')}
+          onClick={() => setExpandedSection('orders')}
           className="text-red-500 hover:text-red-600 underline"
         >
           recent orders
         </button>
         , manage your{' '}
         <button 
-          onClick={() => setActiveTab('addresses')}
+          onClick={() => setExpandedSection('addresses')}
           className="text-red-500 hover:text-red-600 underline"
         >
           shipping and billing addresses
         </button>
         , and{' '}
         <button 
-          onClick={() => setActiveTab('account-details')}
+          onClick={() => setExpandedSection('account-details')}
           className="text-red-500 hover:text-red-600 underline"
         >
           edit your password and account details
@@ -402,7 +395,7 @@ const AccountPage = () => {
   );
 
   const renderOrders = () => (
-    <div className="px-2 sm:px-0">
+    <div>
       {/* Mobile Card View */}
       <div className="block md:hidden space-y-4">
         {ordersLoading ? (
@@ -558,7 +551,7 @@ const AccountPage = () => {
   );
 
   const renderAddresses = () => (
-    <div className="px-2 sm:px-0">
+    <div>
       <button 
         onClick={() => setShowAddressForm(true)}
         className="w-full sm:w-auto bg-black text-white px-4 sm:px-6 py-3 font-medium mb-6 sm:mb-8 hover:bg-gray-800 transition-colors text-sm sm:text-base"
@@ -612,213 +605,160 @@ const AccountPage = () => {
           ))}
         </div>
       )}
-      
-      {/* Address Form Modal */}
-      {showAddressForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
-          <div className="bg-white rounded-lg w-full max-w-lg max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
-            <div className="p-4 sm:p-6">
-              <div className="flex justify-between items-center mb-4 sm:mb-6">
-                <h2 className="text-lg sm:text-xl font-semibold">{editingAddress ? 'Edit Address' : 'Add New Address'}</h2>
-                <button onClick={resetAddressForm} className="text-gray-500 hover:text-gray-700 text-2xl p-1">&times;</button>
+    </div>
+  );
+
+  // Address Form Modal - extracted to prevent focus loss
+  const renderAddressFormModal = () => {
+    if (!showAddressForm) return null;
+    
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+        <div className="bg-white rounded-lg w-full max-w-lg max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+          <div className="p-4 sm:p-6">
+            <div className="flex justify-between items-center mb-4 sm:mb-6">
+              <h2 className="text-lg sm:text-xl font-semibold">{editingAddress ? 'Edit Address' : 'Add New Address'}</h2>
+              <button onClick={resetAddressForm} className="text-gray-500 hover:text-gray-700 text-2xl p-1">&times;</button>
+            </div>
+            
+            <form onSubmit={handleAddressSubmit} className="space-y-3 sm:space-y-4">
+              <div>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Address Label *</label>
+                <select
+                  value={addressFormData.label}
+                  onChange={(e) => setAddressFormData(prev => ({...prev, label: e.target.value as 'home' | 'work' | 'other'}))}
+                  className="w-full border border-gray-300 px-3 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-red-500 rounded"
+                >
+                  <option value="home">Home</option>
+                  <option value="work">Work</option>
+                  <option value="other">Other</option>
+                </select>
               </div>
               
-              <form onSubmit={handleAddressSubmit} className="space-y-3 sm:space-y-4">
+              <div>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Full Name *</label>
+                <input
+                  type="text"
+                  value={addressFormData.fullName}
+                  onChange={(e) => setAddressFormData(prev => ({...prev, fullName: e.target.value}))}
+                  className="w-full border border-gray-300 px-3 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-red-500 rounded"
+                />
+                {addressErrors.fullName && <p className="text-red-500 text-xs sm:text-sm mt-1">{addressErrors.fullName}</p>}
+              </div>
+              
+              <div>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Phone *</label>
+                <input
+                  type="tel"
+                  value={addressFormData.phone}
+                  onChange={(e) => setAddressFormData(prev => ({...prev, phone: e.target.value}))}
+                  className="w-full border border-gray-300 px-3 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-red-500 rounded"
+                />
+                {addressErrors.phone && <p className="text-red-500 text-xs sm:text-sm mt-1">{addressErrors.phone}</p>}
+              </div>
+              
+              <div>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Address Line 1 *</label>
+                <input
+                  type="text"
+                  value={addressFormData.addressLine1}
+                  onChange={(e) => setAddressFormData(prev => ({...prev, addressLine1: e.target.value}))}
+                  className="w-full border border-gray-300 px-3 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-red-500 rounded"
+                />
+                {addressErrors.addressLine1 && <p className="text-red-500 text-xs sm:text-sm mt-1">{addressErrors.addressLine1}</p>}
+              </div>
+              
+              <div>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Address Line 2</label>
+                <input
+                  type="text"
+                  value={addressFormData.addressLine2}
+                  onChange={(e) => setAddressFormData(prev => ({...prev, addressLine2: e.target.value}))}
+                  className="w-full border border-gray-300 px-3 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-red-500 rounded"
+                />
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Address Label *</label>
-                  <select
-                    value={addressFormData.label}
-                    onChange={(e) => setAddressFormData({...addressFormData, label: e.target.value as 'home' | 'work' | 'other'})}
-                    className="w-full border border-gray-300 px-3 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-red-500 rounded"
-                  >
-                    <option value="home">Home</option>
-                    <option value="work">Work</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Full Name *</label>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">City *</label>
                   <input
                     type="text"
-                    value={addressFormData.fullName}
-                    onChange={(e) => setAddressFormData({...addressFormData, fullName: e.target.value})}
+                    value={addressFormData.city}
+                    onChange={(e) => setAddressFormData(prev => ({...prev, city: e.target.value}))}
                     className="w-full border border-gray-300 px-3 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-red-500 rounded"
                   />
-                  {addressErrors.fullName && <p className="text-red-500 text-xs sm:text-sm mt-1">{addressErrors.fullName}</p>}
+                  {addressErrors.city && <p className="text-red-500 text-xs sm:text-sm mt-1">{addressErrors.city}</p>}
                 </div>
-                
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Phone *</label>
-                  <input
-                    type="tel"
-                    value={addressFormData.phone}
-                    onChange={(e) => setAddressFormData({...addressFormData, phone: e.target.value})}
-                    className="w-full border border-gray-300 px-3 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-red-500 rounded"
-                  />
-                  {addressErrors.phone && <p className="text-red-500 text-xs sm:text-sm mt-1">{addressErrors.phone}</p>}
-                </div>
-                
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Address Line 1 *</label>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">State *</label>
                   <input
                     type="text"
-                    value={addressFormData.addressLine1}
-                    onChange={(e) => setAddressFormData({...addressFormData, addressLine1: e.target.value})}
+                    value={addressFormData.state}
+                    onChange={(e) => setAddressFormData(prev => ({...prev, state: e.target.value}))}
                     className="w-full border border-gray-300 px-3 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-red-500 rounded"
                   />
-                  {addressErrors.addressLine1 && <p className="text-red-500 text-xs sm:text-sm mt-1">{addressErrors.addressLine1}</p>}
+                  {addressErrors.state && <p className="text-red-500 text-xs sm:text-sm mt-1">{addressErrors.state}</p>}
                 </div>
-                
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Address Line 2</label>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Postal Code *</label>
                   <input
                     type="text"
-                    value={addressFormData.addressLine2}
-                    onChange={(e) => setAddressFormData({...addressFormData, addressLine2: e.target.value})}
+                    value={addressFormData.postalCode}
+                    onChange={(e) => setAddressFormData(prev => ({...prev, postalCode: e.target.value}))}
+                    className="w-full border border-gray-300 px-3 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-red-500 rounded"
+                  />
+                  {addressErrors.postalCode && <p className="text-red-500 text-xs sm:text-sm mt-1">{addressErrors.postalCode}</p>}
+                </div>
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Country</label>
+                  <input
+                    type="text"
+                    value={addressFormData.country}
+                    onChange={(e) => setAddressFormData(prev => ({...prev, country: e.target.value}))}
                     className="w-full border border-gray-300 px-3 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-red-500 rounded"
                   />
                 </div>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">City *</label>
-                    <input
-                      type="text"
-                      value={addressFormData.city}
-                      onChange={(e) => setAddressFormData({...addressFormData, city: e.target.value})}
-                      className="w-full border border-gray-300 px-3 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-red-500 rounded"
-                    />
-                    {addressErrors.city && <p className="text-red-500 text-xs sm:text-sm mt-1">{addressErrors.city}</p>}
-                  </div>
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">State *</label>
-                    <input
-                      type="text"
-                      value={addressFormData.state}
-                      onChange={(e) => setAddressFormData({...addressFormData, state: e.target.value})}
-                      className="w-full border border-gray-300 px-3 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-red-500 rounded"
-                    />
-                    {addressErrors.state && <p className="text-red-500 text-xs sm:text-sm mt-1">{addressErrors.state}</p>}
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Postal Code *</label>
-                    <input
-                      type="text"
-                      value={addressFormData.postalCode}
-                      onChange={(e) => setAddressFormData({...addressFormData, postalCode: e.target.value})}
-                      className="w-full border border-gray-300 px-3 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-red-500 rounded"
-                    />
-                    {addressErrors.postalCode && <p className="text-red-500 text-xs sm:text-sm mt-1">{addressErrors.postalCode}</p>}
-                  </div>
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Country</label>
-                    <input
-                      type="text"
-                      value={addressFormData.country}
-                      onChange={(e) => setAddressFormData({...addressFormData, country: e.target.value})}
-                      className="w-full border border-gray-300 px-3 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-red-500 rounded"
-                    />
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="isDefault"
-                    checked={addressFormData.isDefault}
-                    onChange={(e) => setAddressFormData({...addressFormData, isDefault: e.target.checked})}
-                    className="w-4 h-4"
-                  />
-                  <label htmlFor="isDefault" className="text-xs sm:text-sm text-gray-700">Set as default address</label>
-                </div>
-                
-                <div className="flex flex-col sm:flex-row gap-3 pt-3 sm:pt-4">
-                  <button
-                    type="submit"
-                    disabled={addressLoading}
-                    className="w-full sm:w-auto bg-black text-white px-4 sm:px-6 py-2 text-sm sm:text-base font-medium hover:bg-gray-800 transition-colors disabled:bg-gray-400 rounded"
-                  >
-                    {addressLoading ? 'Saving...' : (editingAddress ? 'Update Address' : 'Add Address')}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={resetAddressForm}
-                    className="w-full sm:w-auto border border-black px-4 sm:px-6 py-2 text-sm sm:text-base font-medium hover:bg-gray-50 transition-colors rounded"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="isDefault"
+                  checked={addressFormData.isDefault}
+                  onChange={(e) => setAddressFormData(prev => ({...prev, isDefault: e.target.checked}))}
+                  className="w-4 h-4"
+                />
+                <label htmlFor="isDefault" className="text-xs sm:text-sm text-gray-700">Set as default address</label>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row gap-3 pt-3 sm:pt-4">
+                <button
+                  type="submit"
+                  disabled={addressLoading}
+                  className="w-full sm:w-auto bg-black text-white px-4 sm:px-6 py-2 text-sm sm:text-base font-medium hover:bg-gray-800 transition-colors disabled:bg-gray-400 rounded"
+                >
+                  {addressLoading ? 'Saving...' : (editingAddress ? 'Update Address' : 'Add Address')}
+                </button>
+                <button
+                  type="button"
+                  onClick={resetAddressForm}
+                  className="w-full sm:w-auto border border-black px-4 sm:px-6 py-2 text-sm sm:text-base font-medium hover:bg-gray-50 transition-colors rounded"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
           </div>
-        </div>
-      )}
-    </div>
-  );
-
-  const renderWishlist = () => (
-    <div className="px-2 sm:px-0">
-      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-        {/* Product 1 */}
-        <div className="group">
-          <div className="relative mb-2 sm:mb-4 bg-gray-100 aspect-square overflow-hidden rounded-lg">
-            <img 
-              src="/images/IMAGE_1.png" 
-              alt="Ribbed Tank Top"
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            />
-          </div>
-          <h3 className="font-semibold mb-1 sm:mb-2 text-sm sm:text-base truncate">Ribbed Tank Top</h3>
-          <p className="font-medium mb-2 sm:mb-3 text-sm sm:text-base">$16.95</p>
-          <div className="flex gap-1 sm:gap-2">
-            <button className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-orange-400 border-2 border-orange-400"></button>
-            <button className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-black border-2 border-gray-300"></button>
-          </div>
-        </div>
-
-        {/* Product 2 */}
-        <div className="group">
-          <div className="relative mb-2 sm:mb-4 bg-gray-100 aspect-square overflow-hidden rounded-lg">
-            <img 
-              src="/images/IMAGE_2.png" 
-              alt="Ribbed Modal T-shirt"
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            />
-            <div className="absolute top-2 right-2 sm:top-4 sm:right-4 bg-white px-1.5 py-0.5 sm:px-2 sm:py-1 text-[10px] sm:text-sm font-medium rounded">
-              You are good to go!
-            </div>
-          </div>
-          <h3 className="font-semibold mb-1 sm:mb-2 text-sm sm:text-base truncate">Ribbed Modal T-shirt</h3>
-          <p className="font-medium mb-2 sm:mb-3 text-sm sm:text-base">$18.95</p>
-          <div className="flex gap-1 sm:gap-2">
-            <button className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-green-400 border-2 border-green-400"></button>
-            <button className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-pink-300 border-2 border-gray-300"></button>
-            <button className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-green-200 border-2 border-gray-300"></button>
-          </div>
-        </div>
-
-        {/* Product 3 */}
-        <div className="group">
-          <div className="relative mb-2 sm:mb-4 bg-gray-100 aspect-square overflow-hidden rounded-lg">
-            <img 
-              src="/images/IMAGE_3.png" 
-              alt="Oversized Printed T-shirt"
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            />
-          </div>
-          <h3 className="font-semibold mb-1 sm:mb-2 text-sm sm:text-base truncate">Oversized Printed T-shirt</h3>
-          <p className="font-medium mb-2 sm:mb-3 text-sm sm:text-base">$10.00</p>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderAccountDetails = () => (
-    <div className="px-2 sm:px-0">
+    <div>
       <form onSubmit={handleAccountSubmit} className="max-w-2xl">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
           <div>
@@ -918,15 +858,54 @@ const AccountPage = () => {
     </div>
   );
 
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'dashboard': return renderDashboard();
-      case 'orders': return renderOrders();
-      case 'addresses': return renderAddresses();
-      case 'wishlist': return renderWishlist();
-      case 'account-details': return renderAccountDetails();
-      default: return renderDashboard();
-    }
+  // Accordion Section Component
+  const AccordionSection = ({ 
+    id, 
+    label, 
+    icon,
+    children 
+  }: { 
+    id: string; 
+    label: string; 
+    icon: React.ReactNode;
+    children: React.ReactNode;
+  }) => {
+    const isOpen = expandedSection === id;
+    const isLogout = id === 'logout';
+    const isWishlist = id === 'wishlist';
+    
+    return (
+      <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+        <button
+          onClick={() => handleSectionToggle(id)}
+          className={`w-full flex items-center justify-between px-4 sm:px-5 py-4 text-left transition-colors ${
+            isOpen ? 'bg-gray-50' : 'hover:bg-gray-50'
+          } ${isLogout ? 'text-red-600 hover:bg-red-50' : ''}`}
+        >
+          <div className="flex items-center gap-3">
+            <span className={`${isLogout ? 'text-red-500' : 'text-gray-500'}`}>
+              {icon}
+            </span>
+            <span className={`font-medium text-sm sm:text-base ${isLogout ? 'text-red-600' : 'text-gray-800'}`}>
+              {label}
+            </span>
+          </div>
+          {!isLogout && !isWishlist && (
+            <ChevronIcon isOpen={isOpen} />
+          )}
+          {isWishlist && (
+            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          )}
+        </button>
+        {!isLogout && !isWishlist && isOpen && (
+          <div className="px-4 sm:px-5 py-4 border-t border-gray-100 bg-white">
+            {children}
+          </div>
+        )}
+      </div>
+    );
   };
 
   if (loading) {
@@ -938,57 +917,116 @@ const AccountPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Gradient Header Section */}
-      <div className="w-full bg-gradient-to-r from-pink-50 via-purple-50 to-blue-50 py-8 sm:py-12 lg:py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-center text-black">
-            {getPageTitle()}
+    <div className="min-h-screen bg-gray-50">
+      {/* Gradient Header Section - matching ContactUs style */}
+      <div 
+        className="w-full flex items-center justify-center"
+        style={{
+          background: 'linear-gradient(90deg, rgba(255, 255, 255, 1) 0%, rgba(254, 240, 239, 1) 50%, rgba(243, 251, 251, 1) 76%, rgba(254, 255, 255, 1) 98%)',
+          height: '140px'
+        }}
+      >
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
+          <h1 
+            className="text-black"
+            style={{ 
+              fontSize: '28px',
+              fontWeight: 'normal', 
+              fontFamily: "'Albert Sans', sans-serif" 
+            }}
+          >
+            My Account
           </h1>
+          <p 
+            className="text-gray-600 mt-1"
+            style={{ fontFamily: "'Albert Sans', sans-serif" }}
+          >
+            Hello, {user?.name || 'User'} 👋
+          </p>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
-        <div className="flex flex-col lg:flex-row gap-6 lg:gap-12">
-          {/* Mobile Tab Navigation */}
-          <div className="lg:hidden">
-            <select
-              value={activeTab}
-              onChange={(e) => handleTabClick(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 text-base font-medium bg-white focus:outline-none focus:ring-2 focus:ring-red-500"
-            >
-              {sidebarItems.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.label}
-                </option>
-              ))}
-            </select>
-          </div>
+      {/* Main Content - Accordion Style */}
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        <div className="space-y-3">
+          {/* Dashboard Section */}
+          <AccordionSection 
+            id="dashboard" 
+            label="Dashboard"
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+              </svg>
+            }
+          >
+            {renderDashboard()}
+          </AccordionSection>
 
-          {/* Desktop Sidebar */}
-          <div className="hidden lg:block w-64 flex-shrink-0">
-            <nav className="space-y-2 sticky top-4">
-              {sidebarItems.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => handleTabClick(item.id)}
-                  className={`w-full text-left px-4 xl:px-6 py-3 font-medium transition-colors text-sm xl:text-base ${
-                    activeTab === item.id
-                      ? 'bg-red-50 text-red-600 border-l-4 border-red-600'
-                      : 'text-gray-700 hover:bg-gray-50 border-l-4 border-transparent'
-                  }`}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </nav>
-          </div>
+          {/* Orders Section */}
+          <AccordionSection 
+            id="orders" 
+            label="Orders"
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+              </svg>
+            }
+          >
+            {renderOrders()}
+          </AccordionSection>
 
-          {/* Main Content Area */}
-          <div className="flex-1 min-w-0 overflow-hidden">
-            {renderContent()}
-          </div>
+          {/* Addresses Section */}
+          <AccordionSection 
+            id="addresses" 
+            label="Addresses"
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            }
+          >
+            {renderAddresses()}
+          </AccordionSection>
+
+          {/* Account Details Section */}
+          <AccordionSection 
+            id="account-details" 
+            label="Account Details"
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            }
+          >
+            {renderAccountDetails()}
+          </AccordionSection>
+
+          {/* Wishlist Link */}
+          <AccordionSection 
+            id="wishlist" 
+            label="Wishlist"
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+            }
+          >
+            <></>
+          </AccordionSection>
+
+          {/* Logout Section */}
+          <AccordionSection 
+            id="logout" 
+            label="Logout"
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+            }
+          >
+            <></>
+          </AccordionSection>
         </div>
       </div>
 
@@ -998,6 +1036,9 @@ const AccountPage = () => {
         onClose={() => setShowLogoutConfirmation(false)}
         onConfirm={handleLogout}
       />
+
+      {/* Address Form Modal - rendered at root level to prevent focus issues */}
+      {renderAddressFormModal()}
     </div>
   );
 };

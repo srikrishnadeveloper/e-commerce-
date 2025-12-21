@@ -21,7 +21,7 @@ interface ZoomPosition {
   y: number;
 }
 
-type TabType = 'description' | 'shipping';
+type TabType = 'description';
 
 // Arrow Icon Components for Carousel
 const ArrowLeftIcon: React.FC<ArrowIconProps> = ({ className }) => (
@@ -74,7 +74,7 @@ const ProductDetailPage: React.FC = () => {
         if (!isActive) return;
         setCurrentProduct(prod);
         if (prod) {
-          const rel = await getRelatedProducts((prod._id || prod.id || '').toString(), prod.categoryId, 4);
+          const rel = await getRelatedProducts((prod._id || prod.id || '').toString(), prod.categoryId, 10);
           if (!isActive) return;
           setRelatedProducts(rel);
         }
@@ -625,7 +625,7 @@ const ProductDetailPage: React.FC = () => {
           {/* Tabs */}
           <div className="w-full overflow-x-auto border-b border-gray-200 mb-6 lg:mb-12 scrollbar-hide">
             <div className="flex min-w-max">
-              {(['description', 'shipping'] as TabType[]).map((tab) => (
+              {(['description'] as TabType[]).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -709,75 +709,6 @@ const ProductDetailPage: React.FC = () => {
                       </>
                     )}
                   </ul>
-
-                  <div className="space-y-2">
-                    <span className="font-semibold text-black" style={{ fontFamily: "'Albert Sans', sans-serif" }}>Care Instructions:</span>
-                    <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
-                      {currentProduct.tags && currentProduct.tags.includes('electronics') ? (
-                        <>
-                          <li>Keep away from water and moisture</li>
-                          <li>Handle with care to avoid damage</li>
-                          <li>Store in a cool, dry place</li>
-                        </>
-                      ) : currentProduct.tags && currentProduct.tags.includes('clothing') ? (
-                        <>
-                          <li>Machine wash cold with similar colors</li>
-                          <li>Tumble dry low or hang to dry</li>
-                          <li>Iron on low heat if needed</li>
-                        </>
-                      ) : (
-                        <>
-                          <li>Wipe clean with a soft, dry cloth</li>
-                          <li>Store in a dry environment</li>
-                          <li>Handle with care</li>
-                        </>
-                      )}
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'shipping' && (
-              <div className="space-y-8">
-                <div>
-                  <h3 className="text-lg lg:text-xl font-bold text-black mb-4 lg:mb-6" style={{ fontFamily: "'Albert Sans', sans-serif" }}>Shipping Information</h3>
-                  <div className="grid md:grid-cols-2 gap-8">
-                    <div className="space-y-4">
-                      <div>
-                        <h4 className="font-semibold text-black mb-2">Standard Shipping</h4>
-                        <p className="text-gray-700">
-                          {(currentProduct as any)?.shipping?.standard?.days || "5-7 business days"} - {(currentProduct as any)?.shipping?.standard?.price || "FREE on orders over ₹50"}
-                        </p>
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-black mb-2">Express Shipping</h4>
-                        <p className="text-gray-700">
-                          {(currentProduct as any)?.shipping?.express?.days || "2-3 business days"} - {(currentProduct as any)?.shipping?.express?.price || "₹9.99"}
-                        </p>
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-black mb-2">Overnight Shipping</h4>
-                        <p className="text-gray-700">
-                          {(currentProduct as any)?.shipping?.overnight?.days || "1 business day"} - {(currentProduct as any)?.shipping?.overnight?.price || "₹19.99"}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="space-y-4">
-                      <div>
-                        <h4 className="font-semibold text-black mb-2">International Shipping</h4>
-                        <p className="text-gray-700">
-                          {(currentProduct as any)?.shipping?.international?.days || "12-25 business days depending on location"}
-                        </p>
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-black mb-2">Order Processing</h4>
-                        <p className="text-gray-700">
-                          {(currentProduct as any)?.shipping?.international?.processing || "Orders are processed within 1-2 business days"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </div>
             )}
@@ -786,7 +717,7 @@ const ProductDetailPage: React.FC = () => {
 
         {/* Related Products Carousel */}
         <div className="border-t border-gray-200 pt-16 mt-16">
-          <h2 className="text-2xl font-bold text-black mb-10" style={{ fontFamily: "'Albert Sans', sans-serif" }}>People Also Bought</h2>
+          <h2 className="text-2xl font-bold text-black mb-10" style={{ fontFamily: "'Albert Sans', sans-serif" }}>You May Also Like</h2>
 
           {/* Desktop Carousel */}
           <div className="hidden md:block relative">

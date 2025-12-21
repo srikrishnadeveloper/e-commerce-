@@ -127,14 +127,14 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSuccess, onS
   if (view === 'forgotPasswordSuccess') {
     return (
       <div 
-        className="fixed inset-0 bg-black bg-opacity-55 flex items-center justify-center z-50 p-4"
+        className="fixed inset-0 bg-black bg-opacity-55 flex items-center justify-center z-[100] px-[1%] sm:px-4"
         onClick={handleOverlayClick}
         role="dialog"
         aria-modal="true"
       >
         <div 
           ref={modalRef}
-          className="bg-white rounded-lg shadow-xl w-full max-w-[560px] max-h-[90vh] overflow-y-auto"
+          className="bg-white rounded-lg shadow-xl w-[98%] sm:w-full max-w-[560px] max-h-[95vh] sm:max-h-[90vh] overflow-y-auto"
           style={{ boxShadow: '0 16px 40px rgba(0,0,0,0.18)' }}
         >
           <div className="flex items-center justify-between p-6 pb-4">
@@ -180,14 +180,14 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSuccess, onS
   if (view === 'forgotPassword') {
     return (
       <div 
-        className="fixed inset-0 bg-black bg-opacity-55 flex items-center justify-center z-50 p-3 sm:p-4"
+        className="fixed inset-0 bg-black bg-opacity-55 flex items-center justify-center z-[100] px-[1%] sm:px-4"
         onClick={handleOverlayClick}
         role="dialog"
         aria-modal="true"
       >
         <div 
           ref={modalRef}
-          className="bg-white rounded-lg shadow-xl w-full max-w-[560px] max-h-[90vh] overflow-y-auto mx-2 sm:mx-0"
+          className="bg-white rounded-lg shadow-xl w-[98%] sm:w-full max-w-[560px] max-h-[95vh] sm:max-h-[90vh] overflow-y-auto"
           style={{ boxShadow: '0 16px 40px rgba(0,0,0,0.18)' }}
         >
           <div className="flex items-center justify-between p-4 sm:p-6 pb-3 sm:pb-4">
@@ -257,7 +257,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSuccess, onS
   // Login Form View (default)
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-55 flex items-center justify-center z-50 p-3 sm:p-4"
+      className="fixed inset-0 bg-black bg-opacity-55 flex items-center justify-center z-[100] px-[1%] sm:px-4"
       onClick={handleOverlayClick}
       role="dialog"
       aria-modal="true"
@@ -265,7 +265,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSuccess, onS
     >
       <div 
         ref={modalRef}
-        className="bg-white rounded-lg shadow-xl w-full max-w-[560px] max-h-[90vh] overflow-y-auto mx-2 sm:mx-0"
+        className="bg-white rounded-lg shadow-xl w-[98%] sm:w-full max-w-[560px] max-h-[95vh] sm:max-h-[90vh] overflow-y-auto"
         style={{
           boxShadow: '0 16px 40px rgba(0,0,0,0.18)'
         }}

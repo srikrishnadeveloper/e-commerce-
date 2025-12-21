@@ -76,19 +76,19 @@ const ResetPasswordPage: React.FC = () => {
   // Success state
   if (success) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center px-4">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 sm:px-6">
         <div className="w-full max-w-md">
-          <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 sm:p-8 text-center">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-5">
               <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Password Reset Successful!</h1>
-            <p className="text-gray-600 mb-4">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">Password Reset Successful!</h1>
+            <p className="text-sm sm:text-base text-gray-600 mb-4">
               Your password has been reset and you are now logged in.
             </p>
-            <p className="text-sm text-gray-500">
+            <p className="text-xs sm:text-sm text-gray-500">
               Redirecting to home page...
             </p>
           </div>
@@ -98,24 +98,25 @@ const ResetPasswordPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-[60vh] flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 sm:px-6 py-8 sm:py-12">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-lg shadow-lg p-8">
-          <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Reset Your Password</h1>
-            <p className="text-gray-600">Enter your new password below</p>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 sm:p-8">
+          {/* Header */}
+          <div className="text-center mb-6 sm:mb-8">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Reset Your Password</h1>
+            <p className="text-sm sm:text-base text-gray-500">Enter your new password below</p>
           </div>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm">
+            <div className="mb-5 p-3 sm:p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-xs sm:text-sm">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
             {/* New Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="password" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                 New Password *
               </label>
               <div className="relative">
@@ -126,14 +127,14 @@ const ResetPasswordPage: React.FC = () => {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full h-11 px-3.5 py-2.5 pr-10 border border-gray-300 rounded-md text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
+                  className="w-full h-11 sm:h-12 px-3.5 sm:px-4 py-2.5 pr-11 border border-gray-300 rounded-lg text-sm sm:text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-colors"
                   placeholder="Enter new password"
                   minLength={8}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                 >
                   {showPassword ? (
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -147,12 +148,12 @@ const ResetPasswordPage: React.FC = () => {
                   )}
                 </button>
               </div>
-              <p className="mt-1 text-xs text-gray-500">Must be at least 8 characters</p>
+              <p className="mt-1.5 sm:mt-2 text-xs text-gray-500">Must be at least 8 characters</p>
             </div>
 
             {/* Confirm Password */}
             <div>
-              <label htmlFor="passwordConfirm" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="passwordConfirm" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                 Confirm Password *
               </label>
               <div className="relative">
@@ -163,14 +164,14 @@ const ResetPasswordPage: React.FC = () => {
                   required
                   value={formData.passwordConfirm}
                   onChange={handleChange}
-                  className="w-full h-11 px-3.5 py-2.5 pr-10 border border-gray-300 rounded-md text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
+                  className="w-full h-11 sm:h-12 px-3.5 sm:px-4 py-2.5 pr-11 border border-gray-300 rounded-lg text-sm sm:text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-colors"
                   placeholder="Confirm new password"
                   minLength={8}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                 >
                   {showConfirmPassword ? (
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -187,19 +188,21 @@ const ResetPasswordPage: React.FC = () => {
             </div>
 
             {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full h-11 bg-black text-white font-semibold rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {loading ? 'Resetting...' : 'Reset Password'}
-            </button>
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full h-11 sm:h-12 bg-black text-white text-sm sm:text-base font-semibold rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {loading ? 'Resetting...' : 'Reset Password'}
+              </button>
+            </div>
           </form>
 
-          <div className="mt-6 text-center">
+          <div className="mt-6 sm:mt-8 text-center">
             <Link 
               to="/" 
-              className="text-sm text-gray-600 hover:text-gray-900 hover:underline"
+              className="text-xs sm:text-sm text-gray-500 hover:text-gray-900 hover:underline transition-colors"
               onClick={() => window.dispatchEvent(new Event('auth:openLogin'))}
             >
               ← Back to login
