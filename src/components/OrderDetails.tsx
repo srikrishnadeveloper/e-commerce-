@@ -10,6 +10,8 @@ interface OrderItem {
   quantity: number;
   image?: string;
   itemTotal: number;
+  selectedColor?: string;
+  selectedSize?: string;
 }
 
 interface Order {
@@ -99,8 +101,8 @@ const OrderDetails: React.FC = () => {
                 )}
               </div>
               <div className="text-right">
-                <div className="text-gray-900 font-medium">${item.price.toFixed(2)}</div>
-                <div className="text-gray-600 text-sm">Item total: ${item.itemTotal.toFixed(2)}</div>
+                <div className="text-gray-900 font-medium">₹{item.price.toFixed(2)}</div>
+                <div className="text-gray-600 text-sm">Item total: ₹{item.itemTotal.toFixed(2)}</div>
               </div>
             </div>
           ))}
@@ -110,15 +112,15 @@ const OrderDetails: React.FC = () => {
           <div className="bg-gray-50 p-6 rounded-lg space-y-3">
             <div className="flex justify-between">
               <span>Subtotal</span>
-              <span>${order.subtotal.toFixed(2)}</span>
+              <span>₹{order.subtotal.toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
               <span>Shipping</span>
-              <span>{order.shipping === 0 ? 'Free' : `$${order.shipping.toFixed(2)}`}</span>
+              <span>{order.shipping === 0 ? 'Free' : `₹${order.shipping.toFixed(2)}`}</span>
             </div>
             <div className="border-t pt-3 flex justify-between font-semibold">
               <span>Total</span>
-              <span>${order.total.toFixed(2)}</span>
+              <span>₹{order.total.toFixed(2)}</span>
             </div>
             <div className="pt-3 text-sm text-gray-700">
               <div>Status: <span className="capitalize">{order.status}</span></div>

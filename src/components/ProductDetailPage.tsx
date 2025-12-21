@@ -101,9 +101,70 @@ const ProductDetailPage: React.FC = () => {
   useEffect(() => {
     if (currentProduct) {
       setSelectedColor(currentProduct.colors?.[0]?.name || '');
-      setSelectedSize(currentProduct.sizes?.[0] || '');
+      setSelectedImage(0); // Reset to first image when product changes
+      // Check if sizeVariants exist, otherwise use sizes
+      const sizeVariants = (currentProduct as any).sizeVariants;
+      if (sizeVariants && sizeVariants.length > 0) {
+        setSelectedSize(sizeVariants[0].size || '');
+      } else {
+        setSelectedSize(currentProduct.sizes?.[0] || '');
+      }
     }
   }, [currentProduct]);
+
+  // Get images for the currently selected color (or all images if no color selected/no color images)
+  const getDisplayImages = (): string[] => {
+    if (!currentProduct) return [];
+    
+    // Check if selected color has images
+    if (selectedColor && currentProduct.colors) {
+      const colorObj = currentProduct.colors.find((c: Color) => c.name === selectedColor);
+      const colorImages = (colorObj as any)?.images;
+      if (colorImages && Array.isArray(colorImages) && colorImages.length > 0) {
+        return colorImages;
+      }
+    }
+    // Fallback to all product images
+    return currentProduct.images || [];
+  };
+
+  const displayImages = getDisplayImages();
+
+  // Reset selected image when color changes
+  useEffect(() => {
+    setSelectedImage(0);
+  }, [selectedColor]);
+
+  // Get the current price based on selected size variant
+  const getCurrentPrice = (): { price: number; originalPrice: number } => {
+    if (!currentProduct) return { price: 0, originalPrice: 0 };
+    
+    const sizeVariants = (currentProduct as any).sizeVariants;
+    if (sizeVariants && sizeVariants.length > 0 && selectedSize) {
+      const variant = sizeVariants.find((v: any) => v.size === selectedSize);
+      if (variant) {
+        return {
+          price: variant.price,
+          originalPrice: variant.originalPrice || currentProduct.originalPrice || variant.price
+        };
+      }
+    }
+    return {
+      price: currentProduct.price,
+      originalPrice: currentProduct.originalPrice || currentProduct.price
+    };
+  };
+
+  // Get the current main image based on selected color and thumbnail
+  const getCurrentImage = (): string => {
+    if (!currentProduct) return '';
+    
+    // Use displayImages which are already filtered by color
+    return displayImages[selectedImage] || displayImages[0] || currentProduct.images[0];
+  };
+
+  const { price: displayPrice, originalPrice: displayOriginalPrice } = getCurrentPrice();
+  const displayImage = getCurrentImage();
 
   // Check if device is desktop
   useEffect(() => {
@@ -121,9 +182,27 @@ const ProductDetailPage: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState<number>(0); // Will update after relatedProducts load
   const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
 
+  // Compute display products for carousel - only repeat if there are enough unique products
+  const carouselProducts = React.useMemo(() => {
+    if (relatedProducts.length === 0) return [];
+    // If we have 4+ unique products, create infinite scroll by repeating
+    if (relatedProducts.length >= 4) {
+      return [...relatedProducts, ...relatedProducts, ...relatedProducts, ...relatedProducts, ...relatedProducts];
+    }
+    // Otherwise just show the unique products without repeating
+    return relatedProducts;
+  }, [relatedProducts]);
+
+  // Check if carousel should be enabled (need enough products for scrolling to make sense)
+  const isCarouselEnabled = relatedProducts.length >= 4;
+
   useEffect(() => {
-    setCurrentIndex(relatedProducts.length); // Start from middle of infinite array when items available
-  }, [relatedProducts.length]);
+    if (isCarouselEnabled) {
+      setCurrentIndex(relatedProducts.length); // Start from middle of infinite array when items available
+    } else {
+      setCurrentIndex(0);
+    }
+  }, [relatedProducts.length, isCarouselEnabled]);
 
   const handleQuantityChange = (change: number): void => {
     setQuantity(Math.max(1, quantity + change));
@@ -282,7 +361,7 @@ const ProductDetailPage: React.FC = () => {
 
   // Carousel navigation handlers
   const handlePrevious = (): void => {
-    if (isTransitioning) return;
+    if (isTransitioning || !isCarouselEnabled) return;
 
     setIsTransitioning(true);
     setCurrentIndex(prev => prev - 1);
@@ -300,7 +379,7 @@ const ProductDetailPage: React.FC = () => {
   };
 
   const handleNext = (): void => {
-    if (isTransitioning) return;
+    if (isTransitioning || !isCarouselEnabled) return;
 
     setIsTransitioning(true);
     setCurrentIndex(prev => prev + 1);
@@ -351,7 +430,18 @@ const ProductDetailPage: React.FC = () => {
 
 
   const hasColors = Array.isArray(currentProduct.colors) && currentProduct.colors.length > 0;
-  const hasSizes = Array.isArray(currentProduct.sizes) && currentProduct.sizes.length > 0;
+  const hasSizes = Array.isArray(currentProduct.sizes) && currentProduct.sizes.length > 0 || 
+                   Array.isArray((currentProduct as any).sizeVariants) && (currentProduct as any).sizeVariants.length > 0;
+  
+  // Get available sizes (from sizeVariants or sizes array)
+  const availableSizes = (currentProduct as any).sizeVariants?.length > 0 
+    ? (currentProduct as any).sizeVariants.map((v: any) => v.size)
+    : currentProduct.sizes || [];
+
+  // Calculate discount percentage based on current variant price
+  const discountPercentage = displayOriginalPrice > displayPrice 
+    ? Math.round(((displayOriginalPrice - displayPrice) / displayOriginalPrice) * 100)
+    : 0;
 
   return (
     <div className="min-h-screen bg-white pb-28" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
@@ -365,84 +455,87 @@ const ProductDetailPage: React.FC = () => {
               {currentProduct.name}
             </h1>
 
-            {/* Pricing Row */}
+            {/* Pricing Row - Dynamic based on selected size */}
             <div className="flex items-center gap-4 flex-wrap">
-              <span className="text-2xl lg:text-3xl font-bold text-black" style={{ fontFamily: "'Albert Sans', sans-serif" }}>₹{currentProduct.price}</span>
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
-                {(currentProduct as any)?.discountPercentage || 25}% OFF
-              </span>
-              <span className="text-lg text-gray-600 line-through" style={{ fontFamily: "'Albert Sans', sans-serif" }}>₹{currentProduct.originalPrice}</span>
+              <span className="text-2xl lg:text-3xl font-bold text-black" style={{ fontFamily: "'Albert Sans', sans-serif" }}>₹{displayPrice}</span>
+              {discountPercentage > 0 && (
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
+                  {discountPercentage}% OFF
+                </span>
+              )}
+              {displayOriginalPrice > displayPrice && (
+                <span className="text-lg text-gray-600 line-through" style={{ fontFamily: "'Albert Sans', sans-serif" }}>₹{displayOriginalPrice}</span>
+              )}
             </div>
-
-            {/* Color Selector (collapsible on mobile) */}
+            {/* Color Selector - Always visible */}
             {hasColors && (
-              <div className="space-y-3 border-t pt-5 lg:border-none lg:pt-0">
-                <button
-                  type="button"
-                  onClick={() => setMobileInfoOpen(s => ({...s, color: !s.color}))}
-                  className="flex w-full items-center justify-between lg:cursor-default"
-                  aria-expanded={mobileInfoOpen.color}
-                >
-                  <h3 className="text-base font-medium text-black" style={{ fontFamily: "'Albert Sans', sans-serif" }}>Color: <span className="font-normal capitalize">{selectedColor}</span></h3>
-                  <span className="lg:hidden text-sm text-gray-500">{mobileInfoOpen.color ? '−' : '+'}</span>
-                </button>
-                {mobileInfoOpen.color && (
-                  <div className="flex gap-2">
-                    {currentProduct.colors!.map((color: Color) => (
-                      <button
-                        key={color.name}
-                        onClick={() => setSelectedColor(color.name)}
-                        className={`w-8 h-8 rounded-full border-2 transition-all duration-200 ${
-                          selectedColor === color.name ? 'border-black' : 'border-gray-300 hover:border-gray-400'
-                        }`}
-                        style={{ backgroundColor: color.value }}
-                        title={color.name}
-                      >
-                        {color.value === '#FFFFFF' && (
-                          <div className="w-full h-full rounded-full border border-gray-200"></div>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
+              <div className="space-y-3 border-t pt-5">
+                <h3 className="text-base font-medium text-black" style={{ fontFamily: "'Albert Sans', sans-serif" }}>Color: <span className="font-normal capitalize">{selectedColor}</span></h3>
+                <div className="flex gap-2">
+                  {currentProduct.colors!.map((color: Color) => (
+                    <button
+                      key={color.name}
+                      onClick={() => setSelectedColor(color.name)}
+                      className={`w-8 h-8 rounded-full border-2 transition-all duration-200 ${
+                        selectedColor === color.name ? 'border-black' : 'border-gray-300 hover:border-gray-400'
+                      }`}
+                      style={{ backgroundColor: color.value }}
+                      title={color.name}
+                    >
+                      {color.value === '#FFFFFF' && (
+                        <div className="w-full h-full rounded-full border border-gray-200"></div>
+                      )}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 
-            {/* Size Selector (collapsible on mobile) */}
+            {/* Size Selector - Always visible */}
             {hasSizes && (
-              <div className="space-y-3 border-t pt-5 lg:border-none lg:pt-0">
-                <button
-                  type="button"
-                  onClick={() => setMobileInfoOpen(s => ({...s, size: !s.size}))}
-                  className="flex w-full items-center justify-between lg:cursor-default"
-                  aria-expanded={mobileInfoOpen.size}
-                >
-                  <h3 className="text-base font-medium text-black" style={{ fontFamily: "'Albert Sans', sans-serif" }}>Size: <span className="font-normal">{selectedSize}</span></h3>
-                  <span className="lg:hidden text-sm text-gray-500">{mobileInfoOpen.size ? '−' : '+'}</span>
-                </button>
-                {mobileInfoOpen.size && (
-                  <>
-                    <div className="flex justify-end">
-                      <button className="text-sm text-gray-600 hover:text-black underline" style={{ fontFamily: "'Albert Sans', sans-serif" }}>Find your size</button>
-                    </div>
-                    <div className="flex gap-2">
-                      {currentProduct.sizes!.map((size: string) => (
-                        <button
-                          key={size}
-                          onClick={() => setSelectedSize(size)}
-                          className={`px-3 py-2 border text-sm font-medium transition-all duration-200 ${
-                            selectedSize === size
-                              ? 'border-black bg-black text-white'
-                              : 'border-gray-300 hover:border-gray-400 text-gray-700'
-                          }`}
-                          style={{ fontFamily: "'Albert Sans', sans-serif" }}
-                        >
-                          {size}
-                        </button>
-                      ))}
-                    </div>
-                  </>
-                )}
+              <div className="space-y-3 border-t pt-5">
+                <h3 className="text-base font-medium text-black" style={{ fontFamily: "'Albert Sans', sans-serif" }}>Size: <span className="font-normal">{selectedSize || 'Select a size'}</span></h3>
+                <div className="flex gap-2 flex-wrap">
+                      {(currentProduct as any).sizeVariants?.length > 0 ? (
+                        // Render size variants with individual prices
+                        (currentProduct as any).sizeVariants.map((variant: any) => (
+                          <button
+                            key={variant.size}
+                            onClick={() => setSelectedSize(variant.size)}
+                            disabled={variant.inStock === false}
+                            className={`px-3 py-2 border text-sm font-medium transition-all duration-200 ${
+                              selectedSize === variant.size
+                                ? 'border-black bg-black text-white'
+                                : variant.inStock === false
+                                  ? 'border-gray-200 text-gray-300 cursor-not-allowed'
+                                  : 'border-gray-300 hover:border-gray-400 text-gray-700'
+                            }`}
+                            style={{ fontFamily: "'Albert Sans', sans-serif" }}
+                          >
+                            <span>{variant.size}</span>
+                            {variant.price && variant.price !== currentProduct.price && (
+                              <span className="text-xs ml-1 opacity-75">₹{variant.price}</span>
+                            )}
+                          </button>
+                        ))
+                      ) : (
+                        // Render regular sizes without price variants
+                        availableSizes.map((size: string) => (
+                          <button
+                            key={size}
+                            onClick={() => setSelectedSize(size)}
+                            className={`px-3 py-2 border text-sm font-medium transition-all duration-200 ${
+                              selectedSize === size
+                                ? 'border-black bg-black text-white'
+                                : 'border-gray-300 hover:border-gray-400 text-gray-700'
+                            }`}
+                            style={{ fontFamily: "'Albert Sans', sans-serif" }}
+                          >
+                            {size}
+                          </button>
+                        ))
+                      )}
+                </div>
               </div>
             )}
 
@@ -481,7 +574,7 @@ const ProductDetailPage: React.FC = () => {
                     className={`flex-1 py-4 px-6 rounded-lg font-bold text-lg transition-colors ${inCart ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-black text-white hover:bg-gray-800'}`}
                     style={{ fontFamily: "'Albert Sans', sans-serif" }}
                   >
-                    {inCart ? 'In Cart' : `Add to Cart - ₹${(currentProduct.price * quantity).toFixed(2)}`}
+                    {inCart ? 'In Cart' : `Add to Cart - ₹${(displayPrice * quantity).toFixed(2)}`}
                   </button>
                   <button
                     onClick={handleAddToWishlist}
@@ -506,9 +599,9 @@ const ProductDetailPage: React.FC = () => {
 
           {/* Left Column - Image Gallery */}
           <div className="flex flex-col lg:flex-row gap-4 mb-4 lg:mb-0 lg:order-first">
-            {/* Thumbnails (horizontal scroll on mobile) */}
+            {/* Thumbnails (horizontal scroll on mobile) - Shows only selected color's images */}
             <div className="flex lg:flex-col gap-3 order-2 lg:order-1 overflow-x-auto pb-1 lg:pb-0 -mx-2 px-2 lg:mx-0 lg:px-0 scrollbar-hide">
-              {currentProduct.images.map((image, index) => (
+              {displayImages.map((image, index) => (
                 <button
                   key={index}
                   onClick={() => setSelectedImage(index)}
@@ -534,12 +627,12 @@ const ProductDetailPage: React.FC = () => {
               ))}
             </div>
 
-            {/* Main Image */}
+            {/* Main Image - Shows color-specific image if available */}
             <div className="flex-1 order-1 lg:order-2 relative">
               <div className="w-full aspect-square bg-gray-50 rounded-lg overflow-hidden shadow-md relative">
                 <img
                   ref={imageRef}
-                  src={currentProduct.images[selectedImage]}
+                  src={displayImage}
                   alt={currentProduct.name}
                   className={`w-full h-full max-w-full max-h-full object-cover ${isDesktop ? 'cursor-crosshair' : ''}`}
                   style={{
@@ -574,7 +667,7 @@ const ProductDetailPage: React.FC = () => {
                   <div
                     className="w-full h-full"
                     style={{
-                      backgroundImage: `url(${currentProduct.images[selectedImage]})`,
+                      backgroundImage: `url(${displayImage})`,
                       backgroundSize: '300% 300%',
                       backgroundPosition: `${zoomPosition.x}% ${zoomPosition.y}%`,
                       backgroundRepeat: 'no-repeat',
@@ -715,315 +808,105 @@ const ProductDetailPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Related Products Carousel */}
-        <div className="border-t border-gray-200 pt-16 mt-16">
-          <h2 className="text-2xl font-bold text-black mb-10" style={{ fontFamily: "'Albert Sans', sans-serif" }}>You May Also Like</h2>
+        {/* Related Products - Simple Grid */}
+        {relatedProducts.length > 0 && (
+          <div className="border-t border-gray-200 pt-8 sm:pt-12 mt-8 sm:mt-12">
+            <h2 className="text-xl sm:text-2xl font-bold text-black mb-6 sm:mb-8" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
+              You May Also Like
+            </h2>
 
-          {/* Desktop Carousel */}
-          <div className="hidden md:block relative">
-            {/* Left Arrow */}
-            <button
-              onClick={handlePrevious}
-              disabled={isTransitioning}
-              className="absolute left-2 top-1/2 -translate-y-1/2 z-30 bg-white hover:bg-black text-black hover:text-white transition-all duration-300 rounded-full shadow-lg w-12 h-12 flex items-center justify-center group disabled:opacity-50"
-              aria-label="Previous products"
-            >
-              <ArrowLeftIcon className="w-5 h-5" />
-            </button>
-
-            {/* Right Arrow */}
-            <button
-              onClick={handleNext}
-              disabled={isTransitioning}
-              className="absolute right-2 top-1/2 -translate-y-1/2 z-30 bg-white hover:bg-black text-black hover:text-white transition-all duration-300 rounded-full shadow-lg w-12 h-12 flex items-center justify-center group disabled:opacity-50"
-              aria-label="Next products"
-            >
-              <ArrowRightIcon className="w-5 h-5" />
-            </button>
-
-            {/* Carousel Container - Responsive for different screen sizes */}
-            <div className="overflow-hidden mx-16">
-              {/* Large Desktop: 4 cards (1280px+) */}
-              <div className="hidden xl:block">
-                <div
-                  className={`flex ${isTransitioning ? 'transition-transform duration-500 ease-in-out' : ''}`}
-                  style={{
-                    transform: `translateX(calc(-${currentIndex} * (25% + 0.375rem)))`, // Move by card width + gap
-                    gap: '1.5rem'
-                  }}
-                >
-                  {[...relatedProducts, ...relatedProducts, ...relatedProducts, ...relatedProducts, ...relatedProducts].map((product, index) => (
-                    <Link to={`/product/${(product._id || product.id)}`} key={`infinite-${(product._id || product.id)}-${index}`} className="group flex-shrink-0" style={{ width: 'calc(25% - 1.125rem)' }}>
-                      <div className="aspect-square bg-gray-50 rounded-lg overflow-hidden mb-4 relative">
-                        <img
-                          src={product.images[0]}
-                          alt={product.name}
-                          className="w-full h-full max-w-full max-h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          style={{
-                            minHeight: '100%',
-                            maxHeight: '100%',
-                            minWidth: '100%',
-                            maxWidth: '100%',
-                            objectFit: 'cover'
-                          }}
-                        />
-                        <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={(e) => handleQuickWishlist(product, e)}
-                            title={isInRelatedWishlist(product) ? 'In Wishlist' : 'Add to Wishlist'}
-                            className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md ${isInRelatedWishlist(product) ? 'bg-red-100 text-red-600' : 'bg-white hover:bg-gray-100'}`}
-                          >
-                            <svg className="w-4 h-4" fill={isInRelatedWishlist(product) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                            </svg>
-                          </button>
-                          <button
-                            onClick={(e) => handleQuickAddToCart(product, e)}
-                            disabled={isInRelatedCart(product)}
-                            title={isInRelatedCart(product) ? 'In Cart' : 'Add to Cart'}
-                            className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md ${isInRelatedCart(product) ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-white hover:bg-gray-100'}`}
-                          >
-                            {isInRelatedCart(product) ? (
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                              </svg>
-                            ) : (
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                              </svg>
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                      <h3 className="font-semibold text-black mb-2" style={{ fontFamily: "'Albert Sans', sans-serif" }}>{product.name}</h3>
-                      <div className="flex items-center gap-2 mb-2">
-                         <span className="font-bold text-black" style={{ fontFamily: "'Albert Sans', sans-serif" }}>₹{product.price}</span>
-                         <span className="text-sm text-gray-600 line-through" style={{ fontFamily: "'Albert Sans', sans-serif" }}>₹{product.originalPrice}</span>
-                      </div>
-                      <div className="flex gap-1">
-                        {product.colors.map((color, colorIndex) => (
-                          <div
-                            key={colorIndex}
-                            className="w-4 h-4 rounded-full border border-gray-200"
-                            style={{ backgroundColor: color.value }}
-                          ></div>
-                        ))}
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-
-              {/* Medium Desktop: 3 cards (1024px - 1279px) */}
-              <div className="hidden lg:block xl:hidden">
-                <div
-                  className={`flex ${isTransitioning ? 'transition-transform duration-500 ease-in-out' : ''}`}
-                  style={{
-                    transform: `translateX(calc(-${currentIndex} * (33.333% + 0.5rem)))`, // Move by card width + gap
-                    gap: '1.5rem'
-                  }}
-                >
-                  {[...relatedProducts, ...relatedProducts, ...relatedProducts, ...relatedProducts, ...relatedProducts].map((product, index) => (
-                    <div key={`infinite-${product.id}-${index}`} className="group flex-shrink-0" style={{ width: 'calc(33.333% - 1rem)' }}>
-                      <div className="aspect-square bg-gray-50 rounded-lg overflow-hidden mb-4 relative">
-                        <img
-                          src={product.images[0]}
-                          alt={product.name}
-                          className="w-full h-full max-w-full max-h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          style={{
-                            minHeight: '100%',
-                            maxHeight: '100%',
-                            minWidth: '100%',
-                            maxWidth: '100%',
-                            objectFit: 'cover'
-                          }}
-                        />
-                        <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={(e) => handleQuickWishlist(product as Product, e)}
-                            title={isInRelatedWishlist(product as Product) ? 'In Wishlist' : 'Add to Wishlist'}
-                            className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md ${isInRelatedWishlist(product as Product) ? 'bg-red-100 text-red-600' : 'bg-white hover:bg-gray-100'}`}
-                          >
-                            <svg className="w-4 h-4" fill={isInRelatedWishlist(product as Product) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                            </svg>
-                          </button>
-                          <button
-                            onClick={(e) => handleQuickAddToCart(product as Product, e)}
-                            disabled={isInRelatedCart(product as Product)}
-                            title={isInRelatedCart(product as Product) ? 'In Cart' : 'Add to Cart'}
-                            className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md ${isInRelatedCart(product as Product) ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-white hover:bg-gray-100'}`}
-                          >
-                            {isInRelatedCart(product as Product) ? (
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                              </svg>
-                            ) : (
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                              </svg>
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                      <h3 className="font-semibold text-black mb-2" style={{ fontFamily: "'Albert Sans', sans-serif" }}>{product.name}</h3>
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="font-bold text-black" style={{ fontFamily: "'Albert Sans', sans-serif" }}>₹{product.price}</span>
-                        <span className="text-sm text-gray-600 line-through" style={{ fontFamily: "'Albert Sans', sans-serif" }}>₹{product.originalPrice}</span>
-                      </div>
-                      <div className="flex gap-1">
-                        {product.colors.map((color, colorIndex) => (
-                          <div
-                            key={colorIndex}
-                            className="w-4 h-4 rounded-full border border-gray-200"
-                            style={{ backgroundColor: color.value }}
-                          ></div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Small Desktop: 2 cards (768px - 1023px) */}
-              <div className="hidden md:block lg:hidden">
-                <div
-                  className={`flex ${isTransitioning ? 'transition-transform duration-500 ease-in-out' : ''}`}
-                  style={{
-                    transform: `translateX(calc(-${currentIndex} * (50% + 0.75rem)))`, // Move by card width + gap
-                    gap: '1.5rem'
-                  }}
-                >
-                  {[...relatedProducts, ...relatedProducts, ...relatedProducts, ...relatedProducts, ...relatedProducts].map((product, index) => (
-                    <div key={`infinite-${product.id}-${index}`} className="group flex-shrink-0" style={{ width: 'calc(50% - 0.75rem)' }}>
-                      <div className="aspect-square bg-gray-50 rounded-lg overflow-hidden mb-4 relative">
-                        <img
-                          src={product.images[0]}
-                          alt={product.name}
-                          className="w-full h-full max-w-full max-h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          style={{
-                            minHeight: '100%',
-                            maxHeight: '100%',
-                            minWidth: '100%',
-                            maxWidth: '100%',
-                            objectFit: 'cover'
-                          }}
-                        />
-                        <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={(e) => handleQuickWishlist(product as Product, e)}
-                            title={isInRelatedWishlist(product as Product) ? 'In Wishlist' : 'Add to Wishlist'}
-                            className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md ${isInRelatedWishlist(product as Product) ? 'bg-red-100 text-red-600' : 'bg-white hover:bg-gray-100'}`}
-                          >
-                            <svg className="w-4 h-4" fill={isInRelatedWishlist(product as Product) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                            </svg>
-                          </button>
-                          <button
-                            onClick={(e) => handleQuickAddToCart(product as Product, e)}
-                            disabled={isInRelatedCart(product as Product)}
-                            title={isInRelatedCart(product as Product) ? 'In Cart' : 'Add to Cart'}
-                            className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md ${isInRelatedCart(product as Product) ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-white hover:bg-gray-100'}`}
-                          >
-                            {isInRelatedCart(product as Product) ? (
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                              </svg>
-                            ) : (
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                              </svg>
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                      <h3 className="font-semibold text-black mb-2" style={{ fontFamily: "'Albert Sans', sans-serif" }}>{product.name}</h3>
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="font-bold text-black" style={{ fontFamily: "'Albert Sans', sans-serif" }}>₹{product.price}</span>
-                        <span className="text-sm text-gray-600 line-through" style={{ fontFamily: "'Albert Sans', sans-serif" }}>₹{product.originalPrice}</span>
-                      </div>
-                      <div className="flex gap-1">
-                        {product.colors.map((color, colorIndex) => (
-                          <div
-                            key={colorIndex}
-                            className="w-4 h-4 rounded-full border border-gray-200"
-                            style={{ backgroundColor: color.value }}
-                          ></div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Mobile Grid - Related products simplified spacing */}
-          <div className="block md:hidden">
-            <div className="grid grid-cols-2 gap-4">
+            {/* Responsive Grid - 2 cols mobile, 3 cols tablet, 4 cols desktop */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
               {relatedProducts.map((product) => (
-                <div key={(product._id || product.id)} className="group">
-                  <div className="aspect-square bg-gray-50 rounded-lg overflow-hidden mb-4 relative">
-                    <img
-                      src={product.images[0]}
-                      alt={product.name}
-                      className="w-full h-full max-w-full max-h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      style={{
-                        minHeight: '100%',
-                        maxHeight: '100%',
-                        minWidth: '100%',
-                        maxWidth: '100%',
-                        objectFit: 'cover'
-                      }}
-                      loading="lazy"
-                    />
-                    <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={(e) => handleQuickWishlist(product, e)}
-                        title={isInRelatedWishlist(product) ? 'In Wishlist' : 'Add to Wishlist'}
-                        className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md ${isInRelatedWishlist(product) ? 'bg-red-100 text-red-600' : 'bg-white hover:bg-gray-100'}`}
-                      >
-                        <svg className="w-4 h-4" fill={isInRelatedWishlist(product) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={(e) => handleQuickAddToCart(product, e)}
-                        disabled={isInRelatedCart(product)}
-                        title={isInRelatedCart(product) ? 'In Cart' : 'Add to Cart'}
-                        className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md ${isInRelatedCart(product) ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-white hover:bg-gray-100'}`}
-                      >
-                        {isInRelatedCart(product) ? (
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                <Link 
+                  to={`/product/${(product._id || product.id)}`} 
+                  key={(product._id || product.id)} 
+                  className="group"
+                >
+                  {/* Product Card */}
+                  <div className="bg-white rounded-lg overflow-hidden">
+                    {/* Image Container */}
+                    <div className="aspect-square bg-gray-50 rounded-lg overflow-hidden relative">
+                      <img
+                        src={product.images[0]}
+                        alt={product.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                      />
+                      {/* Quick Actions - Desktop only */}
+                      <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:flex">
+                        <button
+                          onClick={(e) => handleQuickWishlist(product, e)}
+                          title={isInRelatedWishlist(product) ? 'In Wishlist' : 'Add to Wishlist'}
+                          className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md ${isInRelatedWishlist(product) ? 'bg-red-100 text-red-600' : 'bg-white hover:bg-gray-100'}`}
+                        >
+                          <svg className="w-4 h-4" fill={isInRelatedWishlist(product) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                           </svg>
-                        ) : (
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                          </svg>
+                        </button>
+                        <button
+                          onClick={(e) => handleQuickAddToCart(product, e)}
+                          disabled={isInRelatedCart(product)}
+                          title={isInRelatedCart(product) ? 'In Cart' : 'Add to Cart'}
+                          className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md ${isInRelatedCart(product) ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-white hover:bg-gray-100'}`}
+                        >
+                          {isInRelatedCart(product) ? (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          ) : (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                          )}
+                        </button>
+                      </div>
+                      {/* Discount Badge */}
+                      {product.originalPrice && product.price < product.originalPrice && (
+                        <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
+                          {Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}% OFF
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Product Info */}
+                    <div className="pt-3 pb-1">
+                      <h3 className="text-sm sm:text-base font-medium text-gray-900 line-clamp-2 mb-1" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
+                        {product.name}
+                      </h3>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm sm:text-base font-bold text-black" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
+                          ₹{product.price}
+                        </span>
+                        {product.originalPrice && product.price < product.originalPrice && (
+                          <span className="text-xs sm:text-sm text-gray-400 line-through">
+                            ₹{product.originalPrice}
+                          </span>
                         )}
-                      </button>
+                      </div>
+                      {/* Color Dots */}
+                      {product.colors && product.colors.length > 0 && (
+                        <div className="flex gap-1 mt-2">
+                          {product.colors.slice(0, 4).map((color, colorIndex) => (
+                            <div
+                              key={colorIndex}
+                              className="w-3 h-3 sm:w-4 sm:h-4 rounded-full border border-gray-200"
+                              style={{ backgroundColor: color.value }}
+                              title={color.name}
+                            />
+                          ))}
+                          {product.colors.length > 4 && (
+                            <span className="text-xs text-gray-400">+{product.colors.length - 4}</span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <h3 className="font-semibold text-black mb-2" style={{ fontFamily: "'Albert Sans', sans-serif" }}>{product.name}</h3>
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="font-bold text-black" style={{ fontFamily: "'Albert Sans', sans-serif" }}>₹{product.price}</span>
-                    <span className="text-sm text-gray-600 line-through" style={{ fontFamily: "'Albert Sans', sans-serif" }}>₹{product.originalPrice}</span>
-                  </div>
-                  <div className="flex gap-1">
-                    {product.colors.map((color, colorIndex) => (
-                      <div
-                        key={colorIndex}
-                        className="w-4 h-4 rounded-full border border-gray-200"
-                        style={{ backgroundColor: color.value }}
-                      ></div>
-                    ))}
-                  </div>
-                </div>
+                </Link>
               ))}
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Sticky Mobile Action Bar */}
@@ -1033,7 +916,7 @@ const ProductDetailPage: React.FC = () => {
           <div className="flex items-center justify-between mb-2">
             <div className="flex flex-col leading-tight">
               <span className="text-xs text-gray-500">Total</span>
-              <span className="text-base font-semibold">₹{(currentProduct.price * quantity).toFixed(2)}</span>
+              <span className="text-base font-semibold">₹{(displayPrice * quantity).toFixed(2)}</span>
             </div>
             <button
               onClick={handleAddToWishlist}

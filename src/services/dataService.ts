@@ -272,19 +272,44 @@ export const getFooterConfig = async () => {
 
 /**
  * Get related products (exclude current product)
+ * First tries to get products from the same category, then fills with other categories if needed
  */
 export const getRelatedProducts = async (currentProductId: string, categoryId: string | null = null, limit: number = 8): Promise<Product[]> => {
   try {
-    // Get products from the same category if specified, otherwise get all products
-    const products = categoryId ? 
-      await getProductsByCategory(categoryId) : 
-      await getProducts();
+    const minProducts = Math.max(limit, 5); // Ensure at least 5 products
+    let relatedProducts: Product[] = [];
+    const addedProductIds = new Set<string>([currentProductId]); // Track added products to avoid duplicates
     
-    // Filter out the current product
-    const relatedProducts = products.filter(product => {
-      const pid = product._id || product.id || '';
-      return pid !== currentProductId;
-    });
+    // First, try to get products from the same category
+    if (categoryId) {
+      const sameCategoryProducts = await getProductsByCategory(categoryId);
+      
+      // Filter out current product and add to related products
+      for (const product of sameCategoryProducts) {
+        const pid = (product._id || product.id || '').toString();
+        if (!addedProductIds.has(pid)) {
+          relatedProducts.push(product);
+          addedProductIds.add(pid);
+        }
+      }
+    }
+    
+    // If we don't have enough products, get products from other categories
+    if (relatedProducts.length < minProducts) {
+      const allProducts = await getProducts();
+      
+      // Filter out already added products and current product
+      for (const product of allProducts) {
+        const pid = (product._id || product.id || '').toString();
+        if (!addedProductIds.has(pid)) {
+          relatedProducts.push(product);
+          addedProductIds.add(pid);
+        }
+        
+        // Stop if we have enough products
+        if (relatedProducts.length >= minProducts) break;
+      }
+    }
     
     // Shuffle array randomly using Fisher-Yates algorithm
     const shuffled = [...relatedProducts];

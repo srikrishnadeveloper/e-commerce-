@@ -531,7 +531,7 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
                               <Link to={`/product/${pid}`} className="block text-sm text-gray-900 truncate hover:underline" onClick={onClose}>
                                 {p.name}
                               </Link>
-                              <div className="text-xs text-gray-600">${p.price}</div>
+                              <div className="text-xs text-gray-600">₹{p.price}</div>
                             </div>
                             <div className="flex items-center gap-1.5">
                               <button
@@ -651,7 +651,7 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
                             <Link to={`/product/${pid}`} className="block text-sm font-medium text-gray-900 truncate hover:underline" onClick={onClose}>
                               {p.name}
                             </Link>
-                            <div className="text-xs text-gray-600">${p.price}</div>
+                            <div className="text-xs text-gray-600">₹{p.price}</div>
                           </div>
                           <div className="flex items-center gap-1.5">
                             <button

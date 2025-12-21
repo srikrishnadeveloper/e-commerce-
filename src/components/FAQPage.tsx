@@ -127,7 +127,7 @@ const FAQPage: React.FC = () => {
               </svg>
             </button>
             {expandedSection === item.id && (
-              <div className="pb-6 pr-8">
+              <div className="px-6 pb-6 pt-2">
                 <p className="text-sm text-gray-600 leading-relaxed">
                   {item.answer}
                 </p>
@@ -147,47 +147,11 @@ const FAQPage: React.FC = () => {
       </div>
 
       {/* Main Content Container */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - FAQ Accordions */}
-          <div className="lg:col-span-2">
-            <AccordionSection sectionKey="shopping" section={faqData.shopping} />
-            <AccordionSection sectionKey="payment" section={faqData.payment} />
-            <AccordionSection sectionKey="returns" section={faqData.returns} />
-          </div>
-
-          {/* Right Column - Contact Card */}
-          <div className="lg:col-span-1">
-            <div className="bg-gray-50 rounded-lg p-8 shadow-sm border border-gray-100 sticky top-8">
-              <h3 className="text-lg font-semibold text-black mb-4">Have a question</h3>
-              
-              <div className="mb-6">
-                <p className="text-sm text-gray-600 mb-4">
-                  If you have an issue or question that requires immediate assistance, you can click the button below to chat live with a Customer Service representative.
-                </p>
-                <p className="text-sm text-gray-600">
-                  Please allow 06 - 12 business days from the time your package arrives back to us for a refund to be issued.
-                </p>
-              </div>
-
-              <div className="space-y-3">
-                <button 
-                  className="w-full bg-black text-white py-3 px-6 rounded-md font-medium hover:bg-gray-800 transition-colors duration-200"
-                >
-                  Contact us
-                </button>
-                <button 
-                  className="w-full border border-black text-black py-3 px-6 rounded-md font-medium hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center gap-2"
-                >
-                  Live chat
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M9 18l6-6-6-6"/>
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+        {/* FAQ Accordions */}
+        <AccordionSection sectionKey="shopping" section={faqData.shopping} />
+        <AccordionSection sectionKey="payment" section={faqData.payment} />
+        <AccordionSection sectionKey="returns" section={faqData.returns} />
       </div>
     </div>
   );

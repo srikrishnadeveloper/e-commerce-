@@ -24,6 +24,8 @@ interface OrderTrackingData {
       quantity: number;
       price: number;
       image?: string;
+      selectedColor?: string;
+      selectedSize?: string;
     }>;
     shippingAddress: {
       fullName: string;
@@ -142,7 +144,7 @@ const OrderTracking: React.FC = () => {
             </div>
             <div>
               <p className="text-gray-600">Total</p>
-              <p className="font-medium">${trackingData.order.total.toFixed(2)}</p>
+              <p className="font-medium">₹{trackingData.order.total.toFixed(2)}</p>
             </div>
             <div>
               <p className="text-gray-600">Items</p>
@@ -217,31 +219,70 @@ const OrderTracking: React.FC = () => {
 
         {/* Order Items */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Order Items</h2>
-          <div className="space-y-4">
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">Order Items</h2>
+          <div className="divide-y divide-gray-100">
             {trackingData.order.items.map((item, index) => (
-              <div key={index} className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg">
-                <img
-                  src={item.image || '/images/placeholder.jpg'}
-                  alt={item.name}
-                  className="w-16 h-16 object-cover rounded"
-                />
-                <div className="flex-1">
-                  <h3 className="font-medium text-gray-900">{item.name}</h3>
-                  <p className="text-gray-600">Quantity: {item.quantity}</p>
-                  {(item.selectedColor || item.selectedSize) && (
-                    <p className="text-gray-500 text-sm">
-                      {item.selectedColor && <span>Color: {item.selectedColor}</span>}
-                      {item.selectedColor && item.selectedSize && <span> • </span>}
-                      {item.selectedSize && <span>Size: {item.selectedSize}</span>}
-                    </p>
-                  )}
+              <div key={index} className="flex gap-5 py-6 first:pt-0 last:pb-0">
+                {/* Product Image */}
+                <div className="flex-shrink-0">
+                  <img
+                    src={item.image || '/images/placeholder.jpg'}
+                    alt={item.name}
+                    className="w-24 h-28 sm:w-28 sm:h-32 object-cover rounded-lg border border-gray-100"
+                  />
                 </div>
-                <div className="text-right">
-                  <p className="font-medium">${item.price.toFixed(2)}</p>
+                
+                {/* Product Details */}
+                <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
+                  {/* Top: Name & Price */}
+                  <div className="flex justify-between items-start gap-4">
+                    <h3 className="font-semibold text-gray-900 text-base sm:text-lg leading-snug">
+                      {item.name}
+                    </h3>
+                    <div className="flex-shrink-0 text-right">
+                      <p className="font-semibold text-gray-900 text-base sm:text-lg">
+                        ₹{item.price.toFixed(2)}
+                      </p>
+                      {item.quantity > 1 && (
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          ₹{(item.price / item.quantity).toFixed(2)} each
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Bottom: Attributes */}
+                  <div className="flex flex-wrap items-center gap-3 mt-4 text-sm">
+                    <span className="inline-flex items-center bg-gray-50 px-3 py-1.5 rounded-md">
+                      <span className="text-gray-500">Qty:</span>
+                      <span className="ml-1.5 font-medium text-gray-800">{item.quantity}</span>
+                    </span>
+                    
+                    {item.selectedColor && (
+                      <span className="inline-flex items-center bg-gray-50 px-3 py-1.5 rounded-md">
+                        <span className="text-gray-500">Color:</span>
+                        <span className="ml-1.5 font-medium text-gray-800">{item.selectedColor}</span>
+                      </span>
+                    )}
+                    
+                    {item.selectedSize && (
+                      <span className="inline-flex items-center bg-gray-50 px-3 py-1.5 rounded-md">
+                        <span className="text-gray-500">Size:</span>
+                        <span className="ml-1.5 font-medium text-gray-800">{item.selectedSize}</span>
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
+          </div>
+          
+          {/* Order Summary */}
+          <div className="mt-6 pt-5 border-t border-gray-200">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Total ({trackingData.order.items.length} items)</span>
+              <span className="text-xl font-bold text-gray-900">₹{trackingData.order.total.toFixed(2)}</span>
+            </div>
           </div>
         </div>
 

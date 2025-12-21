@@ -343,50 +343,6 @@ const Footer = () => {
               </Link>
             </div>
           </div>
-          
-          {/* Payment Methods */}
-          <div className="flex items-center gap-2 sm:gap-3 md:gap-4 flex-wrap justify-center sm:justify-end">
-            {/* Visa */}
-            <div className="w-8 h-5 sm:w-10 sm:h-6 md:w-12 md:h-8 lg:w-12 lg:h-8 bg-gray-100 rounded flex items-center justify-center hover:bg-gray-200 transition-colors duration-200">
-              <svg className="w-6 h-4 sm:w-8 sm:h-5 md:w-10 md:h-6" viewBox="0 0 48 32" fill="none">
-                <rect width="48" height="32" rx="6" fill="#1A1F71"/>
-                <path d="M18.5 11.5h-3l-1.5 9h3l1.5-9zM25 11.5l-2 6.5-1-6.5h-3.5l2.5 9h3l4.5-9H25zM32 14.5c0-1-1-1.5-2-1.5s-1.5.5-1.5 1c0 1 2 1 2 2s-1 1-2 1-1.5-.5-1.5-1h-2.5c0 2 2 2.5 4 2.5s4-1 4-2.5-2-1.5-2-2 1-.5 2-.5s1 .5 1 1H32z" fill="white"/>
-              </svg>
-            </div>
-            
-            {/* PayPal */}
-            <div className="w-8 h-5 sm:w-10 sm:h-6 md:w-12 md:h-8 lg:w-12 lg:h-8 bg-gray-100 rounded flex items-center justify-center hover:bg-gray-200 transition-colors duration-200">
-              <svg className="w-6 h-4 sm:w-8 sm:h-5 md:w-10 md:h-6" viewBox="0 0 48 32" fill="none">
-                <rect width="48" height="32" rx="6" fill="#003087"/>
-                <path d="M16 11h4c2 0 3 1 3 3s-1 3-3 3h-2l-1 3h-2l1-9zM18 15h2c1 0 1-.5 1-1s0-1-1-1h-2l0 2zM26 11h4c2 0 3 1 3 3s-1 3-3 3h-2l-1 3h-2l1-9zM28 15h2c1 0 1-.5 1-1s0-1-1-1h-2l0 2z" fill="#009CDE"/>
-              </svg>
-            </div>
-            
-            {/* Mastercard */}
-            <div className="w-8 h-5 sm:w-10 sm:h-6 md:w-12 md:h-8 lg:w-12 lg:h-8 bg-gray-100 rounded flex items-center justify-center hover:bg-gray-200 transition-colors duration-200">
-              <svg className="w-6 h-4 sm:w-8 sm:h-5 md:w-10 md:h-6" viewBox="0 0 48 32" fill="none">
-                <rect width="48" height="32" rx="6" fill="white"/>
-                <circle cx="19" cy="16" r="7" fill="#EB001B"/>
-                <circle cx="29" cy="16" r="7" fill="#F79E1B"/>
-              </svg>
-            </div>
-            
-            {/* American Express */}
-            <div className="w-8 h-5 sm:w-10 sm:h-6 md:w-12 md:h-8 lg:w-12 lg:h-8 bg-gray-100 rounded flex items-center justify-center hover:bg-gray-200 transition-colors duration-200">
-              <svg className="w-6 h-4 sm:w-8 sm:h-5 md:w-10 md:h-6" viewBox="0 0 48 32" fill="none">
-                <rect width="48" height="32" rx="6" fill="#006FCF"/>
-                <path d="M15 12h6v2h-6v-2zM15 16h6v2h-6v-2zM27 12h6v8h-6v-8z" fill="white"/>
-              </svg>
-            </div>
-            
-            {/* Discover */}
-            <div className="w-8 h-5 sm:w-10 sm:h-6 md:w-12 md:h-8 lg:w-12 lg:h-8 bg-gray-100 rounded flex items-center justify-center hover:bg-gray-200 transition-colors duration-200">
-              <svg className="w-6 h-4 sm:w-8 sm:h-5 md:w-10 md:h-6" viewBox="0 0 48 32" fill="none">
-                <rect width="48" height="32" rx="6" fill="#FF6000"/>
-                <path d="M12 14h8v4h-8v-4z" fill="white"/>
-              </svg>
-            </div>
-          </div>
         </div>
       </div>
     </footer>
