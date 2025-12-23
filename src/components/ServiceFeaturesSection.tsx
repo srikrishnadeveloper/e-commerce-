@@ -51,6 +51,13 @@ const ServiceFeaturesSection: React.FC = () => {
   console.log('[ServiceFeaturesSection] ✅✅✅ RENDERING with', featuresSection.features?.length, 'features');
   
   const features: FeatureItem[] = featuresSection.features || [];
+  
+  // Reorder features for mobile: put 24/7 Support (headphones) first
+  const mobileFeatures: FeatureItem[] = [...features].sort((a, b) => {
+    if (a.icon === 'headphones') return -1;
+    if (b.icon === 'headphones') return 1;
+    return 0;
+  });
 
   // Icon mapping - replace with your preferred icons
   const iconMap: IconMap = {
@@ -88,24 +95,24 @@ const ServiceFeaturesSection: React.FC = () => {
             {/* Icon */}
             <div className="bg-gray-100 rounded-full flex items-center justify-center w-20 h-20 mb-6">
               <div className="text-black">
-                {iconMap[features[currentSlide]?.icon] || <div className="w-10 h-10 bg-gray-400 rounded" />}
+                {iconMap[mobileFeatures[currentSlide]?.icon] || <div className="w-10 h-10 bg-gray-400 rounded" />}
               </div>
             </div>
             
             {/* Title */}
             <h3 className="text-xl font-semibold text-black mb-3 leading-tight" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
-              {features[currentSlide]?.title || 'Feature'}
+              {mobileFeatures[currentSlide]?.title || 'Feature'}
             </h3>
             
             {/* Description */}
             <p className="text-base text-black leading-relaxed" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
-              {features[currentSlide]?.description || 'Feature description'}
+              {mobileFeatures[currentSlide]?.description || 'Feature description'}
             </p>
           </div>
 
           {/* Navigation Dots */}
           <div className="flex justify-center space-x-2 mt-6">
-            {features.map((_, index) => (
+            {mobileFeatures.map((_, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentSlide(index)}

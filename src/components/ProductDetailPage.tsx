@@ -444,7 +444,7 @@ const ProductDetailPage: React.FC = () => {
     : 0;
 
   return (
-    <div className="min-h-screen bg-white pb-28" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
+    <div className={`min-h-screen bg-white ${relatedProducts.length > 0 ? 'pb-28' : 'pb-20 sm:pb-8'}`} style={{ fontFamily: "'Albert Sans', sans-serif" }}>
       {/* Main Product Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 lg:py-12">
         <div className="flex flex-col-reverse lg:grid lg:grid-cols-2 lg:gap-16 xl:gap-20">
@@ -745,64 +745,6 @@ const ProductDetailPage: React.FC = () => {
                     <p className="text-gray-700 text-sm lg:text-base leading-relaxed">{currentProduct.description}</p>
                   </div>
                 )}
-
-                <div className="space-y-4">
-                  <h3 className="text-lg lg:text-xl font-bold text-black" style={{ fontFamily: "'Albert Sans', sans-serif" }}>Features</h3>
-                  <ul className="space-y-3 text-gray-700 text-sm lg:text-base">
-                    {currentProduct.features && currentProduct.features.length > 0 ? (
-                      currentProduct.features.map((feature, index) => (
-                        <li key={index} className="flex items-start gap-3">
-                          <span className="text-black mt-1">•</span>
-                          <span>{feature}</span>
-                        </li>
-                      ))
-                    ) : (
-                      <>
-                        {/* Dynamic fallback features based on product category/tags */}
-                        <li className="flex items-start gap-3">
-                          <span className="text-black mt-1">•</span>
-                          <span>High-quality construction and materials</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                          <span className="text-black mt-1">•</span>
-                          <span>Designed for durability and performance</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                          <span className="text-black mt-1">•</span>
-                          <span>Easy to use and maintain</span>
-                        </li>
-                        {currentProduct.tags && currentProduct.tags.includes('electronics') && (
-                          <>
-                            <li className="flex items-start gap-3">
-                              <span className="text-black mt-1">•</span>
-                              <span>Advanced technology integration</span>
-                            </li>
-                            <li className="flex items-start gap-3">
-                              <span className="text-black mt-1">•</span>
-                              <span>Energy efficient operation</span>
-                            </li>
-                          </>
-                        )}
-                        {currentProduct.tags && currentProduct.tags.includes('clothing') && (
-                          <>
-                            <li className="flex items-start gap-3">
-                              <span className="text-black mt-1">•</span>
-                              <span>Comfortable fit and feel</span>
-                            </li>
-                            <li className="flex items-start gap-3">
-                              <span className="text-black mt-1">•</span>
-                              <span>Stylish and versatile design</span>
-                            </li>
-                          </>
-                        )}
-                        <li className="flex items-start gap-3">
-                          <span className="text-black mt-1">•</span>
-                          <span>Excellent value for money</span>
-                        </li>
-                      </>
-                    )}
-                  </ul>
-                </div>
               </div>
             )}
           </div>
