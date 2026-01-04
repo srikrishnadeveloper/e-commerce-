@@ -130,6 +130,11 @@ const PoliciesPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<PolicyTab>(getInitialTab);
   const [expandedSections, setExpandedSections] = useState<Set<number>>(new Set([0]));
 
+  // Scroll to top when page loads
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // Update URL hash when tab changes
   const handleTabChange = (tab: PolicyTab) => {
     setActiveTab(tab);
@@ -179,86 +184,61 @@ const PoliciesPage: React.FC = () => {
     <div className="min-h-screen bg-white" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
       {/* Header */}
       <div className="bg-gray-50 border-b border-gray-200">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        <div className="max-w-5xl lg:max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
           <div className="text-center">
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-[54px] font-bold text-gray-900 mb-2 lg:mb-4">
               Legal & Policies
             </h1>
-            <p className="text-gray-600 text-sm sm:text-base">
+            <p className="text-gray-600 text-sm sm:text-base lg:text-lg">
               Important information about our policies and terms
             </p>
           </div>
         </div>
       </div>
 
-      {/* Tab Navigation */}
-      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex overflow-x-auto scrollbar-hide">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => handleTabChange(tab.id)}
-                className={`
-                  flex-shrink-0 flex items-center gap-2 px-4 sm:px-6 py-4 text-sm sm:text-base font-medium
-                  border-b-2 transition-colors whitespace-nowrap
-                  ${activeTab === tab.id
-                    ? 'border-black text-black'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }
-                `}
-              >
-                <span>{tab.icon}</span>
-                <span>{tab.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
       {/* Content */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      <div className="max-w-5xl lg:max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
         {/* Policy Title & Introduction */}
-        <div className="mb-8">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
+        <div className="mb-8 lg:mb-12">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 lg:mb-6">
             {currentPolicy.pageTitle}
           </h2>
-          <p className="text-gray-600 leading-relaxed">
+          <p className="text-gray-600 leading-relaxed text-base lg:text-lg">
             {currentPolicy.introduction}
           </p>
-          <p className="text-sm text-gray-400 mt-3">
+          <p className="text-sm lg:text-base text-gray-400 mt-3">
             Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
           </p>
         </div>
 
         {/* Policy Sections - Accordion Style */}
-        <div className="space-y-3">
+        <div className="space-y-3 lg:space-y-4">
           {currentPolicy.sections.map((section, index) => (
             <div
               key={index}
-              className="border border-gray-200 rounded-xl overflow-hidden"
+              className="border border-gray-200 rounded-xl lg:rounded-2xl overflow-hidden"
             >
               <button
                 onClick={() => toggleSection(index)}
-                className="w-full flex items-center justify-between p-4 sm:p-5 bg-white hover:bg-gray-50 transition-colors text-left"
+                className="w-full flex items-center justify-between p-4 sm:p-5 lg:p-6 bg-white hover:bg-gray-50 transition-colors text-left"
               >
-                <span className="font-semibold text-gray-900 pr-4">
+                <span className="font-semibold text-gray-900 pr-4 text-base lg:text-lg">
                   {section.title}
                 </span>
                 <span
-                  className={`flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center transition-transform duration-200 ${
+                  className={`flex-shrink-0 w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-gray-100 flex items-center justify-center transition-transform duration-200 ${
                     expandedSections.has(index) ? 'rotate-180' : ''
                   }`}
                 >
-                  <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 lg:w-5 lg:h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </span>
               </button>
               
               {expandedSections.has(index) && (
-                <div className="px-4 sm:px-5 pb-4 sm:pb-5 pt-0 bg-white">
-                  <p className="text-gray-600 leading-relaxed">
+                <div className="px-4 sm:px-5 lg:px-6 pb-4 sm:pb-5 lg:pb-6 pt-0 bg-white">
+                  <p className="text-gray-600 leading-relaxed text-base lg:text-lg">
                     {section.content}
                   </p>
                 </div>
@@ -268,17 +248,17 @@ const PoliciesPage: React.FC = () => {
         </div>
 
         {/* Contact Section */}
-        <div className="mt-12 p-6 bg-gray-50 rounded-2xl">
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">
+        <div className="mt-12 lg:mt-16 p-6 lg:p-8 bg-gray-50 rounded-2xl lg:rounded-3xl">
+          <h3 className="text-lg lg:text-xl font-semibold text-gray-900 mb-3 lg:mb-4">
             Have Questions?
           </h3>
-          <p className="text-gray-600 mb-4">
+          <p className="text-gray-600 mb-4 lg:mb-6 text-base lg:text-lg">
             If you have any questions about our policies, please don't hesitate to contact us.
           </p>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-3 lg:gap-4">
             <Link
               to="/contact"
-              className="inline-flex items-center gap-2 bg-black text-white px-5 py-2.5 rounded-full text-sm font-medium hover:bg-gray-800 transition-colors"
+              className="inline-flex items-center gap-2 bg-black text-white px-5 lg:px-6 py-2.5 lg:py-3 rounded-full text-sm lg:text-base font-medium hover:bg-gray-800 transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -287,7 +267,7 @@ const PoliciesPage: React.FC = () => {
             </Link>
             <Link
               to="/faq"
-              className="inline-flex items-center gap-2 bg-white text-gray-700 px-5 py-2.5 rounded-full text-sm font-medium border border-gray-300 hover:bg-gray-100 transition-colors"
+              className="inline-flex items-center gap-2 bg-white text-gray-700 px-5 lg:px-6 py-2.5 lg:py-3 rounded-full text-sm lg:text-base font-medium border border-gray-300 hover:bg-gray-100 transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -298,10 +278,10 @@ const PoliciesPage: React.FC = () => {
         </div>
 
         {/* Back to Home */}
-        <div className="mt-8 text-center">
+        <div className="mt-8 lg:mt-12 text-center">
           <Link
             to="/"
-            className="inline-flex items-center gap-2 text-gray-600 hover:text-black transition-colors"
+            className="inline-flex items-center gap-2 text-gray-600 hover:text-black transition-colors text-base lg:text-lg"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />

@@ -70,7 +70,7 @@ const RefundPolicyPage: React.FC = () => {
           setPolicyData({ ...defaultPolicyData, ...data });
         }
       } catch (error) {
-        console.log('Using default refund policy data');
+        // Using default refund policy data
       } finally {
         setIsLoading(false);
       }

@@ -40,7 +40,6 @@ class AddressService {
       // Backend returns { success: true, data: [...] }
       return response.data?.data || response.data || [];
     } catch (error: any) {
-      console.error('Error fetching addresses:', error);
       return []; // Return empty array on error
     }
   }

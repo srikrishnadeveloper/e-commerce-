@@ -130,7 +130,6 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
         setTrending(Array.from(map.values()).slice(0, 20));
         allProductsRef.current = all || [];
       } catch (e) {
-        console.error('SearchSidebar init error:', e);
         if (mounted) setError('Failed to load search data. Please try again.');
       } finally {
         if (mounted) setInitialLoading(false);
@@ -292,7 +291,6 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
         }
       } catch (e) {
         if (!cancelled) {
-          console.error('Search failed:', e);
           setResults([]);
         }
       } finally {
@@ -329,7 +327,7 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
       await cartService.addToCart(pid, 1);
       // UI will update via cart:changed listener
     } catch (e) {
-      console.error('Add to cart failed:', e);
+      // silently handle error
     }
   }, []);
 
@@ -341,7 +339,7 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
     try {
       await wishlistService.addToWishlist(pid);
     } catch (e) {
-      console.error('Add to wishlist failed:', e);
+      // silently handle error
     }
   }, []);
 
@@ -482,13 +480,13 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
 
           {/* When there's no query, show recent searches, categories, and trending */}
           {!hasQuery && !initialLoading && !error && (
-            <div className="space-y-6">
+            <div className="space-y-4">
               {recentSearches.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Recent searches</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {recentSearches.map((s, i) => (
-                      <button key={i} className="px-3 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-sm" onClick={() => setQuery(s)}>
+                  <h3 className="text-xs font-semibold text-gray-900 mb-2">Recent searches</h3>
+                  <div className="flex flex-wrap gap-1.5">
+                    {recentSearches.slice(0, 3).map((s, i) => (
+                      <button key={i} className="px-2.5 py-1 rounded-full bg-gray-100 hover:bg-gray-200 text-xs truncate max-w-[120px]" onClick={() => setQuery(s)} title={s}>
                         {s}
                       </button>
                     ))}
@@ -496,17 +494,18 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
                 </div>
               )}
               <div>
-                <h3 className="text-sm font-semibold text-gray-900 mb-3">Browse categories</h3>
-                <div className="grid grid-cols-2 gap-2">
+                <h3 className="text-xs font-semibold text-gray-900 mb-2">Browse categories</h3>
+                <div className="grid grid-cols-2 gap-1.5">
                   {categories.map((c) => (
                     <button
                       key={c.id}
                       type="button"
-                      className="px-3 py-2 rounded-md border border-gray-200 hover:bg-gray-50 text-sm text-gray-800 text-left"
+                      className="px-2.5 py-1.5 rounded-md border border-gray-200 hover:bg-gray-50 text-xs text-gray-800 text-left truncate"
                       onClick={() => {
                         navigate(`/products?category=${encodeURIComponent(c.name)}`);
                         onClose();
                       }}
+                      title={c.name}
                     >
                       {c.name}
                     </button>
@@ -515,39 +514,39 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
               </div>
               {trending.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Trending products</h3>
+                  <h3 className="text-xs font-semibold text-gray-900 mb-2">Trending products</h3>
                   <ul className="divide-y divide-gray-100 border border-gray-100 rounded-md">
-                    {trending.slice(0, 6).map((p) => {
+                    {trending.slice(0, 5).map((p) => {
                       const pid = String(p._id || p.id);
                       const inCart = cartIds.has(pid);
                       const inWish = wishIds.has(pid);
                       return (
-                        <li key={pid} className="p-2.5">
-                          <div className="flex items-center gap-3">
-                            <Link to={`/product/${pid}`} className="w-12 h-12 rounded-md overflow-hidden bg-gray-100 flex-shrink-0" onClick={onClose}>
+                        <li key={pid} className="p-2">
+                          <div className="flex items-center gap-2">
+                            <Link to={`/product/${pid}`} className="w-10 h-10 rounded-md overflow-hidden bg-gray-100 flex-shrink-0" onClick={onClose}>
                               <img src={getProductImage(p)} alt={p.name} className="w-full h-full object-cover" loading="lazy" />
                             </Link>
                             <div className="flex-1 min-w-0">
-                              <Link to={`/product/${pid}`} className="block text-sm text-gray-900 truncate hover:underline" onClick={onClose}>
+                              <Link to={`/product/${pid}`} className="block text-xs text-gray-900 truncate hover:underline" onClick={onClose} title={p.name}>
                                 {p.name}
                               </Link>
                               <div className="text-xs text-gray-600">₹{p.price}</div>
                             </div>
-                            <div className="flex items-center gap-1.5">
+                            <div className="flex items-center gap-1">
                               <button
                                 onClick={() => handleAddToWishlist(pid)}
-                                className={`p-1.5 rounded-full ${inWish ? 'bg-red-100 text-red-600' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
+                                className={`p-1 rounded-full ${inWish ? 'bg-red-100 text-red-600' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
                                 aria-label="Add to wishlist"
                                 title={inWish ? 'In Wishlist' : 'Add to Wishlist'}
                               >
-                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill={inWish ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
+                                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill={inWish ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
                                   <path strokeLinecap="round" strokeLinejoin="round" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
                                 </svg>
                               </button>
                               <button
                                 onClick={() => handleAddToCart(pid)}
                                 disabled={inCart}
-                                className={`px-2.5 py-1.5 rounded-md text-xs font-medium ${inCart ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-black text-white hover:bg-gray-800'}`}
+                                className={`px-2 py-1 rounded-md text-xs font-medium ${inCart ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-black text-white hover:bg-gray-800'}`}
                                 aria-label="Add to cart"
                               >
                                 {inCart ? 'In Cart' : 'Add'}

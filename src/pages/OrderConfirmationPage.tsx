@@ -80,78 +80,78 @@ const OrderConfirmationPage: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center flex items-center justify-center" style={{
           background: 'linear-gradient(90deg, rgba(255, 255, 255, 1) 0%, rgba(254, 240, 239, 1) 50%, rgba(243, 251, 251, 1) 76%, rgba(254, 255, 255, 1) 98%)',
-          height: '194px'
+          height: 'clamp(140px, 15vw, 194px)'
         }}>
-          <h1 className="text-black" style={{ fontSize: '42px', fontWeight: 'normal', fontFamily: "'Albert Sans', sans-serif" }}>
+          <h1 className="text-black text-2xl sm:text-3xl lg:text-4xl xl:text-[42px]" style={{ fontWeight: 'normal', fontFamily: "'Albert Sans', sans-serif" }}>
             Payment confirmation
           </h1>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-2xl lg:max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
         {/* Payment Confirmation Card */}
-        <div className="bg-gray-50 rounded-lg p-8">
-          <h2 className="text-xl font-semibold text-black mb-6">
+        <div className="bg-gray-50 rounded-lg lg:rounded-xl p-8 lg:p-10">
+          <h2 className="text-xl lg:text-2xl font-semibold text-black mb-6 lg:mb-8">
             Payment confirmation
           </h2>
           
           {/* Details Table */}
-          <div className="space-y-4">
+          <div className="space-y-4 lg:space-y-5">
             {/* Date */}
-            <div className="flex justify-between items-center py-2 border-b border-gray-200">
-              <span className="text-gray-600">Date</span>
-              <span className="text-gray-900">{formatDate(order.createdAt)}</span>
+            <div className="flex justify-between items-center py-2 lg:py-3 border-b border-gray-200">
+              <span className="text-gray-600 text-base lg:text-lg">Date</span>
+              <span className="text-gray-900 text-base lg:text-lg">{formatDate(order.createdAt)}</span>
             </div>
             
             {/* Payment method */}
-            <div className="flex justify-between items-center py-2 border-b border-gray-200">
-              <span className="text-gray-600">Payment method</span>
-              <span className="text-gray-900">Cash on Delivery</span>
+            <div className="flex justify-between items-center py-2 lg:py-3 border-b border-gray-200">
+              <span className="text-gray-600 text-base lg:text-lg">Payment method</span>
+              <span className="text-gray-900 text-base lg:text-lg">Cash on Delivery</span>
             </div>
             
             {/* Order ID as Card number replacement */}
-            <div className="flex justify-between items-center py-2 border-b border-gray-200">
-              <span className="text-gray-600">Order number</span>
-              <span className="text-gray-900">#{order._id?.slice(-8).toUpperCase() || 'N/A'}</span>
+            <div className="flex justify-between items-center py-2 lg:py-3 border-b border-gray-200">
+              <span className="text-gray-600 text-base lg:text-lg">Order number</span>
+              <span className="text-gray-900 text-base lg:text-lg">#{order._id?.slice(-8).toUpperCase() || 'N/A'}</span>
             </div>
             
             {/* Cardholder name / Customer name */}
-            <div className="flex justify-between items-center py-2 border-b border-gray-200">
-              <span className="text-gray-600">Customer name</span>
-              <span className="text-gray-900">{order.shippingAddress?.fullName || 'N/A'}</span>
+            <div className="flex justify-between items-center py-2 lg:py-3 border-b border-gray-200">
+              <span className="text-gray-600 text-base lg:text-lg">Customer name</span>
+              <span className="text-gray-900 text-base lg:text-lg">{order.shippingAddress?.fullName || 'N/A'}</span>
             </div>
             
             {/* Email */}
-            <div className="flex justify-between items-center py-2 border-b border-gray-200">
-              <span className="text-gray-600">Email</span>
-              <span className="text-gray-900">{email || 'N/A'}</span>
+            <div className="flex justify-between items-center py-2 lg:py-3 border-b border-gray-200">
+              <span className="text-gray-600 text-base lg:text-lg">Email</span>
+              <span className="text-gray-900 text-base lg:text-lg">{email || 'N/A'}</span>
             </div>
             
             {/* Phone */}
-            <div className="flex justify-between items-center py-2 border-b border-gray-200">
-              <span className="text-gray-600">Phone</span>
-              <span className="text-gray-900">{order.shippingAddress?.phone || 'N/A'}</span>
+            <div className="flex justify-between items-center py-2 lg:py-3 border-b border-gray-200">
+              <span className="text-gray-600 text-base lg:text-lg">Phone</span>
+              <span className="text-gray-900 text-base lg:text-lg">{order.shippingAddress?.phone || 'N/A'}</span>
             </div>
             
             {/* Subtotal */}
-            <div className="flex justify-between items-center py-2 pt-4">
-              <span className="text-gray-900 font-semibold">Subtotal</span>
-              <span className="text-gray-900 font-semibold">{formatPrice(order.total)}</span>
+            <div className="flex justify-between items-center py-2 lg:py-3 pt-4">
+              <span className="text-gray-900 font-semibold text-base lg:text-lg">Subtotal</span>
+              <span className="text-gray-900 font-semibold text-base lg:text-lg">{formatPrice(order.total)}</span>
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 mt-8">
+          <div className="flex flex-col sm:flex-row gap-4 lg:gap-5 mt-8 lg:mt-10">
             <Link
               to="/products"
-              className="flex-1 inline-flex items-center justify-center px-6 py-3 border border-gray-300 rounded-lg bg-white text-gray-700 hover:bg-gray-50 font-medium transition-colors"
+              className="flex-1 inline-flex items-center justify-center px-6 lg:px-8 py-3 lg:py-4 border border-gray-300 rounded-lg lg:rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-medium transition-colors text-base lg:text-lg"
             >
               Continue Shopping
             </Link>
             <Link
               to="/account?tab=orders"
-              className="flex-1 inline-flex items-center justify-center px-6 py-3 border border-transparent rounded-lg bg-black text-white hover:bg-gray-800 font-medium transition-colors"
+              className="flex-1 inline-flex items-center justify-center px-6 lg:px-8 py-3 lg:py-4 border border-transparent rounded-lg lg:rounded-xl bg-black text-white hover:bg-gray-800 font-medium transition-colors text-base lg:text-lg"
             >
               View Orders
             </Link>
@@ -159,8 +159,8 @@ const OrderConfirmationPage: React.FC = () => {
         </div>
 
         {/* Help Section */}
-        <div className="text-center mt-8">
-          <p className="text-gray-600">
+        <div className="text-center mt-8 lg:mt-12">
+          <p className="text-gray-600 text-base lg:text-lg">
             Have a question?
             <Link to="/contact" className="text-red-500 hover:text-red-600 ml-1">
               Contact Support

@@ -99,14 +99,13 @@ const DealCard: React.FC<DealCardProps> = ({ deal, onColorSelect, onCloseDeal })
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>): void => {
     const target = e.target as HTMLImageElement;
-    console.log('Image failed to load:', resolveImageSrc(activeImage));
     target.style.display = 'block';
     target.style.backgroundColor = '#f3f4f6';
     target.alt = 'Image not found';
   };
 
-  const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement, Event>): void => {
-    console.log('Image loaded successfully:', resolveImageSrc(activeImage));
+  const handleImageLoad = (_e: React.SyntheticEvent<HTMLImageElement, Event>): void => {
+    // Image loaded successfully
   };
 
   // Compute active image: try image per color index; fallback to first image
@@ -341,8 +340,7 @@ const HotDealsSection: React.FC = () => {
 
         setProducts(deals);
         setIsLoading(false);
-      } catch (error) {
-        console.error('Error loading data:', error);
+      } catch (_error) {
         setIsLoading(false);
       }
     };
@@ -417,8 +415,8 @@ const HotDealsSection: React.FC = () => {
     return () => clearInterval(timer);
   }, [currentIndex, isTransitioning, products.length]);
 
-  if (isLoading) return <div className="py-16 text-center">Loading...</div>;
-  if (!homepage) return <div className="py-16 text-center">Loading...</div>;
+  if (isLoading) return <div className="py-6 sm:py-10 md:py-12 lg:py-16 text-center">Loading...</div>;
+  if (!homepage) return <div className="py-6 sm:py-10 md:py-12 lg:py-16 text-center">Loading...</div>;
 
   // Check if section is disabled
   if (homepage?.hotDealsSection?.enabled === false) {
@@ -430,10 +428,10 @@ const HotDealsSection: React.FC = () => {
   const hotDealsSection = homepage?.hotDealsSection || { title: 'Hot Deals', subtitle: '', viewAllText: 'View All', viewAllLink: '/products' };
 
   return (
-    <section className="py-16 bg-white" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
+    <section className="py-6 sm:py-10 md:py-12 lg:py-16 bg-white" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
       <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-12">
+        <div className="mb-8 sm:mb-10 lg:mb-12">
           <h2 
             className="hidden sm:block text-xl sm:text-2xl lg:text-3xl font-medium text-black ml-[12.5%] sm:ml-[10%] lg:ml-[8.33%] mb-6"
             style={{ fontFamily: "'Albert Sans', sans-serif" }}

@@ -24,10 +24,10 @@ import OrderTracking from './components/OrderTracking'
 import WelcomePopup from './components/WelcomePopup'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import PoliciesPage from './pages/PoliciesPage'
-import TermsConditionsPage from './pages/TermsConditionsPage'
 import NotFoundPage from './pages/NotFoundPage'
 import './App.css'
 import authService from './services/authService'
+import { useFavicon } from './hooks/useFavicon'
 
 // Scroll to top component - scrolls to top on route change
 const ScrollToTop: React.FC = () => {
@@ -59,6 +59,9 @@ const App: React.FC = () => {
   const [showWelcomePopup, setShowWelcomePopup] = useState(false);
   const [welcomeUsername, setWelcomeUsername] = useState('');
   const [announcementHeight, setAnnouncementHeight] = useState<number>(0);
+
+  // Load favicon from site config
+  useFavicon();
 
   // (Removed legacy login page redirect) Standalone /login page is removed in favor of modal
 
@@ -134,8 +137,7 @@ const App: React.FC = () => {
           <Route path="/policies" element={<PoliciesPage />} />
           {/* Policy pages */}
           <Route path="/refund-policy" element={<PoliciesPage />} />
-          <Route path="/terms-conditions" element={<TermsConditionsPage />} />
-          <Route path="/terms-and-conditions" element={<TermsConditionsPage />} />
+          <Route path="/terms-conditions" element={<PoliciesPage />} />
           <Route path="/privacy-policy" element={<PoliciesPage />} />
           {/* Catch-all route for 404 */}
           <Route path="*" element={<NotFoundPage />} />

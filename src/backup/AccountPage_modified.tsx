@@ -204,7 +204,7 @@ const AccountPage: React.FC = () => {
       ]);
 
     } catch (error) {
-      console.error('Error fetching user data:', error);
+      // Error handled silently
     } finally {
       setLoading(false);
     }
@@ -216,7 +216,6 @@ const AccountPage: React.FC = () => {
       const data = await addressService.getAddresses();
       setAddresses(data);
     } catch (error: any) {
-      console.error('Error fetching addresses:', error);
       setAddressError(error.message || 'Failed to fetch addresses');
     } finally {
       setAddressLoading(false);

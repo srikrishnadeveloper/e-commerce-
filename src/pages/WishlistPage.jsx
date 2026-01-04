@@ -43,7 +43,7 @@ const WishlistCard = ({
   const activeOriginal = getActiveOriginalPrice(product, safeIndex);
 
   return (
-    <div className="group rounded-xl border border-gray-200 bg-white overflow-hidden hover:shadow-md transition-shadow">
+    <div className="group rounded-lg lg:rounded-xl border border-gray-200 bg-white overflow-hidden hover:shadow-md transition-shadow">
       {/* Image */}
       <Link to={`/product/${pid}`} className="block bg-gray-50">
         <div className="w-full aspect-[4/5] overflow-hidden">
@@ -57,20 +57,20 @@ const WishlistCard = ({
       </Link>
 
       {/* Content */}
-      <div className="p-4">
+      <div className="p-3 lg:p-4">
         <Link to={`/product/${pid}`} className="block">
-          <h3 className="text-base sm:text-lg text-gray-900 hover:underline line-clamp-2">{product.name}</h3>
+          <h3 className="text-sm sm:text-base lg:text-lg text-gray-900 hover:underline line-clamp-2">{product.name}</h3>
         </Link>
-        <div className="mt-2 flex items-center gap-2">
+        <div className="mt-1.5 lg:mt-2 flex items-center gap-2 text-sm lg:text-base">
           <span className="text-gray-900 font-semibold">₹{activePrice}</span>
           {activeOriginal && activeOriginal > activePrice && (
-            <span className="text-gray-500 line-through">₹{activeOriginal}</span>
+            <span className="text-gray-500 line-through text-xs lg:text-sm">₹{activeOriginal}</span>
           )}
         </div>
 
         {/* Swatches */}
         {colors?.length > 0 && (
-          <div className="mt-3 flex items-center gap-2">
+          <div className="mt-2 lg:mt-3 flex items-center gap-1.5 lg:gap-2">
             {colors.map((c, idx) => (
               <button
                 key={`${pid}-${c.name}-${idx}`}
@@ -78,7 +78,7 @@ const WishlistCard = ({
                 aria-label={`Select ${c.name} color`}
                 aria-pressed={safeIndex === idx}
                 onClick={() => onSelectColor(pid, idx)}
-                className={`w-5 h-5 rounded-full border-2 transition-transform duration-150 hover:scale-110 ${
+                className={`w-4 h-4 lg:w-5 lg:h-5 rounded-full border-2 transition-transform duration-150 hover:scale-110 ${
                   safeIndex === idx ? 'border-black shadow-sm' : 'border-gray-300 hover:border-gray-400'
                 }`}
                 style={{ backgroundColor: c.value }}
@@ -88,12 +88,12 @@ const WishlistCard = ({
         )}
 
         {/* Actions */}
-        <div className="mt-4 flex items-center justify-between gap-3">
+        <div className="mt-3 lg:mt-4 flex items-center justify-between gap-2">
           <button
             type="button"
             onClick={() => onAddToCart(pid)}
             disabled={inCart}
-            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+            className={`flex-1 py-1.5 lg:py-2 px-3 lg:px-4 rounded-md text-xs lg:text-sm font-medium transition-colors ${
               inCart ? 'bg-gray-200 text-gray-600 cursor-not-allowed' : 'bg-black text-white hover:bg-gray-800'
             }`}
           >
@@ -102,7 +102,7 @@ const WishlistCard = ({
           <button
             type="button"
             onClick={() => onRemove(pid)}
-            className="px-3 py-2 rounded-md text-sm text-red-600 hover:text-red-700 hover:bg-red-50"
+            className="px-2 lg:px-3 py-1.5 lg:py-2 rounded-md text-xs lg:text-sm text-red-600 hover:text-red-700 hover:bg-red-50"
             aria-label="Remove from wishlist"
             title="Remove"
           >
@@ -214,21 +214,21 @@ const WishlistPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading your wishlist...</p>
+          <div className="animate-spin rounded-full h-8 w-8 lg:h-12 lg:w-12 border-b-2 border-black mx-auto"></div>
+          <p className="mt-3 lg:mt-4 text-sm lg:text-base text-gray-600">Loading your wishlist...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white py-10" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
+    <div className="min-h-screen bg-white py-4 sm:py-6 lg:py-10" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <h1 className="text-2xl sm:text-3xl font-medium text-gray-900">My Favorites</h1>
-          <p className="text-gray-500 mt-1">Items you’ve saved for later</p>
+        <div className="mb-4 sm:mb-6 lg:mb-8">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-medium text-gray-900">My Favorites</h1>
+          <p className="text-gray-500 text-sm lg:text-base mt-0.5 lg:mt-1">Items you've saved for later</p>
         </div>
 
         {error && (
@@ -238,18 +238,18 @@ const WishlistPage = () => {
         )}
 
         {wishlist.length === 0 ? (
-          <div className="text-center py-20">
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Your favorites is empty</h3>
-            <p className="text-gray-500 mb-6">Start adding products to your favorites.</p>
+          <div className="text-center py-12 lg:py-20">
+            <h3 className="text-base lg:text-lg font-medium text-gray-900 mb-2">Your favorites is empty</h3>
+            <p className="text-gray-500 text-sm lg:text-base mb-4 lg:mb-6">Start adding products to your favorites.</p>
             <Link
               to="/products"
-              className="inline-flex items-center px-5 py-2.5 rounded-md text-white bg-black hover:bg-gray-800"
+              className="inline-flex items-center px-4 lg:px-5 py-2 lg:py-2.5 rounded-md text-sm lg:text-base text-white bg-black hover:bg-gray-800"
             >
               Browse Products
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 xl:gap-8">
             {wishlist.map((product) => (
               <WishlistCard
                 key={getPid(product)}

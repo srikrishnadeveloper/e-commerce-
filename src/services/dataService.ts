@@ -58,7 +58,6 @@ const apiRequest = async (endpoint: string): Promise<any> => {
     }
     return await response.json();
   } catch (error) {
-    console.error(`API request failed for ${endpoint}:`, error);
     throw error;
   }
 };
@@ -80,7 +79,6 @@ export const getProducts = async (params: Record<string, any> = {}): Promise<Pro
     const response = await apiRequest(endpoint);
   return normalizeProducts(response.data || []);
   } catch (error) {
-    console.error('Error fetching products:', error);
     return [];
   }
 };
@@ -94,7 +92,6 @@ export const getProductById = async (id: string): Promise<Product | null> => {
     const response = await apiRequest(`/products/${id}`);
   return response.data ? normalizeProduct(response.data) : null;
   } catch (error) {
-    console.error('Error fetching product by ID:', error);
     return null;
   }
 };
@@ -109,7 +106,6 @@ export const getProductsByCategory = async (categoryId: string): Promise<Product
     const response = await apiRequest(endpoint);
   return normalizeProducts(response.data || []);
   } catch (error) {
-    console.error('Error fetching products by category:', error);
     return [];
   }
 };
@@ -123,7 +119,6 @@ export const getHotDealProducts = async (): Promise<Product[]> => {
     const response = await apiRequest('/products/hotdeals');
   return normalizeProducts(response.data || []);
   } catch (error) {
-    console.error('Error fetching hot deal products:', error);
     return [];
   }
 };
@@ -137,7 +132,6 @@ export const getDealsProducts = async (): Promise<Product[]> => {
     const response = await apiRequest('/products?onSale=true');
   return normalizeProducts(response.data || []);
   } catch (error) {
-    console.error('Error fetching deals products:', error);
     return [];
   }
 };
@@ -151,7 +145,6 @@ export const getBestSellerProducts = async (): Promise<Product[]> => {
     const response = await apiRequest('/products?bestseller=true');
   return normalizeProducts(response.data || []);
   } catch (error) {
-    console.error('Error fetching bestseller products:', error);
     return [];
   }
 };
@@ -168,7 +161,6 @@ export const getCategories = async (): Promise<Category[]> => {
     const response = await apiRequest('/categories');
     return response.data || [];
   } catch (error) {
-    console.error('Error fetching categories:', error);
     return [];
   }
 };
@@ -183,7 +175,6 @@ export const searchProducts = async (query: string): Promise<Product[]> => {
     const response = await apiRequest(endpoint);
   return normalizeProducts(response.data || []);
   } catch (error) {
-    console.error('Error searching products:', error);
     return [];
   }
 };
@@ -203,7 +194,6 @@ export const getSiteConfig = async (): Promise<SiteConfig> => {
     const response = await apiRequest('/siteconfig');
     return response.data || {} as SiteConfig;
   } catch (error) {
-    console.error('Error fetching site config:', error);
     return {} as SiteConfig;
   }
 };
@@ -217,7 +207,6 @@ export const getNavigationConfig = async () => {
     const response = await apiRequest('/siteconfig/navigation');
     return response.data || {};
   } catch (error) {
-    console.error('Error fetching navigation config:', error);
     return {};
   }
 };
@@ -231,7 +220,6 @@ export const getHomepageConfig = async () => {
     const response = await apiRequest('/siteconfig/homepage');
     return response.data || {};
   } catch (error) {
-    console.error('Error fetching homepage config:', error);
     return {};
   }
 };
@@ -245,7 +233,6 @@ export const getBrandingConfig = async () => {
     const response = await apiRequest('/siteconfig/branding');
     return response.data || {};
   } catch (error) {
-    console.error('Error fetching branding config:', error);
     return {};
   }
 };
@@ -259,7 +246,6 @@ export const getFooterConfig = async () => {
     const response = await apiRequest('/siteconfig/footer');
     return response.data || {};
   } catch (error) {
-    console.error('Error fetching footer config:', error);
     return {};
   }
 };
@@ -272,56 +258,71 @@ export const getFooterConfig = async () => {
 
 /**
  * Get related products (exclude current product)
- * First tries to get products from the same category, then fills with other categories if needed
+ * First tries to get products from the same category, then fills with other categories to ensure minimum 4 products
  */
 export const getRelatedProducts = async (currentProductId: string, categoryId: string | null = null, limit: number = 8): Promise<Product[]> => {
+  const MIN_PRODUCTS = 4; // Always ensure at least 4 products
+  const targetCount = Math.max(limit, MIN_PRODUCTS);
+  
   try {
-    const minProducts = Math.max(limit, 5); // Ensure at least 5 products
-    let relatedProducts: Product[] = [];
-    const addedProductIds = new Set<string>([currentProductId]); // Track added products to avoid duplicates
+    // Step 1: Get ALL products first
+    const allProducts = await getProducts();
     
-    // First, try to get products from the same category
-    if (categoryId) {
-      const sameCategoryProducts = await getProductsByCategory(categoryId);
+    if (!allProducts || allProducts.length === 0) {
+      return [];
+    }
+    
+    // Step 2: Filter out current product
+    const availableProducts = allProducts.filter(p => {
+      const pid = (p._id || p.id || '').toString();
+      return pid !== currentProductId;
+    });
+    
+    // Step 3: Separate same category and other category products
+    const sameCategoryProducts: Product[] = [];
+    const otherCategoryProducts: Product[] = [];
+    
+    for (const product of availableProducts) {
+      const productCatId = (product.categoryId || (product as any).category || '').toString();
+      const currentCatId = (categoryId || '').toString();
       
-      // Filter out current product and add to related products
-      for (const product of sameCategoryProducts) {
-        const pid = (product._id || product.id || '').toString();
-        if (!addedProductIds.has(pid)) {
-          relatedProducts.push(product);
-          addedProductIds.add(pid);
-        }
+      if (categoryId && productCatId === currentCatId) {
+        sameCategoryProducts.push(product);
+      } else {
+        otherCategoryProducts.push(product);
       }
     }
     
-    // If we don't have enough products, get products from other categories
-    if (relatedProducts.length < minProducts) {
-      const allProducts = await getProducts();
-      
-      // Filter out already added products and current product
-      for (const product of allProducts) {
-        const pid = (product._id || product.id || '').toString();
-        if (!addedProductIds.has(pid)) {
-          relatedProducts.push(product);
-          addedProductIds.add(pid);
-        }
-        
-        // Stop if we have enough products
-        if (relatedProducts.length >= minProducts) break;
-      }
+    // Step 4: Combine - prioritize same category, then fill with others
+    let relatedProducts: Product[] = [...sameCategoryProducts];
+    
+    // Add from other categories to reach minimum
+    for (const product of otherCategoryProducts) {
+      if (relatedProducts.length >= targetCount) break;
+      relatedProducts.push(product);
     }
     
-    // Shuffle array randomly using Fisher-Yates algorithm
-    const shuffled = [...relatedProducts];
-    for (let i = shuffled.length - 1; i > 0; i--) {
+    // Step 5: Shuffle for variety
+    for (let i = relatedProducts.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      [relatedProducts[i], relatedProducts[j]] = [relatedProducts[j], relatedProducts[i]];
     }
     
-    return shuffled.slice(0, limit);
+    // Step 6: Return at least MIN_PRODUCTS (or all available if less)
+    return relatedProducts.slice(0, targetCount);
+    
   } catch (error) {
-    console.error('Error fetching related products:', error);
-    return [];
+    // Fallback: try to get all products
+    try {
+      const allProducts = await getProducts();
+      const filtered = allProducts.filter(p => {
+        const pid = (p._id || p.id || '').toString();
+        return pid !== currentProductId;
+      });
+      return filtered.slice(0, MIN_PRODUCTS);
+    } catch {
+      return [];
+    }
   }
 };
 

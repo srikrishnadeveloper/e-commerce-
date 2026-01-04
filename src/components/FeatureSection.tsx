@@ -11,7 +11,6 @@ export default function FeatureSection(): React.ReactElement {
         const siteConfig = await getSiteConfig();
         setConfig(siteConfig);
       } catch (error) {
-        console.error('Error loading site config:', error);
         // Set fallback config on error
         setConfig({
           homePage: {

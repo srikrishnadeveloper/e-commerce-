@@ -86,7 +86,7 @@ const Navbar: React.FC = () => {
           (Array.isArray(response?.data) ? response.data.length : (Array.isArray(response) ? response.length : 0));
         setWishlistCount(count || 0);
       } catch (error) {
-        console.error('Failed to load wishlist count:', error);
+        // Silently handle wishlist count error
       }
     };
 
@@ -95,7 +95,7 @@ const Navbar: React.FC = () => {
         const count = await cartService.getCartCount();
         setCartCount(count);
       } catch (error) {
-        console.error('Failed to load cart count:', error);
+        // Silently handle cart count error
       }
     };
 
@@ -202,7 +202,7 @@ const Navbar: React.FC = () => {
   // Show loading state if data is not ready
   if (navLoading || brandLoading) {
     return (
-      <nav className="w-full h-[74px] md:h-[74px] sm:h-[40px] h-[32px] bg-white flex items-center justify-center px-2 sm:px-3 md:px-6 relative z-50">
+      <nav className="w-full h-[60px] md:h-[74px] bg-white flex items-center justify-center px-2 sm:px-3 md:px-6 relative z-50">
         <div className="text-gray-500">Loading...</div>
       </nav>
     );
@@ -210,9 +210,8 @@ const Navbar: React.FC = () => {
 
   // Show error state if there's an error
   if (navError || brandError) {
-    console.error('Navbar config error:', navError || brandError);
     return (
-      <nav className="w-full h-[74px] md:h-[74px] sm:h-[40px] h-[32px] bg-white flex items-center justify-center px-2 sm:px-3 md:px-6 relative z-50">
+      <nav className="w-full h-[60px] md:h-[74px] bg-white flex items-center justify-center px-2 sm:px-3 md:px-6 relative z-50">
         <div className="text-red-500">Error loading navigation</div>
       </nav>
     );
@@ -237,7 +236,7 @@ const Navbar: React.FC = () => {
 
   return (
     <>
-  <nav className="w-full h-[74px] md:h-[74px] sm:h-[40px] h-[32px] bg-white flex items-center justify-between px-2 sm:px-3 md:px-6 z-50" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
+  <nav className="w-full h-[60px] md:h-[74px] bg-white flex items-center justify-between px-2 sm:px-3 md:px-6 z-50" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
         {/* Mobile Menu Button - Only visible on small screens */}
         <button 
           className="lg:hidden p-1 sm:p-1.5 hover:bg-gray-100 rounded-full transition-colors duration-200"
@@ -513,11 +512,11 @@ const Navbar: React.FC = () => {
         }}
       >
         {/* Sidebar Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200">
           <img
             src={brandData.logo.url}
             alt={brandData.logo.alt}
-            className="h-6 w-auto"
+            className="h-5 w-auto"
           />
           <button 
             onClick={toggleSidebar}
@@ -545,13 +544,13 @@ const Navbar: React.FC = () => {
         {/* Sidebar Content - scrollable */}
         <div className="flex-1 overflow-y-auto">
           {/* Navigation Menu */}
-          <div className="p-4">
+          <div className="px-4 py-2">
             {/* Dynamic Navigation Links from siteConfig */}
             {navData.mainMenu.map((item, index) => (
-              <div className="mb-4" key={index}>
+              <div className="mb-2" key={index}>
                 <Link 
                   to={item.link}
-                  className="w-full flex items-center justify-between py-3 text-left font-medium text-gray-900 hover:text-black transition-colors"
+                  className="w-full flex items-center justify-between py-2 text-left font-medium text-gray-900 hover:text-black transition-colors"
                   onClick={() => { setIsSidebarOpen(false); window.scrollTo(0, 0); }}
                 >
                   <span className="text-black">{item.name}</span>
@@ -560,10 +559,10 @@ const Navbar: React.FC = () => {
             ))}
 
             {/* Quick Actions */}
-            <div className="flex gap-4 mb-6 mt-6">
+            <div className="flex gap-2 mb-3 mt-3">
               <Link 
                 to="/wishlist"
-                className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
                 onClick={() => { setIsSidebarOpen(false); window.scrollTo(0, 0); }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -577,7 +576,7 @@ const Navbar: React.FC = () => {
                 )}
               </Link>
               <button 
-                className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
                 onClick={() => { setIsSidebarOpen(false); setIsSearchOpen(true); }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -591,13 +590,13 @@ const Navbar: React.FC = () => {
         </div>
 
         {/* Sidebar Footer */}
-        <div className="border-t border-gray-200 p-4">
+        <div className="border-t border-gray-200 px-4 py-2">
           {/* Login/Account Button */}
           {isAuthenticated ? (
-            <div className="flex flex-col gap-3 mb-4">
+            <div className="flex flex-col gap-2">
               <Link 
                 to="/account"
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
                 onClick={() => setIsSidebarOpen(false)}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -607,7 +606,7 @@ const Navbar: React.FC = () => {
                 <span className="font-medium">My Account</span>
               </Link>
               <button 
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
                 onClick={() => { setIsSidebarOpen(false); setShowLogoutConfirmation(true); }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -620,7 +619,7 @@ const Navbar: React.FC = () => {
             </div>
           ) : (
             <button 
-              className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors mb-4"
+              className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
               onClick={() => {
                 setShowLoginModal(true);
                 setIsSidebarOpen(false);
@@ -646,7 +645,6 @@ const Navbar: React.FC = () => {
         isOpen={showLoginModal}
         onClose={() => setShowLoginModal(false)}
         onSuccess={(response) => {
-          console.log('Login successful:', response);
           // The auth:changed event will automatically update the navbar
           setShowLoginModal(false);
         }}
@@ -661,7 +659,6 @@ const Navbar: React.FC = () => {
         isOpen={showRegisterModal}
         onClose={() => setShowRegisterModal(false)}
         onSuccess={(response) => {
-          console.log('Registration successful:', response);
           // The auth:changed event will automatically update the navbar
           setShowRegisterModal(false);
         }}

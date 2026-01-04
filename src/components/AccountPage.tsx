@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import addressService from '../services/addressService';
 import { Address, AddressFormData } from '../types/Address';
 import LogoutConfirmation from './LogoutConfirmation';
+import Toast from './Toast';
 
 interface UserData {
   _id: string;
@@ -89,6 +90,13 @@ const AccountPage = () => {
   
   // Logout state
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
+  
+  // Toast state
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info'; isVisible: boolean }>({ message: '', type: 'success', isVisible: false });
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    setToast({ message, type, isVisible: true });
+  };
 
   // Check auth and fetch user data
   useEffect(() => {
@@ -149,7 +157,7 @@ const AccountPage = () => {
         email: userData.email || ''
       }));
     } catch (error) {
-      console.error('Error fetching user:', error);
+      // Error handled silently
     } finally {
       setLoading(false);
     }
@@ -162,7 +170,6 @@ const AccountPage = () => {
       // Ensure we always have an array
       setAddresses(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error('Error fetching addresses:', error);
       setAddresses([]);
     } finally {
       setAddressLoading(false);
@@ -186,7 +193,6 @@ const AccountPage = () => {
         setOrders([]);
       }
     } catch (error) {
-      console.error('Error fetching orders:', error);
       setOrders([]);
     } finally {
       setOrdersLoading(false);
@@ -211,23 +217,21 @@ const AccountPage = () => {
       }
       await fetchAddresses();
       resetAddressForm();
+      showToast('Address saved successfully!', 'success');
     } catch (error: any) {
-      console.error('Error saving address:', error);
-      alert(error.message || 'Failed to save address');
+      showToast(error.message || 'Failed to save address', 'error');
     } finally {
       setAddressLoading(false);
     }
   };
 
   const handleDeleteAddress = async (addressId: string) => {
-    if (!confirm('Are you sure you want to delete this address?')) return;
-    
     try {
       await addressService.deleteAddress(addressId);
       await fetchAddresses();
+      showToast('Address deleted successfully!', 'success');
     } catch (error: any) {
-      console.error('Error deleting address:', error);
-      alert(error.message || 'Failed to delete address');
+      showToast(error.message || 'Failed to delete address', 'error');
     }
   };
 
@@ -236,7 +240,7 @@ const AccountPage = () => {
       await addressService.setDefaultAddress(addressId);
       await fetchAddresses();
     } catch (error: any) {
-      console.error('Error setting default:', error);
+      // Error handled silently
     }
   };
 
@@ -302,7 +306,7 @@ const AccountPage = () => {
       // Update password if provided
       if (accountForm.currentPassword && accountForm.newPassword) {
         if (accountForm.newPassword !== accountForm.confirmPassword) {
-          alert('New passwords do not match');
+          showToast('New passwords do not match', 'error');
           setAccountSaving(false);
           return;
         }
@@ -327,7 +331,7 @@ const AccountPage = () => {
         }
       }
       
-      alert('Changes saved successfully!');
+      showToast('Changes saved successfully!', 'success');
       setAccountForm(prev => ({
         ...prev,
         currentPassword: '',
@@ -341,8 +345,7 @@ const AccountPage = () => {
       window.dispatchEvent(new Event('auth:changed'));
       
     } catch (error: any) {
-      console.error('Error saving account:', error);
-      alert(error.message || 'Failed to save changes');
+      showToast(error.message || 'Failed to save changes', 'error');
     } finally {
       setAccountSaving(false);
     }
@@ -367,7 +370,7 @@ const AccountPage = () => {
 
   const renderDashboard = () => (
     <div className="text-left">
-      <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
+      <p className="text-sm sm:text-base lg:text-lg text-gray-600 leading-relaxed">
         From your account dashboard you can view your{' '}
         <button 
           onClick={() => setExpandedSection('orders')}
@@ -404,15 +407,15 @@ const AccountPage = () => {
           <div className="py-8 text-center text-gray-500">No orders found</div>
         ) : (
           orders.map((order) => (
-            <div key={order._id} className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
-              <div className="flex justify-between items-start mb-3">
+            <div key={order._id} className="border border-gray-200 rounded-lg p-3">
+              <div className="flex justify-between items-start mb-2">
                 <div>
-                  <p className="font-semibold text-sm">#{order.orderNumber || order._id.slice(-6)}</p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-gray-500 mb-1">Order #{order.orderNumber || order._id.slice(-6)}</p>
+                  <p className="text-xs text-gray-500">
                     {new Date(order.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
                   </p>
                 </div>
-                <span className={`px-2 py-1 text-xs font-medium rounded capitalize ${
+                <span className={`px-2 py-0.5 text-xs font-medium rounded capitalize ${
                   order.status === 'delivered' ? 'bg-green-100 text-green-700' :
                   order.status === 'processing' ? 'bg-yellow-100 text-yellow-700' :
                   order.status === 'shipped' ? 'bg-blue-100 text-blue-700' :
@@ -421,17 +424,14 @@ const AccountPage = () => {
                   {order.status}
                 </span>
               </div>
-              <div className="flex justify-between items-center pt-3 border-t border-gray-100">
-                <p className="text-sm font-medium">₹{(order.total || order.totalAmount || 0).toFixed(2)} <span className="text-gray-500 font-normal">({order.items?.length || 0} items)</span></p>
-                <button 
-                  onClick={() => {
-                    setSelectedOrder(order);
-                    setShowOrderModal(true);
-                  }}
-                  className="bg-black text-white px-4 py-2 text-sm font-medium hover:bg-gray-800 transition-colors rounded"
+              <div className="flex justify-between items-center pt-2 border-t border-gray-100">
+                <p className="text-sm font-medium">₹{(order.total || order.totalAmount || 0).toFixed(2)} <span className="text-gray-500 text-xs font-normal">({order.items?.length || 0} items)</span></p>
+                <Link
+                  to={`/order-tracking/${order._id}`}
+                  className="bg-black text-white px-3 py-1.5 text-xs font-medium hover:bg-gray-800 transition-colors rounded"
                 >
-                  View
-                </button>
+                  Track Order
+                </Link>
               </div>
             </div>
           ))
@@ -467,15 +467,12 @@ const AccountPage = () => {
                   <td className="py-4 px-2 lg:px-4 capitalize text-sm lg:text-base">{order.status}</td>
                   <td className="py-4 px-2 lg:px-4 text-sm lg:text-base whitespace-nowrap">₹{(order.total || order.totalAmount || 0).toFixed(2)} for {order.items?.length || 0} Items</td>
                   <td className="py-4 px-2 lg:px-4">
-                    <button 
-                      onClick={() => {
-                        setSelectedOrder(order);
-                        setShowOrderModal(true);
-                      }}
-                      className="bg-black text-white px-3 lg:px-4 py-2 text-sm font-medium hover:bg-gray-800 transition-colors"
+                    <Link
+                      to={`/order-tracking/${order._id}`}
+                      className="inline-block bg-black text-white px-3 lg:px-4 py-2 text-sm font-medium hover:bg-gray-800 transition-colors rounded"
                     >
-                      View
-                    </button>
+                      Track Order
+                    </Link>
                   </td>
                 </tr>
               ))
@@ -483,70 +480,6 @@ const AccountPage = () => {
           </tbody>
         </table>
       </div>
-      
-      {/* Order Details Modal */}
-      {showOrderModal && selectedOrder && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
-          <div className="bg-white rounded-lg w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
-            <div className="p-4 sm:p-6">
-              <div className="flex justify-between items-center mb-4 sm:mb-6">
-                <h2 className="text-lg sm:text-xl font-semibold">Order #{selectedOrder.orderNumber || selectedOrder._id.slice(-6)}</h2>
-                <button onClick={() => setShowOrderModal(false)} className="text-gray-500 hover:text-gray-700 text-2xl p-1">&times;</button>
-              </div>
-              
-              <div className="space-y-3 sm:space-y-4">
-                <div className="flex justify-between border-b pb-3 sm:pb-4 text-sm sm:text-base">
-                  <span className="text-gray-600">Date:</span>
-                  <span>{new Date(selectedOrder.createdAt).toLocaleDateString()}</span>
-                </div>
-                <div className="flex justify-between border-b pb-3 sm:pb-4 text-sm sm:text-base">
-                  <span className="text-gray-600">Status:</span>
-                  <span className="capitalize font-medium">{selectedOrder.status}</span>
-                </div>
-                <div className="flex justify-between border-b pb-3 sm:pb-4 text-sm sm:text-base">
-                  <span className="text-gray-600">Total:</span>
-                  <span className="font-semibold">₹{(selectedOrder.total || selectedOrder.totalAmount || 0).toFixed(2)}</span>
-                </div>
-                
-                <div className="mt-4 sm:mt-6">
-                  <h3 className="font-medium mb-3 sm:mb-4 text-sm sm:text-base">Items</h3>
-                  {selectedOrder.items?.map((item, index) => (
-                    <div key={index} className="flex items-center gap-3 sm:gap-4 py-3 border-b">
-                      <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded overflow-hidden flex-shrink-0">
-                        <img 
-                          src={item.image || item.product?.images?.[0] || '/images/placeholder.svg'} 
-                          alt={item.name || item.product?.name || 'Product'}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm sm:text-base truncate">{item.name || item.product?.name || 'Product'}</p>
-                        <p className="text-gray-500 text-xs sm:text-sm">Qty: {item.quantity}</p>
-                      </div>
-                      <p className="font-medium text-sm sm:text-base flex-shrink-0">₹{item.price?.toFixed(2)}</p>
-                    </div>
-                  ))}
-                </div>
-                
-                <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row gap-3">
-                  <Link 
-                    to={`/order-tracking/${selectedOrder._id}`}
-                    className="bg-black text-white px-4 sm:px-6 py-2 font-medium hover:bg-gray-800 transition-colors text-center text-sm sm:text-base"
-                  >
-                    Track Order
-                  </Link>
-                  <button 
-                    onClick={() => setShowOrderModal(false)}
-                    className="border border-black px-4 sm:px-6 py-2 font-medium hover:bg-gray-50 transition-colors text-sm sm:text-base"
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 
@@ -554,7 +487,7 @@ const AccountPage = () => {
     <div>
       <button 
         onClick={() => setShowAddressForm(true)}
-        className="w-full sm:w-auto bg-black text-white px-4 sm:px-6 py-3 font-medium mb-6 sm:mb-8 hover:bg-gray-800 transition-colors text-sm sm:text-base"
+        className="w-full sm:w-auto bg-black text-white px-4 sm:px-6 lg:px-8 py-3 lg:py-3.5 font-medium mb-6 sm:mb-8 hover:bg-gray-800 transition-colors text-sm sm:text-base lg:text-lg rounded-none lg:rounded-sm"
       >
         Add a new address
       </button>
@@ -564,14 +497,14 @@ const AccountPage = () => {
       ) : addresses.length === 0 ? (
         <div className="text-gray-500">No addresses saved yet.</div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
           {addresses.map((address) => (
-            <div key={address._id} className="bg-white border border-gray-200 p-4 sm:p-6 rounded-lg">
-              <h3 className="font-semibold mb-3 sm:mb-4 capitalize text-sm sm:text-base">
+            <div key={address._id} className="bg-white border border-gray-200 p-4 sm:p-6 lg:p-8 rounded-lg lg:rounded-xl">
+              <h3 className="font-semibold mb-3 sm:mb-4 capitalize text-sm sm:text-base lg:text-lg">
                 {address.label}
-                {address.isDefault && <span className="ml-2 text-xs sm:text-sm text-green-600 font-normal">(Default)</span>}
+                {address.isDefault && <span className="ml-2 text-xs sm:text-sm lg:text-base text-green-600 font-normal">(Default)</span>}
               </h3>
-              <div className="text-gray-700 mb-4 leading-relaxed text-sm sm:text-base">
+              <div className="text-gray-700 mb-4 lg:mb-6 leading-relaxed text-sm sm:text-base lg:text-lg">
                 <p className="font-medium">{address.fullName}</p>
                 <p className="break-words">{address.addressLine1}</p>
                 {address.addressLine2 && <p className="break-words">{address.addressLine2}</p>}
@@ -579,23 +512,23 @@ const AccountPage = () => {
                 <p>{address.country}</p>
                 <p className="mt-2">Phone: {address.phone}</p>
               </div>
-              <div className="flex flex-wrap gap-2 sm:gap-3">
+              <div className="flex flex-wrap gap-2 sm:gap-3 lg:gap-4">
                 <button 
                   onClick={() => handleEditAddress(address)}
-                  className="bg-black text-white px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium hover:bg-gray-800 transition-colors"
+                  className="bg-black text-white px-3 sm:px-4 lg:px-5 py-2 lg:py-2.5 text-xs sm:text-sm lg:text-base font-medium hover:bg-gray-800 transition-colors rounded-none lg:rounded-sm"
                 >
                   Edit
                 </button>
                 <button 
                   onClick={() => handleDeleteAddress(address._id!)}
-                  className="border border-black text-black px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium hover:bg-gray-50 transition-colors"
+                  className="border border-black text-black px-3 sm:px-4 lg:px-5 py-2 lg:py-2.5 text-xs sm:text-sm lg:text-base font-medium hover:bg-gray-50 transition-colors rounded-none lg:rounded-sm"
                 >
                   Delete
                 </button>
                 {!address.isDefault && (
                   <button 
                     onClick={() => handleSetDefault(address._id!)}
-                    className="border border-green-600 text-green-600 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium hover:bg-green-50 transition-colors whitespace-nowrap"
+                    className="border border-green-600 text-green-600 px-3 sm:px-4 lg:px-5 py-2 lg:py-2.5 text-xs sm:text-sm lg:text-base font-medium hover:bg-green-50 transition-colors whitespace-nowrap rounded-none lg:rounded-sm"
                   >
                     Set as Default
                   </button>
@@ -614,10 +547,10 @@ const AccountPage = () => {
     
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
-        <div className="bg-white rounded-lg w-full max-w-lg max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
-          <div className="p-4 sm:p-6">
+        <div className="bg-white rounded-lg lg:rounded-xl w-full max-w-lg lg:max-w-xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+          <div className="p-4 sm:p-6 lg:p-8">
             <div className="flex justify-between items-center mb-4 sm:mb-6">
-              <h2 className="text-lg sm:text-xl font-semibold">{editingAddress ? 'Edit Address' : 'Add New Address'}</h2>
+              <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold">{editingAddress ? 'Edit Address' : 'Add New Address'}</h2>
               <button onClick={resetAddressForm} className="text-gray-500 hover:text-gray-700 text-2xl p-1">&times;</button>
             </div>
             
@@ -769,7 +702,7 @@ const AccountPage = () => {
               type="text"
               value={accountForm.firstName}
               onChange={(e) => setAccountForm({...accountForm, firstName: e.target.value})}
-              className="w-full border border-gray-300 px-3 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent rounded"
+              className="w-full border border-gray-300 px-3 lg:px-4 py-2 lg:py-3 text-sm sm:text-base lg:text-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent rounded lg:rounded-md"
             />
           </div>
           <div>
@@ -780,36 +713,36 @@ const AccountPage = () => {
               type="text"
               value={accountForm.lastName}
               onChange={(e) => setAccountForm({...accountForm, lastName: e.target.value})}
-              className="w-full border border-gray-300 px-3 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent rounded"
+              className="w-full border border-gray-300 px-3 lg:px-4 py-2 lg:py-3 text-sm sm:text-base lg:text-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent rounded lg:rounded-md"
             />
           </div>
         </div>
         
-        <div className="mb-4 sm:mb-6">
-          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+        <div className="mb-4 sm:mb-6 lg:mb-8">
+          <label className="block text-xs sm:text-sm lg:text-base font-medium text-gray-700 mb-1 sm:mb-2">
             Display Name *
           </label>
           <input
             type="text"
             value={accountForm.displayName}
             onChange={(e) => setAccountForm({...accountForm, displayName: e.target.value})}
-            className="w-full border border-gray-300 px-3 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent rounded"
+            className="w-full border border-gray-300 px-3 lg:px-4 py-2 lg:py-3 text-sm sm:text-base lg:text-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent rounded lg:rounded-md"
           />
         </div>
 
-        <div className="mb-6 sm:mb-8">
-          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+        <div className="mb-6 sm:mb-8 lg:mb-10">
+          <label className="block text-xs sm:text-sm lg:text-base font-medium text-gray-700 mb-1 sm:mb-2">
             Email Address *
           </label>
           <input
             type="email"
             value={accountForm.email}
             onChange={(e) => setAccountForm({...accountForm, email: e.target.value})}
-            className="w-full border border-gray-300 px-3 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent rounded"
+            className="w-full border border-gray-300 px-3 lg:px-4 py-2 lg:py-3 text-sm sm:text-base lg:text-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent rounded lg:rounded-md"
           />
         </div>
 
-        <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Password Change</h3>
+        <h3 className="text-base sm:text-lg lg:text-xl font-semibold mb-3 sm:mb-4">Password Change</h3>
         
         <div className="mb-4 sm:mb-6">
           <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
@@ -850,7 +783,7 @@ const AccountPage = () => {
         <button
           type="submit"
           disabled={accountSaving}
-          className="w-full sm:w-auto bg-black text-white px-6 sm:px-8 py-3 text-sm sm:text-base font-medium hover:bg-gray-800 transition-colors disabled:bg-gray-400 rounded"
+          className="w-full sm:w-auto bg-black text-white px-6 sm:px-8 lg:px-10 py-3 lg:py-4 text-sm sm:text-base lg:text-lg font-medium hover:bg-gray-800 transition-colors disabled:bg-gray-400 rounded lg:rounded-md"
         >
           {accountSaving ? 'Saving...' : 'Save Changes'}
         </button>
@@ -875,18 +808,18 @@ const AccountPage = () => {
     const isWishlist = id === 'wishlist';
     
     return (
-      <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+      <div className="border border-gray-200 rounded-lg lg:rounded-xl overflow-hidden bg-white">
         <button
           onClick={() => handleSectionToggle(id)}
-          className={`w-full flex items-center justify-between px-4 sm:px-5 py-4 text-left transition-colors ${
+          className={`w-full flex items-center justify-between px-4 sm:px-5 lg:px-6 py-4 lg:py-5 text-left transition-colors ${
             isOpen ? 'bg-gray-50' : 'hover:bg-gray-50'
           } ${isLogout ? 'text-red-600 hover:bg-red-50' : ''}`}
         >
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 lg:gap-4">
             <span className={`${isLogout ? 'text-red-500' : 'text-gray-500'}`}>
               {icon}
             </span>
-            <span className={`font-medium text-sm sm:text-base ${isLogout ? 'text-red-600' : 'text-gray-800'}`}>
+            <span className={`font-medium text-sm sm:text-base lg:text-lg ${isLogout ? 'text-red-600' : 'text-gray-800'}`}>
               {label}
             </span>
           </div>
@@ -900,7 +833,7 @@ const AccountPage = () => {
           )}
         </button>
         {!isLogout && !isWishlist && isOpen && (
-          <div className="px-4 sm:px-5 py-4 border-t border-gray-100 bg-white">
+          <div className="px-4 sm:px-5 lg:px-6 py-4 lg:py-5 border-t border-gray-100 bg-white">
             {children}
           </div>
         )}
@@ -923,14 +856,13 @@ const AccountPage = () => {
         className="w-full flex items-center justify-center"
         style={{
           background: 'linear-gradient(90deg, rgba(255, 255, 255, 1) 0%, rgba(254, 240, 239, 1) 50%, rgba(243, 251, 251, 1) 76%, rgba(254, 255, 255, 1) 98%)',
-          height: '140px'
+          height: 'clamp(140px, 15vw, 194px)'
         }}
       >
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
+        <div className="max-w-3xl lg:max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 
-            className="text-black"
+            className="text-black text-2xl sm:text-3xl lg:text-4xl xl:text-[42px]"
             style={{ 
-              fontSize: '28px',
               fontWeight: 'normal', 
               fontFamily: "'Albert Sans', sans-serif" 
             }}
@@ -947,8 +879,8 @@ const AccountPage = () => {
       </div>
 
       {/* Main Content - Accordion Style */}
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        <div className="space-y-3">
+      <div className="max-w-3xl lg:max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
+        <div className="space-y-3 lg:space-y-4">
           {/* Dashboard Section */}
           <AccordionSection 
             id="dashboard" 
@@ -1039,6 +971,14 @@ const AccountPage = () => {
 
       {/* Address Form Modal - rendered at root level to prevent focus issues */}
       {renderAddressFormModal()}
+      
+      {/* Toast Notification */}
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+        onClose={() => setToast({ ...toast, isVisible: false })}
+      />
     </div>
   );
 };

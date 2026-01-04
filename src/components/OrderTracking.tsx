@@ -97,10 +97,10 @@ const OrderTracking: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading tracking information...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto"></div>
+          <p className="mt-3 text-sm text-gray-600">Loading tracking information...</p>
         </div>
       </div>
     );
@@ -108,13 +108,13 @@ const OrderTracking: React.FC = () => {
 
   if (error || !trackingData) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Order Not Found</h2>
-          <p className="text-gray-600 mb-6">{error}</p>
+      <div className="min-h-screen bg-white flex items-center justify-center" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
+        <div className="text-center px-4">
+          <h2 className="text-xl font-semibold text-black mb-2">Order Not Found</h2>
+          <p className="text-sm text-gray-600 mb-4">{error}</p>
           <Link 
             to="/account?tab=orders" 
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+            className="inline-block bg-black text-white px-5 py-2 text-sm rounded hover:bg-gray-800 transition-colors"
           >
             View All Orders
           </Link>
@@ -124,91 +124,91 @@ const OrderTracking: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
+    <div className="min-h-screen bg-white py-4 sm:py-6 lg:py-10" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
+      <div className="max-w-4xl lg:max-w-5xl mx-auto px-3 sm:px-4 lg:px-6">
         {/* Header */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-bold text-gray-900">
+        <div className="border border-gray-200 rounded-sm lg:rounded-lg p-3 sm:p-4 lg:p-6 mb-3 sm:mb-4 lg:mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3 lg:mb-4">
+            <h1 className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-semibold text-black">
               Order #{trackingData.order._id.slice(-8)}
             </h1>
-            <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(trackingData.order.status, true)}`}>
+            <span className={`px-2.5 lg:px-3 py-1 lg:py-1.5 rounded lg:rounded-md text-xs lg:text-sm font-medium self-start ${getStatusColor(trackingData.order.status, true)}`}>
               {trackingData.order.status.charAt(0).toUpperCase() + trackingData.order.status.slice(1)}
             </span>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 lg:gap-6 text-xs sm:text-sm lg:text-base">
             <div>
-              <p className="text-gray-600">Order Date</p>
-              <p className="font-medium">{formatDate(trackingData.order.createdAt)}</p>
+              <p className="text-gray-500 mb-0.5 lg:mb-1">Order Date</p>
+              <p className="font-medium text-black">{formatDate(trackingData.order.createdAt)}</p>
             </div>
             <div>
-              <p className="text-gray-600">Total</p>
-              <p className="font-medium">₹{trackingData.order.total.toFixed(2)}</p>
+              <p className="text-gray-500 mb-0.5 lg:mb-1">Total</p>
+              <p className="font-medium text-black">₹{trackingData.order.total.toFixed(2)}</p>
             </div>
-            <div>
-              <p className="text-gray-600">Items</p>
-              <p className="font-medium">{trackingData.order.items.length} item(s)</p>
+            <div className="col-span-2 sm:col-span-1">
+              <p className="text-gray-500 mb-0.5 lg:mb-1">Items</p>
+              <p className="font-medium text-black">{trackingData.order.items.length} item(s)</p>
             </div>
           </div>
         </div>
 
         {/* Tracking Timeline */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Order Progress</h2>
+        <div className="border border-gray-200 rounded-sm lg:rounded-lg p-3 sm:p-4 lg:p-6 mb-3 sm:mb-4 lg:mb-6">
+          <h2 className="text-base sm:text-lg lg:text-xl xl:text-2xl font-semibold text-black mb-3 sm:mb-4 lg:mb-6">Order Progress</h2>
           
-          <div className="space-y-6">
+          <div className="space-y-4 lg:space-y-6">
             {trackingData.tracking.map((step, index) => (
               <div key={step.status} className="flex items-start">
                 <div className="flex-shrink-0">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                  <div className={`w-6 h-6 sm:w-7 sm:h-7 lg:w-9 lg:h-9 rounded-full flex items-center justify-center ${
                     step.completed 
-                      ? 'bg-green-500 text-white' 
+                      ? 'bg-black text-white' 
                       : 'bg-gray-200 text-gray-400'
                   }`}>
                     {step.completed ? (
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-5 lg:h-5" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
                     ) : (
-                      <span className="text-sm font-medium">{index + 1}</span>
+                      <span className="text-xs lg:text-sm font-medium">{index + 1}</span>
                     )}
                   </div>
                   {index < trackingData.tracking.length - 1 && (
-                    <div className={`w-0.5 h-12 mt-2 mx-auto ${
-                      step.completed ? 'bg-green-500' : 'bg-gray-200'
+                    <div className={`w-0.5 h-8 sm:h-10 lg:h-12 mt-1.5 mx-auto ${
+                      step.completed ? 'bg-black' : 'bg-gray-200'
                     }`}></div>
                   )}
                 </div>
                 
-                <div className="ml-4 flex-1">
-                  <h3 className="text-lg font-medium text-gray-900">{step.title}</h3>
-                  <p className="text-gray-600 mt-1">{step.description}</p>
+                <div className="ml-3 lg:ml-4 flex-1">
+                  <h3 className="text-sm sm:text-base lg:text-lg font-medium text-black">{step.title}</h3>
+                  <p className="text-xs sm:text-sm lg:text-base text-gray-600 mt-0.5">{step.description}</p>
                   {step.date && (
-                    <p className="text-sm text-gray-500 mt-1">{formatDate(step.date)}</p>
+                    <p className="text-xs text-gray-400 mt-1">{formatDate(step.date)}</p>
                   )}
                   
                   {step.trackingNumber && (
-                    <div className="mt-2">
-                      <p className="text-sm text-gray-600">
-                        Tracking Number: <span className="font-mono">{step.trackingNumber}</span>
+                    <div className="mt-1.5">
+                      <p className="text-xs text-gray-600">
+                        Tracking: <span className="font-mono">{step.trackingNumber}</span>
                       </p>
                       {step.trackingUrl && (
                         <a 
                           href={step.trackingUrl} 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 text-sm underline"
+                          className="text-black hover:text-gray-600 text-xs underline mt-0.5 inline-block"
                         >
-                          Track Package
+                          Track Package →
                         </a>
                       )}
                     </div>
                   )}
                   
                   {step.estimatedDelivery && (
-                    <p className="text-sm text-gray-600 mt-1">
-                      Estimated Delivery: {formatDate(step.estimatedDelivery)}
+                    <p className="text-xs text-gray-600 mt-1">
+                      Est. Delivery: {formatDate(step.estimatedDelivery)}
                     </p>
                   )}
                 </div>
@@ -218,33 +218,33 @@ const OrderTracking: React.FC = () => {
         </div>
 
         {/* Order Items */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Order Items</h2>
+        <div className="border border-gray-200 rounded-sm lg:rounded-lg p-3 sm:p-4 lg:p-6 mb-3 sm:mb-4 lg:mb-6">
+          <h2 className="text-base sm:text-lg lg:text-xl xl:text-2xl font-semibold text-black mb-3 sm:mb-4 lg:mb-6">Order Items</h2>
           <div className="divide-y divide-gray-100">
             {trackingData.order.items.map((item, index) => (
-              <div key={index} className="flex gap-5 py-6 first:pt-0 last:pb-0">
+              <div key={index} className="flex gap-3 lg:gap-5 py-3 lg:py-4 first:pt-0 last:pb-0">
                 {/* Product Image */}
                 <div className="flex-shrink-0">
                   <img
                     src={item.image || '/images/placeholder.jpg'}
                     alt={item.name}
-                    className="w-24 h-28 sm:w-28 sm:h-32 object-cover rounded-lg border border-gray-100"
+                    className="w-16 h-20 sm:w-20 sm:h-24 lg:w-24 lg:h-28 object-cover rounded lg:rounded-lg border border-gray-100"
                   />
                 </div>
                 
                 {/* Product Details */}
-                <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
+                <div className="flex-1 min-w-0 flex flex-col justify-between">
                   {/* Top: Name & Price */}
-                  <div className="flex justify-between items-start gap-4">
-                    <h3 className="font-semibold text-gray-900 text-base sm:text-lg leading-snug">
+                  <div className="flex justify-between items-start gap-2">
+                    <h3 className="font-medium text-black text-sm sm:text-base lg:text-lg leading-snug">
                       {item.name}
                     </h3>
                     <div className="flex-shrink-0 text-right">
-                      <p className="font-semibold text-gray-900 text-base sm:text-lg">
+                      <p className="font-semibold text-black text-sm sm:text-base lg:text-lg">
                         ₹{item.price.toFixed(2)}
                       </p>
                       {item.quantity > 1 && (
-                        <p className="text-xs text-gray-400 mt-0.5">
+                        <p className="text-xs lg:text-sm text-gray-400">
                           ₹{(item.price / item.quantity).toFixed(2)} each
                         </p>
                       )}
@@ -252,23 +252,23 @@ const OrderTracking: React.FC = () => {
                   </div>
                   
                   {/* Bottom: Attributes */}
-                  <div className="flex flex-wrap items-center gap-3 mt-4 text-sm">
-                    <span className="inline-flex items-center bg-gray-50 px-3 py-1.5 rounded-md">
+                  <div className="flex flex-wrap items-center gap-2 lg:gap-3 mt-2 text-xs lg:text-sm">
+                    <span className="inline-flex items-center bg-gray-50 px-2 py-1 rounded">
                       <span className="text-gray-500">Qty:</span>
-                      <span className="ml-1.5 font-medium text-gray-800">{item.quantity}</span>
+                      <span className="ml-1 font-medium text-black">{item.quantity}</span>
                     </span>
                     
                     {item.selectedColor && (
-                      <span className="inline-flex items-center bg-gray-50 px-3 py-1.5 rounded-md">
+                      <span className="inline-flex items-center bg-gray-50 px-2 py-1 rounded">
                         <span className="text-gray-500">Color:</span>
-                        <span className="ml-1.5 font-medium text-gray-800">{item.selectedColor}</span>
+                        <span className="ml-1 font-medium text-black">{item.selectedColor}</span>
                       </span>
                     )}
                     
                     {item.selectedSize && (
-                      <span className="inline-flex items-center bg-gray-50 px-3 py-1.5 rounded-md">
+                      <span className="inline-flex items-center bg-gray-50 px-2 py-1 rounded">
                         <span className="text-gray-500">Size:</span>
-                        <span className="ml-1.5 font-medium text-gray-800">{item.selectedSize}</span>
+                        <span className="ml-1 font-medium text-black">{item.selectedSize}</span>
                       </span>
                     )}
                   </div>
@@ -278,19 +278,19 @@ const OrderTracking: React.FC = () => {
           </div>
           
           {/* Order Summary */}
-          <div className="mt-6 pt-5 border-t border-gray-200">
+          <div className="mt-3 lg:mt-4 pt-3 lg:pt-4 border-t border-gray-200">
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">Total ({trackingData.order.items.length} items)</span>
-              <span className="text-xl font-bold text-gray-900">₹{trackingData.order.total.toFixed(2)}</span>
+              <span className="text-xs sm:text-sm lg:text-base text-gray-600">Total ({trackingData.order.items.length} items)</span>
+              <span className="text-base sm:text-lg lg:text-xl xl:text-2xl font-bold text-black">₹{trackingData.order.total.toFixed(2)}</span>
             </div>
           </div>
         </div>
 
         {/* Shipping Address */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Shipping Address</h2>
-          <div className="text-gray-600">
-            <p>{trackingData.order.shippingAddress.fullName}</p>
+        <div className="border border-gray-200 rounded-sm lg:rounded-lg p-3 sm:p-4 lg:p-6">
+          <h2 className="text-base sm:text-lg lg:text-xl xl:text-2xl font-semibold text-black mb-2 sm:mb-3 lg:mb-4">Shipping Address</h2>
+          <div className="text-xs sm:text-sm lg:text-base text-gray-600 space-y-0.5 lg:space-y-1">
+            <p className="font-medium text-black">{trackingData.order.shippingAddress.fullName}</p>
             <p>{trackingData.order.shippingAddress.addressLine1}</p>
             <p>
               {trackingData.order.shippingAddress.city}, {trackingData.order.shippingAddress.state} {trackingData.order.shippingAddress.postalCode}
@@ -299,10 +299,10 @@ const OrderTracking: React.FC = () => {
         </div>
 
         {/* Back to Orders */}
-        <div className="mt-8 text-center">
+        <div className="mt-4 sm:mt-6 lg:mt-8 text-center">
           <Link 
             to="/account?tab=orders" 
-            className="text-blue-600 hover:text-blue-800 underline"
+            className="text-black hover:text-gray-600 text-xs sm:text-sm lg:text-base underline inline-flex items-center"
           >
             ← Back to All Orders
           </Link>

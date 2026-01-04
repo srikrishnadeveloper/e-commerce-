@@ -23,9 +23,7 @@ export const useSiteConfig = (configKey = null) => {
 
       setData(result);
       setLastUpdated(new Date());
-      console.log(`[useSiteConfig] ✅ Loaded: ${configKey || 'all'}`);
     } catch (err) {
-      console.error(`[useSiteConfig] ❌ Load failed: ${configKey || 'all'}`, err?.message || err);
       setError(err?.message || 'Unknown error');
     } finally {
       setLoading(false);
@@ -95,9 +93,7 @@ export const useMultipleConfigs = (configKeys) => {
       const result = await siteConfigService.getMultipleConfigs(configKeys);
       setData(result);
       setLastUpdated(new Date());
-      console.log(`✅ Multiple configs loaded: ${configKeys.join(', ')}`);
     } catch (err) {
-      console.error('❌ Failed to load multiple configs:', err);
       setError(err.message);
     } finally {
       setLoading(false);

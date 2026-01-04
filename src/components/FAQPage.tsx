@@ -98,20 +98,20 @@ const FAQPage: React.FC = () => {
   };
 
   const AccordionSection: React.FC<AccordionSectionProps> = ({ sectionKey, section }) => (
-    <div className="mb-8">
-      <h2 className="text-xl font-semibold text-black mb-6">{section.title}</h2>
-      <div className="space-y-4">
+    <div className="mb-8 lg:mb-12">
+      <h2 className="text-xl lg:text-2xl xl:text-3xl font-semibold text-black mb-6 lg:mb-8">{section.title}</h2>
+      <div className="space-y-4 lg:space-y-5">
         {section.items.map((item) => (
-          <div key={item.id} className="border border-gray-200 rounded-lg overflow-hidden">
+          <div key={item.id} className="border border-gray-200 rounded-lg lg:rounded-xl overflow-hidden">
             <button
               onClick={() => toggleSection(item.id)}
-              className="w-full px-6 py-4 text-left bg-white hover:bg-gray-50 transition-colors duration-200 flex justify-between items-center"
+              className="w-full px-6 lg:px-8 py-4 lg:py-5 text-left bg-white hover:bg-gray-50 transition-colors duration-200 flex justify-between items-center"
             >
-              <span className="text-sm font-medium text-black pr-4">
+              <span className="text-sm lg:text-base xl:text-lg font-medium text-black pr-4">
                 {item.question}
               </span>
               <svg
-                className={`w-5 h-5 text-gray-500 transition-transform duration-200 ${
+                className={`w-5 h-5 lg:w-6 lg:h-6 text-gray-500 transition-transform duration-200 ${
                   expandedSection === item.id ? 'rotate-180' : ''
                 }`}
                 fill="none"
@@ -127,8 +127,8 @@ const FAQPage: React.FC = () => {
               </svg>
             </button>
             {expandedSection === item.id && (
-              <div className="px-6 pb-6 pt-2">
-                <p className="text-sm text-gray-600 leading-relaxed">
+              <div className="px-6 lg:px-8 pb-6 lg:pb-8 pt-2">
+                <p className="text-sm lg:text-base xl:text-lg text-gray-600 leading-relaxed">
                   {item.answer}
                 </p>
               </div>
@@ -142,12 +142,12 @@ const FAQPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-white" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
       {/* Page Header */}
-      <div className="text-center py-12 px-4">
-        <h1 className="text-4xl font-bold text-black mb-2">FAQ 01</h1>
+      <div className="text-center py-12 lg:py-16 xl:py-20 px-4">
+        <h1 className="text-4xl lg:text-5xl xl:text-[54px] font-bold text-black mb-2">FAQ</h1>
       </div>
 
       {/* Main Content Container */}
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+      <div className="max-w-3xl lg:max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 lg:pb-24">
         {/* FAQ Accordions */}
         <AccordionSection sectionKey="shopping" section={faqData.shopping} />
         <AccordionSection sectionKey="payment" section={faqData.payment} />

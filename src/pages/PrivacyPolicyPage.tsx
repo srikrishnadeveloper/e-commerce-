@@ -83,7 +83,7 @@ const PrivacyPolicyPage: React.FC = () => {
           setPolicyData({ ...defaultPolicyData, ...data });
         }
       } catch (error) {
-        console.log('Using default privacy policy data');
+        // Using default privacy policy data
       } finally {
         setIsLoading(false);
       }

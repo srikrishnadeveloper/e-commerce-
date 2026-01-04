@@ -17,18 +17,12 @@ const apiRequest = async (endpoint, options = {}) => {
 
     if (!response.ok) {
       const message = `HTTP ${response.status}: ${response.statusText} at ${endpoint}`;
-      console.error('[siteConfigService] Response Error:', message);
       throw new Error(message);
     }
 
     const json = await response.json();
     return json;
   } catch (error) {
-    console.error('[siteConfigService] ❌ API request failed:', {
-      endpoint,
-      baseUrl: API_BASE_URL,
-      error: error?.message || String(error)
-    });
     throw error;
   }
 };
@@ -38,11 +32,9 @@ class SiteConfigService {
   // Get all site configurations
   async getAllConfigs() {
     try {
-      console.log('[siteConfigService] 🔄 Fetching all site configs...');
       const response = await apiRequest('/siteconfig');
       // Accept both wrapped and direct formats
       if (response && response.success && response.data) {
-        console.log('[siteConfigService] ✅ All site configs fetched');
         return response.data;
       }
       if (response && !response.success) {
@@ -50,7 +42,6 @@ class SiteConfigService {
       }
       return response; // direct config map fallback
     } catch (error) {
-      console.error('[siteConfigService] ❌ Failed to fetch all site configs:', error?.message || error);
       throw error;
     }
   }
@@ -58,11 +49,9 @@ class SiteConfigService {
   // Get specific configuration by key
   async getConfig(key) {
     try {
-      console.log(`[siteConfigService] 🔄 Fetching config: ${key}`);
       const response = await apiRequest(`/siteconfig/${key}`);
       // Accept both wrapped and direct formats
       if (response && response.success && response.data) {
-        console.log(`[siteConfigService] ✅ Config fetched: ${key}`);
         return response.data;
       }
       if (response && response.success === false) {
@@ -70,7 +59,6 @@ class SiteConfigService {
       }
       return response; // direct section fallback
     } catch (error) {
-      console.error(`[siteConfigService] ❌ Failed to fetch config: ${key}`, error?.message || error);
       throw error;
     }
   }
@@ -201,7 +189,6 @@ siteConfigService.getMultipleConfigs = async (keys = []) => {
     });
     return result;
   } catch (error) {
-    console.error('[siteConfigService] ❌ getMultipleConfigs failed:', error?.message || error);
     const result = {};
     await Promise.all(keys.map(async (k) => {
       try {

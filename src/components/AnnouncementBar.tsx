@@ -26,7 +26,7 @@ const AnnouncementBar: React.FC = () => {
       return announcementData.announcements.filter((a: string) => a && a.trim().length > 0);
     }
     return [
-      'Welcome to our store - Free shipping on orders over $50!',
+      'Welcome to our store - Free shipping on orders over ₹50!',
       'Summer Sale - Up to 50% off selected items!',
       'New arrivals just landed - Shop the latest trends!'
     ];

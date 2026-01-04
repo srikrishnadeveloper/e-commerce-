@@ -196,13 +196,7 @@ const CheckoutPage: React.FC = () => {
     }
   };
 
-  const handleApplyDiscount = () => {
-    // Placeholder for discount code functionality
-    if (discountCode.trim()) {
-      setError('Discount codes coming soon!');
-      setTimeout(() => setError(''), 3000);
-    }
-  };
+
 
   const validateForm = (): boolean => {
     if (!billingDetails.firstName.trim()) {
@@ -412,7 +406,6 @@ const CheckoutPage: React.FC = () => {
       });
       rzp.open();
     } catch (err: any) {
-      console.error('Order creation failed:', err);
       setError(err.message || 'Failed to place order. Please try again.');
       setSubmitting(false);
     }
@@ -441,42 +434,42 @@ const CheckoutPage: React.FC = () => {
     <div className="min-h-screen bg-white" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
       {/* Page Header - Same style as ContactUs */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center flex items-center justify-center" style={{
+        <div className="text-center flex items-center justify-center rounded-lg lg:rounded-xl xl:rounded-2xl" style={{
           background: 'linear-gradient(90deg, rgba(255, 255, 255, 1) 0%, rgba(254, 240, 239, 1) 50%, rgba(243, 251, 251, 1) 76%, rgba(254, 255, 255, 1) 98%)',
-          height: '194px'
+          height: 'clamp(100px, 15vw, 194px)'
         }}>
-          <h1 className="text-black" style={{ fontSize: '42px', fontWeight: 'normal', fontFamily: "'Albert Sans', sans-serif" }}>
+          <h1 className="text-black text-2xl sm:text-3xl lg:text-4xl xl:text-[42px] font-normal" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
             Check Out
           </h1>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 xl:py-12">
         {error && (
           <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded" aria-live="polite">
             {error}
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 xl:gap-12">
           {/* Left Column - Billing Details */}
-          <div className="space-y-8">
+          <div className="space-y-3 sm:space-y-4 lg:space-y-5 xl:space-y-6">
             <div>
-              <h2 className="text-xl md:text-2xl font-bold text-black mb-6">
+              <h2 className="text-base sm:text-lg lg:text-xl xl:text-2xl font-bold text-black mb-3 sm:mb-4 lg:mb-6">
                 Billing details
               </h2>
               
               {/* Saved Addresses */}
               {savedAddresses.length > 0 && (
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                <div className="mb-4">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
                     Use saved address
                   </label>
                   <select
                     value={selectedAddressId}
                     onChange={(e) => handleAddressSelect(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
                   >
                     <option value="">Enter new address</option>
                     {savedAddresses.map((addr) => (
@@ -488,11 +481,11 @@ const CheckoutPage: React.FC = () => {
                 </div>
               )}
               
-              <div className="space-y-6">
+              <div className="space-y-4">
                 {/* Name Row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
                       First Name<span className="text-red-500">*</span>
                     </label>
                     <input
@@ -500,31 +493,31 @@ const CheckoutPage: React.FC = () => {
                       value={billingDetails.firstName}
                       onChange={(e) => handleInputChange('firstName', e.target.value)}
                       placeholder="Themesflat"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent placeholder-gray-400"
+                      className="w-full px-3 lg:px-4 py-2 lg:py-3 text-sm lg:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent placeholder-gray-400"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
                       Last Name<span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={billingDetails.lastName}
                       onChange={(e) => handleInputChange('lastName', e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent placeholder-gray-400"
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent placeholder-gray-400"
                     />
                   </div>
                 </div>
 
                 {/* Country */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
                     Country/Region<span className="text-red-500">*</span>
                   </label>
                   <select
                     value={billingDetails.country}
                     onChange={(e) => handleInputChange('country', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-gray-700"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-gray-700 text-sm"
                   >
                     <option value="">---</option>
                     <option value="United States">United States</option>
@@ -542,66 +535,66 @@ const CheckoutPage: React.FC = () => {
 
                 {/* City */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
                     Town/City<span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     value={billingDetails.city}
                     onChange={(e) => handleInputChange('city', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent placeholder-gray-400"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent placeholder-gray-400"
                   />
                 </div>
 
                 {/* Address */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
                     Address<span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     value={billingDetails.address}
                     onChange={(e) => handleInputChange('address', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent placeholder-gray-400"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent placeholder-gray-400"
                   />
                 </div>
 
                 {/* Phone */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
                     Phone Number<span className="text-red-500">*</span>
                   </label>
                   <input
                     type="tel"
                     value={billingDetails.phone}
                     onChange={(e) => handleInputChange('phone', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent placeholder-gray-400"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent placeholder-gray-400"
                   />
                 </div>
 
                 {/* Email */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
                     Email<span className="text-red-500">*</span>
                   </label>
                   <input
                     type="email"
                     value={billingDetails.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent placeholder-gray-400"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent placeholder-gray-400"
                   />
                 </div>
 
                 {/* Order Notes */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
                     Order notes (optional)<span className="text-red-500">*</span>
                   </label>
                   <textarea
                     value={billingDetails.orderNotes}
                     onChange={(e) => handleInputChange('orderNotes', e.target.value)}
-                    rows={4}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent placeholder-gray-400 resize-none"
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent placeholder-gray-400 resize-none text-sm"
                   />
                 </div>
               </div>
@@ -609,28 +602,28 @@ const CheckoutPage: React.FC = () => {
           </div>
 
           {/* Right Column - Order Summary */}
-          <div className="space-y-8">
+          <div className="space-y-3 sm:space-y-4 lg:space-y-5 xl:space-y-6">
             <div>
-              <h2 className="text-xl md:text-2xl font-bold text-black mb-6">
+              <h2 className="text-base sm:text-lg lg:text-xl xl:text-2xl font-bold text-black mb-3 sm:mb-4 lg:mb-6">
                 Your order
               </h2>
               
               {/* Order Items */}
-              <div className="space-y-4 mb-6">
+              <div className="space-y-2 sm:space-y-3 lg:space-y-4 mb-3 sm:mb-4 lg:mb-6">
                 {cart?.items.map((item) => (
-                  <div key={item._id} className="flex items-center space-x-4">
-                    <div className="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0">
+                  <div key={item._id} className="flex items-center space-x-3 sm:space-x-4">
+                    <div className="relative w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0">
                       <img
                         src={item.product.images?.[0] || '/images/placeholder.svg'}
                         alt={item.product.name}
                         className="w-full h-full object-cover"
                       />
-                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-gray-500 text-white text-xs rounded-full flex items-center justify-center">
+                      <span className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 bg-gray-500 text-white text-xs lg:text-sm rounded-full flex items-center justify-center">
                         {item.quantity}
                       </span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-black truncate">{item.product.name}</p>
+                      <p className="text-xs sm:text-sm lg:text-base font-medium text-black truncate">{item.product.name}</p>
                       {(item.selectedColor || item.selectedSize) && (
                         <p className="text-xs text-gray-500">
                           {item.selectedColor && <span>Color: {item.selectedColor}</span>}
@@ -639,32 +632,15 @@ const CheckoutPage: React.FC = () => {
                         </p>
                       )}
                     </div>
-                    <p className="text-sm font-medium text-black">{formatPrice(item.itemTotal)}</p>
+                    <p className="text-xs sm:text-sm lg:text-base font-medium text-black">{formatPrice(item.itemTotal)}</p>
                   </div>
                 ))}
               </div>
 
-              {/* Discount Code */}
-              <div className="flex space-x-2 mb-6">
-                <input
-                  type="text"
-                  value={discountCode}
-                  onChange={(e) => setDiscountCode(e.target.value)}
-                  placeholder="Discount code"
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent placeholder-gray-400"
-                />
-                <button
-                  onClick={handleApplyDiscount}
-                  className="px-6 py-3 bg-black text-white rounded-lg font-medium hover:bg-gray-800 transition-colors"
-                >
-                  Apply
-                </button>
-              </div>
-
               {/* Total */}
-              <div className="flex justify-between items-center py-4 border-t border-gray-200">
-                <span className="text-lg font-semibold text-black">Total</span>
-                <span className="text-lg font-semibold text-black">{formatPrice(cart?.total || 0)}</span>
+              <div className="flex justify-between items-center py-3 sm:py-4 lg:py-5 border-t border-gray-200">
+                <span className="text-base sm:text-lg lg:text-xl font-semibold text-black">Total</span>
+                <span className="text-base sm:text-lg lg:text-xl font-bold text-black">{formatPrice(cart?.total || 0)}</span>
               </div>
 
               {/* Payment Methods */}
@@ -699,23 +675,23 @@ const CheckoutPage: React.FC = () => {
               </div>
 
               {/* Privacy Notice */}
-              <p className="text-sm text-gray-600 mt-6">
+              <p className="text-sm lg:text-base text-gray-600 mt-6 lg:mt-8">
                 Your personal data will be used to process your order, support your experience throughout this website, and for other purposes described in our
                 <a href="/privacy-policy" className="underline hover:text-black">privacy policy</a>.
               </p>
 
               {/* Terms Agreement */}
-              <div className="flex items-start space-x-3 mt-4">
+              <div className="flex items-start space-x-3 mt-4 lg:mt-6">
                 <input
                   type="checkbox"
                   id="agreeTerms"
                   checked={agreeTerms}
                   onChange={(e) => setAgreeTerms(e.target.checked)}
-                  className="w-4 h-4 mt-1 text-black border-gray-300 rounded focus:ring-black"
+                  className="w-4 h-4 lg:w-5 lg:h-5 mt-1 text-black border-gray-300 rounded focus:ring-black"
                 />
-                <label htmlFor="agreeTerms" className="text-sm text-gray-700">
+                <label htmlFor="agreeTerms" className="text-sm lg:text-base text-gray-700">
                   I have read and agree to the website
-                  <a href="/terms-and-conditions" className="underline hover:text-black">terms and conditions</a>
+                  <a href="/policies#terms" className="underline hover:text-black">terms and conditions</a>
                 </label>
               </div>
 
@@ -723,7 +699,7 @@ const CheckoutPage: React.FC = () => {
               <button
                 onClick={handlePlaceOrder}
                 disabled={submitting}
-                className={`w-full mt-6 py-4 px-8 rounded-lg font-medium text-lg transition-colors duration-200 ${
+                className={`w-full mt-4 sm:mt-6 lg:mt-8 py-2.5 sm:py-3 lg:py-4 px-6 sm:px-8 rounded-lg font-medium text-base sm:text-lg lg:text-xl transition-colors duration-200 ${
                   submitting
                     ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
                     : 'bg-black text-white hover:bg-gray-800'

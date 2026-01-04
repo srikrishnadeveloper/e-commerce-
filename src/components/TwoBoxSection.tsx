@@ -31,7 +31,6 @@ const TwoBoxSection: React.FC = () => {
           setFeaturedCollections(config.featuredCollections);
         }
       } catch (error) {
-        console.error('Error loading site config:', error);
         // Set fallback config on error
         setFeaturedCollections({
           title: 'Featured Collections',

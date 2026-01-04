@@ -83,7 +83,7 @@ const TermsConditionsPage: React.FC = () => {
           setPolicyData({ ...defaultPolicyData, ...data });
         }
       } catch (error) {
-        console.log('Using default terms and conditions data');
+        // Using default terms and conditions data
       } finally {
         setIsLoading(false);
       }

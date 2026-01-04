@@ -34,7 +34,7 @@ const HeroCarousel = () => {
           setSlides(config.slides);
         }
       })
-      .catch(err => console.error('Error fetching hero config:', err));
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -295,8 +295,8 @@ const HeroCarousel = () => {
               {/* Main Heading */}
               <h2 className={`font-normal mb-3 sm:mb-6 leading-tight text-black ${
                 index === activeIndex 
-                  ? 'text-[32px] sm:text-[48px] lg:text-[68px]' 
-                  : 'text-[24px] sm:text-[36px] lg:text-[48px]'
+                  ? 'text-[28px] sm:text-[40px] lg:text-[56px]' 
+                  : 'text-[20px] sm:text-[30px] lg:text-[40px]'
               }`}>
                 {slide.heading.split('\n').map((line, lineIndex) => (
                   <React.Fragment key={lineIndex}>
@@ -320,6 +320,7 @@ const HeroCarousel = () => {
                 <a
                   href={slide.buttonLink || '/products'}
                   ref={buttonRef}
+                  style={{ marginTop: '30px' }}
                   className="inline-flex items-center border-2 border-black px-4 sm:px-8 py-2 sm:py-3 rounded-full text-sm sm:text-lg font-medium transition-all duration-300 hover:bg-black hover:text-white group text-black"
                 >
                   {slide.button}

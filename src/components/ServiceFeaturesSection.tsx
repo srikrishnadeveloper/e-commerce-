@@ -14,18 +14,13 @@ const ServiceFeaturesSection: React.FC = () => {
   useEffect(() => {
     const loadFeaturesSection = async () => {
       try {
-        console.log('[ServiceFeaturesSection] 🔄 Loading...');
         const homepage = await siteConfigService.getHomepage();
-        console.log('[ServiceFeaturesSection] 📦 Homepage response:', homepage);
-        console.log('[ServiceFeaturesSection] 📦 featuresSection:', homepage?.featuresSection);
-        console.log('[ServiceFeaturesSection] ✅ enabled:', homepage?.featuresSection?.enabled);
         
         if (homepage?.featuresSection) {
           setFeaturesSection(homepage.featuresSection);
         }
         setLoading(false);
       } catch (error) {
-        console.error('[ServiceFeaturesSection] ❌ Error:', error);
         setLoading(false);
       }
     };
@@ -34,22 +29,17 @@ const ServiceFeaturesSection: React.FC = () => {
   }, []);
 
   if (loading) {
-    console.log('[ServiceFeaturesSection] ⏳ Still loading...');
     return null;
   }
 
   if (!featuresSection) {
-    console.log('[ServiceFeaturesSection] ❌ No data found');
     return null;
   }
 
   if (featuresSection.enabled === false) {
-    console.log('[ServiceFeaturesSection] 🚫 Section is DISABLED');
     return null;
   }
 
-  console.log('[ServiceFeaturesSection] ✅✅✅ RENDERING with', featuresSection.features?.length, 'features');
-  
   const features: FeatureItem[] = featuresSection.features || [];
   
   // Reorder features for mobile: put 24/7 Support (headphones) first
@@ -84,34 +74,34 @@ const ServiceFeaturesSection: React.FC = () => {
   };
 
   return (
-    <section className="w-full py-16 bg-white">
+    <section className="w-full py-3 sm:py-6 md:py-8 bg-white">
       <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header removed intentionally */}
 
         {/* Mobile Carousel View */}
         <div className="block sm:hidden">
           {/* Current Feature Card */}
-          <div className="flex flex-col items-center text-center px-8 py-8">
+          <div className="flex flex-col items-center text-center px-4 py-2">
             {/* Icon */}
-            <div className="bg-gray-100 rounded-full flex items-center justify-center w-20 h-20 mb-6">
+            <div className="bg-gray-100 rounded-full flex items-center justify-center w-14 h-14 mb-2">
               <div className="text-black">
-                {iconMap[mobileFeatures[currentSlide]?.icon] || <div className="w-10 h-10 bg-gray-400 rounded" />}
+                {iconMap[mobileFeatures[currentSlide]?.icon] || <div className="w-8 h-8 bg-gray-400 rounded" />}
               </div>
             </div>
             
             {/* Title */}
-            <h3 className="text-xl font-semibold text-black mb-3 leading-tight" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
+            <h3 className="text-base font-semibold text-black mb-1.5 leading-tight" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
               {mobileFeatures[currentSlide]?.title || 'Feature'}
             </h3>
             
             {/* Description */}
-            <p className="text-base text-black leading-relaxed" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
+            <p className="text-sm text-black leading-relaxed" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
               {mobileFeatures[currentSlide]?.description || 'Feature description'}
             </p>
           </div>
 
           {/* Navigation Dots */}
-          <div className="flex justify-center space-x-2 mt-6">
+          <div className="flex justify-center space-x-2 mt-2">
             {mobileFeatures.map((_, index) => (
               <button
                 key={index}

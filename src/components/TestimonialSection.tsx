@@ -20,7 +20,6 @@ const TestimonialSection: React.FC = () => {
         const homepageConfig = await siteConfigService.getConfig('homepage');
         setConfig(homepageConfig);
       } catch (error) {
-        console.error('Error loading homepage config:', error);
         // Set fallback config on error
         setConfig({
           testimonialSection: {

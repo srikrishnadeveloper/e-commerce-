@@ -228,7 +228,7 @@ const ProductListingPage: React.FC = () => {
           return initialCategory;
         });
       } catch (error) {
-        console.error('Error loading data:', error);
+        // Error loading data - silently handled
       } finally {
         setLoading(false);
       }
@@ -365,7 +365,6 @@ const ProductListingPage: React.FC = () => {
       } catch (error) {
         // Revert optimistic update on failure
         setInCart(false);
-        console.error('Failed to add to cart:', error);
       }
     };
 
@@ -384,14 +383,13 @@ const ProductListingPage: React.FC = () => {
       } catch (error) {
         // Revert optimistic update on failure
         setInWishlist(false);
-        console.error('Failed to add to wishlist:', error);
       }
     };
 
     if (viewMode === 'list') {
       return (
-  <Link to={`/product/${(product._id || product.id)}`} className="flex flex-col sm:flex-row gap-3 sm:gap-4 p-3 sm:p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow group block">
-          <div className="w-full sm:w-20 md:w-24 h-48 sm:h-20 md:h-24 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+  <Link to={`/product/${(product._id || product.id)}`} className="flex flex-col sm:flex-row gap-3 sm:gap-4 lg:gap-6 p-3 sm:p-4 lg:p-6 border border-gray-200 rounded-lg hover:shadow-md transition-shadow group block">
+          <div className="w-full sm:w-20 md:w-24 lg:w-32 h-48 sm:h-20 md:h-24 lg:h-32 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
             <img
               src={product.images[0]}
               alt={product.name}
@@ -409,19 +407,19 @@ const ProductListingPage: React.FC = () => {
           
           <div className="flex-1 flex flex-col justify-between gap-3 sm:gap-0">
             <div>
-              <h3 className="text-base sm:text-lg font-medium text-black mb-1 sm:mb-2 group-hover:text-gray-700 transition-colors line-clamp-2">
+              <h3 className="text-base sm:text-lg lg:text-xl font-medium text-black mb-1 sm:mb-2 group-hover:text-gray-700 transition-colors line-clamp-2">
                 {product.name}
               </h3>
-              <p className="text-xs sm:text-sm text-gray-600 mb-2">Category: {product.category}</p>
+              <p className="text-xs sm:text-sm lg:text-base text-gray-600 mb-2">Category: {product.category}</p>
             </div>
             
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
               <div className="flex flex-col gap-2">
                 {/* Price with discount */}
                 <div className="flex items-center gap-2">
-                  <span className="text-lg sm:text-xl font-semibold text-black">₹{product.price}</span>
+                  <span className="text-lg sm:text-xl lg:text-2xl font-semibold text-black">₹{product.price}</span>
                   {product.originalPrice && product.originalPrice > product.price && (
-                    <span className="text-sm text-gray-500 line-through">₹{product.originalPrice}</span>
+                    <span className="text-sm lg:text-base text-gray-500 line-through">₹{product.originalPrice}</span>
                   )}
                 </div>
 
@@ -470,7 +468,7 @@ const ProductListingPage: React.FC = () => {
                 <button 
                   onClick={handleAddToCart}
                   disabled={inCart}
-                  className={`px-3 sm:px-4 py-2 rounded-lg transition-colors text-sm sm:text-base ${inCart ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-black text-white hover:bg-gray-800'}`}
+                  className={`px-3 sm:px-4 lg:px-6 py-2 lg:py-3 rounded-lg transition-colors text-sm sm:text-base lg:text-lg ${inCart ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-black text-white hover:bg-gray-800'}`}
                 >
                   {inCart ? 'In Cart' : 'Add to Cart'}
                 </button>
@@ -513,23 +511,23 @@ const ProductListingPage: React.FC = () => {
             <button 
               onClick={handleAddToCart}
               disabled={inCart}
-              className={`w-full py-1.5 sm:py-2 rounded-lg transition-colors text-xs sm:text-sm ${inCart ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-black text-white hover:bg-gray-800'}`}
+              className={`w-full py-1.5 sm:py-2 lg:py-3 rounded-lg transition-colors text-xs sm:text-sm lg:text-base ${inCart ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-black text-white hover:bg-gray-800'}`}
             >
               {inCart ? 'In Cart' : 'Add to Cart'}
             </button>
           </div>
         </div>
         
-        <div className="text-center px-1">
-          <h3 className="text-xs sm:text-sm font-medium text-black mb-1 group-hover:text-gray-700 transition-colors line-clamp-2 min-h-[2.5rem] sm:min-h-[2.8rem]">
+        <div className="text-center px-1 lg:px-2">
+          <h3 className="text-xs sm:text-sm lg:text-base font-medium text-black mb-1 lg:mb-2 group-hover:text-gray-700 transition-colors line-clamp-2 min-h-[2.5rem] sm:min-h-[2.8rem] lg:min-h-[3.2rem]">
             {product.name}
           </h3>
 
           {/* Price with discount */}
           <div className="flex items-center justify-center gap-2 mb-1">
-            <span className="text-sm sm:text-base font-semibold text-black">₹{product.price}</span>
+            <span className="text-sm sm:text-base lg:text-lg font-semibold text-black">₹{product.price}</span>
             {product.originalPrice && product.originalPrice > product.price && (
-              <span className="text-xs text-gray-500 line-through">₹{product.originalPrice}</span>
+              <span className="text-xs lg:text-sm text-gray-500 line-through">₹{product.originalPrice}</span>
             )}
           </div>
 
@@ -551,20 +549,6 @@ const ProductListingPage: React.FC = () => {
           {!product.inStock && (
             <div className="text-xs text-red-600 mb-1">Out of Stock</div>
           )}
-
-          {/* Color Swatches */}
-          <div className="flex justify-center gap-1">
-            {product.colors.slice(0, 4).map((color: Color, index: number) => (
-              <button
-                key={index}
-                className={`w-3 h-3 sm:w-4 sm:h-4 rounded-full border ${getColorClass(color.name)} hover:scale-110 transition-transform`}
-                title={color.name}
-              />
-            ))}
-            {product.colors.length > 4 && (
-              <span className="text-xs text-gray-500 ml-1">+{product.colors.length - 4}</span>
-            )}
-          </div>
         </div>
       </Link>
     );
@@ -575,28 +559,28 @@ const ProductListingPage: React.FC = () => {
     <div className="space-y-8">
       {/* Filter Button */}
       <div className="flex items-center gap-2 pb-4 border-b">
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-5 h-5 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707v4.586a1 1 0 01-.553.894l-4 2A1 1 0 019 21V14.414a1 1 0 00-.293-.707L2.293 7.293A1 1 0 012 6.586V4z" />
         </svg>
-        <span className="text-sm font-medium">Filter</span>
+        <span className="text-sm lg:text-base font-medium">Filter</span>
       </div>
 
       {/* Product Categories */}
       <div>
-        <h3 className="text-base font-semibold text-black mb-4">Product categories</h3>
+        <h3 className="text-base lg:text-lg font-semibold text-black mb-4">Product categories</h3>
         <div className="space-y-2">
           {categories.map((category) => (
             <button
               key={category.name}
               onClick={() => handleSelectCategory(category.name)}
-              className={`w-full flex items-center justify-between p-2 text-left rounded transition-colors ${
+              className={`w-full flex items-center justify-between p-2 lg:p-3 text-left rounded transition-colors ${
                 selectedCategory === category.name
                   ? 'bg-gray-100 text-black font-medium'
                   : 'text-gray-700 hover:bg-gray-50'
               }`}
             >
-              <span className="text-sm">{category.name}</span>
-              <span className="text-xs text-gray-500">({category.count})</span>
+              <span className="text-sm lg:text-base">{category.name}</span>
+              <span className="text-xs lg:text-sm text-gray-500">({category.count})</span>
             </button>
           ))}
         </div>
@@ -604,7 +588,7 @@ const ProductListingPage: React.FC = () => {
 
       {/* Price Range Filter */}
       <div>
-        <h3 className="text-base font-semibold text-black mb-4">Price Range</h3>
+        <h3 className="text-base lg:text-lg font-semibold text-black mb-4">Price Range</h3>
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <input
@@ -619,7 +603,7 @@ const ProductListingPage: React.FC = () => {
                   setMinPriceInput(value);
                 }
               }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-black"
+              className="w-full px-3 py-2 lg:px-4 lg:py-3 border border-gray-300 rounded-md text-sm lg:text-base focus:outline-none focus:ring-2 focus:ring-black"
             />
             <span className="text-gray-500">-</span>
             <input
@@ -634,7 +618,7 @@ const ProductListingPage: React.FC = () => {
                   setMaxPriceInput(value);
                 }
               }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-black"
+              className="w-full px-3 py-2 lg:px-4 lg:py-3 border border-gray-300 rounded-md text-sm lg:text-base focus:outline-none focus:ring-2 focus:ring-black"
             />
           </div>
           <button
@@ -643,36 +627,11 @@ const ProductListingPage: React.FC = () => {
               const minVal = minPriceInput === '' ? 0 : parseInt(minPriceInput, 10);
               const maxVal = maxPriceInput === '' ? 100000 : parseInt(maxPriceInput, 10);
               setPriceRange([minVal, maxVal]);
-              console.log('Price filter applied:', [minVal, maxVal]);
             }}
-            className="w-full py-2 bg-black text-white rounded-md text-sm hover:bg-gray-800 transition-colors"
+            className="w-full py-2 lg:py-3 bg-black text-white rounded-md text-sm lg:text-base hover:bg-gray-800 transition-colors"
           >
             Apply Filter
           </button>
-        </div>
-      </div>
-
-      {/* Follow Us */}
-      <div>
-        <h3 className="text-base font-semibold text-black mb-4">Follow us</h3>
-        <div className="flex gap-3">
-          {[
-            { icon: 'facebook', href: '#' },
-            { icon: 'twitter', href: '#' },
-            { icon: 'instagram', href: '#' },
-            { icon: 'tiktok', href: '#' },
-            { icon: 'pinterest', href: '#' }
-          ].map((social) => (
-            <a
-              key={social.icon}
-              href={social.href}
-              className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
-            >
-              <svg className="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-              </svg>
-            </a>
-          ))}
         </div>
       </div>
     </div>
@@ -681,14 +640,14 @@ const ProductListingPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-white" style={{ fontFamily: "'Albert Sans', sans-serif" }}>
       {/* Hero Section */}
-      <div className="text-center py-6 sm:py-8 lg:py-12 px-4">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-black mb-2">{pageContent.title}</h1>
-        <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto">{pageContent.description}</p>
+      <div className="text-center py-6 sm:py-8 lg:py-16 px-4">
+        <h1 className="text-2xl sm:text-3xl lg:text-5xl font-bold text-black mb-2 lg:mb-4">{pageContent.title}</h1>
+        <p className="text-sm sm:text-base lg:text-lg text-gray-600 max-w-2xl mx-auto">{pageContent.description}</p>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 sm:pb-12 lg:pb-16">
-        <div className="flex gap-4 lg:gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 sm:pb-12 lg:pb-20">
+        <div className="flex gap-4 lg:gap-12">
           {/* Desktop Sidebar - Hide at 1010px */}
           <div className="hidden filter-hide:block w-80 flex-shrink-0">
             {sidebarContent}

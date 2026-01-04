@@ -145,7 +145,7 @@ class OrderService {
 
   // Calculate shipping cost
   calculateShipping(subtotal) {
-    return subtotal > 50 ? 0 : 10; // Free shipping over $50
+    return subtotal > 50 ? 0 : 10; // Free shipping over ₹50
   }
 
   // Format price

@@ -113,7 +113,6 @@ const BillingPage: React.FC<BillingPageProps> = () => {
         });
       }
     } catch (error: any) {
-      console.error('Order creation failed:', error);
       setErrors({ submit: error.message || 'Failed to create order. Please try again.' });
     } finally {
       setIsLoading(false);

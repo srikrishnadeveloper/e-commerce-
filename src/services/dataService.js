@@ -22,7 +22,6 @@ const apiRequest = async (endpoint, options = {}) => {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error(`API Request failed for ${endpoint}:`, error);
     throw error;
   }
 };
@@ -42,11 +41,9 @@ export const getProducts = async (params = {}) => {
     const endpoint = queryString ? `/products?${queryString}` : '/products';
     const response = await apiRequest(endpoint);
     
-    console.log('✅ Products fetched from backend:', response.data?.length || 0, 'products');
     // Return just the products array for backward compatibility
     return response.data || [];
   } catch (error) {
-    console.error('❌ Error fetching products from backend:', error);
     throw error; // Don't fallback to static data, let the error propagate
   }
 };
@@ -61,24 +58,81 @@ export const getProductById = async (productId) => {
     const response = await apiRequest(`/products/${productId}`);
     return response.data || null;
   } catch (error) {
-    console.error(`Error fetching product ${productId}:`, error);
     return null;
   }
 };
 
 /**
  * Get related products for a given product
- * @param {number|string} productId - Product ID
+ * First tries to get products from the same category, then fills with other categories to ensure minimum 4 products
+ * @param {string} productId - Product ID
+ * @param {string|null} categoryId - Category ID for better related products (optional)
  * @param {number} limit - Number of related products to fetch
  * @returns {Promise<Array>} Array of related products
  */
-export const getRelatedProducts = async (productId, limit = 4) => {
+export const getRelatedProducts = async (productId, categoryId = null, limit = 8) => {
+  const MIN_PRODUCTS = 4; // Always ensure at least 4 products
+  const targetCount = Math.max(limit, MIN_PRODUCTS);
+  
   try {
-    const response = await apiRequest(`/products/${productId}/related?limit=${limit}`);
-    return response.data || [];
+    // Step 1: Get ALL products first
+    const allProducts = await getProducts();
+    
+    if (!allProducts || allProducts.length === 0) {
+      return [];
+    }
+    
+    // Step 2: Filter out current product
+    const availableProducts = allProducts.filter(p => {
+      const pid = (p._id || p.id || '').toString();
+      return pid !== productId;
+    });
+    
+    // Step 3: Separate same category and other category products
+    const sameCategoryProducts = [];
+    const otherCategoryProducts = [];
+    
+    for (const product of availableProducts) {
+      const productCatId = (product.categoryId || '').toString();
+      const currentCatId = (categoryId || '').toString();
+      
+      if (categoryId && productCatId === currentCatId) {
+        sameCategoryProducts.push(product);
+      } else {
+        otherCategoryProducts.push(product);
+      }
+    }
+    
+    // Step 4: Combine - prioritize same category, then fill with others
+    let relatedProducts = [...sameCategoryProducts];
+    
+    // Add from other categories to reach minimum
+    for (const product of otherCategoryProducts) {
+      if (relatedProducts.length >= targetCount) break;
+      relatedProducts.push(product);
+    }
+    
+    // Step 5: Shuffle for variety
+    for (let i = relatedProducts.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [relatedProducts[i], relatedProducts[j]] = [relatedProducts[j], relatedProducts[i]];
+    }
+    
+    // Step 6: Return at least MIN_PRODUCTS (or all available if less)
+    return relatedProducts.slice(0, targetCount);
+    
   } catch (error) {
-    console.error(`Error fetching related products for ${productId}:`, error);
-    return [];
+    // Fallback: try to get all products
+    try {
+      const allProducts = await getProducts();
+      const filtered = allProducts.filter(p => {
+        const pid = (p._id || p.id || '').toString();
+        return pid !== productId;
+      });
+      return filtered.slice(0, MIN_PRODUCTS);
+    } catch {
+      return [];
+    }
   }
 };
 
@@ -90,10 +144,8 @@ export const getRelatedProducts = async (productId, limit = 4) => {
 export const getFeaturedProducts = async (limit = 8) => {
   try {
     const response = await apiRequest(`/products/featured?limit=${limit}`);
-    console.log('✅ Featured products fetched from backend:', response.data?.length || 0, 'products');
     return response.data || [];
   } catch (error) {
-    console.error('❌ Error fetching featured products from backend:', error);
     throw error; // Don't fallback to static data, let the error propagate
   }
 };
@@ -111,10 +163,8 @@ export const getOnSaleProducts = async (limit = 8) => {
     const productsWithDeals = allProducts.filter(product => 
       product.originalPrice && product.originalPrice > product.price
     );
-    console.log('✅ Sale products fetched from backend:', productsWithDeals.length, 'products');
     return productsWithDeals.slice(0, limit);
   } catch (error) {
-    console.error('❌ Error fetching sale products from backend:', error);
     throw error; // Don't fallback to static data, let the error propagate
   }
 };
@@ -127,10 +177,8 @@ export const getOnSaleProducts = async (limit = 8) => {
 export const getProductsByCategory = async (categoryId) => {
   try {
     const response = await apiRequest(`/products/category/${categoryId}`);
-    console.log('✅ Category products fetched from backend:', response.data?.length || 0, 'products');
     return response.data || response || [];
   } catch (error) {
-    console.error(`❌ Error fetching products for category ${categoryId} from backend:`, error);
     throw error; // Don't fallback to static data, let the error propagate
   }
 };
@@ -143,10 +191,8 @@ export const getProductsByCategory = async (categoryId) => {
 export const getBestsellerProducts = async (limit = 8) => {
   try {
     const response = await apiRequest(`/products/bestsellers?limit=${limit}`);
-    console.log('✅ Bestseller products fetched from backend:', response.data?.length || 0, 'products');
     return response.data || response || [];
   } catch (error) {
-    console.error('❌ Error fetching bestseller products from backend:', error);
     throw error; // Don't fallback to static data, let the error propagate
   }
 };
@@ -162,10 +208,8 @@ export const getBestSellerProducts = getBestsellerProducts;
 export const getHotDealProducts = async (limit = 8) => {
   try {
     const response = await apiRequest(`/products/hotdeals?limit=${limit}`);
-    console.log('✅ Hot deal products fetched from backend:', response.data?.length || 0, 'products');
     return response.data || response || [];
   } catch (error) {
-    console.error('❌ Error fetching hot deal products from backend:', error);
     throw error; // Don't fallback to static data, let the error propagate
   }
 };
@@ -181,10 +225,8 @@ export const getHotDealProducts = async (limit = 8) => {
 export const getCategories = async () => {
   try {
     const response = await apiRequest('/categories');
-    console.log('✅ Categories fetched from backend:', response.data?.length || 0, 'categories');
     return response.data || [];
   } catch (error) {
-    console.error('❌ Error fetching categories from backend:', error);
     throw error; // Don't fallback to static data, let the error propagate
   }
 };
@@ -199,7 +241,6 @@ export const getCategoryById = async (categoryId) => {
     const response = await apiRequest(`/categories/${categoryId}`);
     return response.data || null;
   } catch (error) {
-    console.error(`Error fetching category ${categoryId}:`, error);
     return null;
   }
 };
@@ -218,8 +259,6 @@ export const getSiteConfig = async (businessType = null) => {
     const endpoint = businessType ? `/siteconfig?businessType=${businessType}` : '/siteconfig';
     const response = await apiRequest(endpoint);
     
-    console.log('✅ Site config fetched from backend');
-    
     // Handle the backend response format
     if (response.data && response.data.main && response.data.main.data) {
       // Return the main config data
@@ -234,7 +273,6 @@ export const getSiteConfig = async (businessType = null) => {
     
     return response.data || response || {};
   } catch (error) {
-    console.error('❌ Error fetching site configuration from backend:', error);
     throw error; // Don't fallback to static data, let the error propagate
   }
 };
@@ -308,7 +346,6 @@ export const searchProducts = async (query, filters = {}) => {
     const response = await getProducts(params);
     return response || [];
   } catch (error) {
-    console.error('Error searching products:', error);
     return [];
   }
 };
