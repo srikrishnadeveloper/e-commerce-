@@ -2,20 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import siteConfigService from '../services/siteConfigService';
 import { Collection } from '../types';
-
-// Backend API URL for images
-const API_BASE_URL = 'http://localhost:5001';
-
-// Helper to normalize image URL
-const getImageUrl = (imagePath: string): string => {
-  if (!imagePath) return '/images/placeholder.jpg';
-  // If already absolute URL, use as-is
-  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-    return imagePath;
-  }
-  // Prepend backend URL for relative paths
-  return `${API_BASE_URL}${imagePath.startsWith('/') ? '' : '/'}${imagePath}`;
-};
+import { getImageUrl } from '../utils/imageUrl';
 
 const TwoBoxSection: React.FC = () => {
   const [currentSlide, setCurrentSlide] = useState<number>(0);
@@ -111,9 +98,17 @@ const TwoBoxSection: React.FC = () => {
         </div>
 
         {/* Mobile Carousel View */}
-        <div className="block sm:hidden px-4">
+        <div className="block sm:hidden px-2">
+          {/* Mobile Section Title */}
+          <h2
+            className="text-xl font-semibold text-black text-center mb-6"
+            style={{ fontFamily: "'Albert Sans', sans-serif" }}
+          >
+            {featuredCollections.title}
+          </h2>
+          
           {/* Current Collection Card */}
-          <div className="relative overflow-hidden bg-gray-100 rounded-lg aspect-[5/4] transition-transform duration-300 hover:scale-[1.02]">
+          <div className="relative overflow-hidden bg-gray-100 rounded-xl shadow-lg" style={{ minHeight: '420px' }}>
             {/* Background Image */}
             <div
               className="absolute inset-0 bg-cover bg-center transition-transform duration-700"
@@ -127,34 +122,42 @@ const TwoBoxSection: React.FC = () => {
             <div className={`absolute inset-0 bg-gradient-to-t ${featuredCollections.collections[currentSlide].gradient}`} />
 
             {/* Content */}
-            <div className="absolute inset-0 flex flex-col justify-end p-6">
+            <div className="absolute inset-0 flex flex-col justify-end p-6 pb-8">
               <div className="text-white">
+                {/* Subtitle */}
+                <p
+                  className="text-sm font-light mb-2 opacity-90 text-white tracking-wide"
+                  style={{ fontFamily: "'Albert Sans', sans-serif" }}
+                >
+                  {featuredCollections.collections[currentSlide].subtitle}
+                </p>
+                
                 {/* Title */}
                 <h3
-                  className="text-2xl font-medium mb-2 leading-tight text-white"
+                  className="text-2xl font-semibold mb-3 leading-tight text-white"
                   style={{ fontFamily: "'Albert Sans', sans-serif" }}
                 >
                   {featuredCollections.collections[currentSlide].title}
                 </h3>
 
-                {/* Subtitle */}
+                {/* Description */}
                 <p
-                  className="text-sm font-light mb-4 opacity-90 text-white"
+                  className="text-sm font-light mb-5 opacity-90 text-white leading-relaxed line-clamp-3"
                   style={{ fontFamily: "'Albert Sans', sans-serif" }}
                 >
-                  {featuredCollections.collections[currentSlide].subtitle}
+                  {featuredCollections.collections[currentSlide].description}
                 </p>
 
                 {/* Button */}
                 <Link 
                   to={featuredCollections.collections[currentSlide].buttonLink || '#'}
-                  className="inline-flex items-center gap-2 bg-white text-black px-4 py-2 text-sm font-medium transition-all duration-300 hover:bg-gray-100 group/btn rounded"
+                  className="inline-flex items-center gap-2 bg-white text-black px-5 py-2.5 text-sm font-medium transition-all duration-300 hover:bg-gray-100 group/btn rounded-lg shadow-md"
                 >
                   <span style={{ fontFamily: "'Albert Sans', sans-serif" }}>
                     {featuredCollections.collections[currentSlide].buttonText}
                   </span>
                   <svg
-                    className="w-3 h-3 transition-transform group-hover/btn:translate-x-1"
+                    className="w-4 h-4 transition-transform group-hover/btn:translate-x-1"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -167,13 +170,13 @@ const TwoBoxSection: React.FC = () => {
           </div>
 
           {/* Navigation Dots */}
-          <div className="flex justify-center space-x-2 mt-6">
+          <div className="flex justify-center space-x-3 mt-6">
             {featuredCollections.collections.map((_: any, index: number) => (
               <button
                 key={index}
                 onClick={() => handleDotClick(index)}
-                className={`w-2 h-2 rounded-full transition-colors duration-200 ${
-                  index === currentSlide ? 'bg-black' : 'bg-gray-300'
+                className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                  index === currentSlide ? 'bg-black scale-110' : 'bg-gray-300 hover:bg-gray-400'
                 }`}
                 aria-label={`Go to collection ${index + 1}`}
               />

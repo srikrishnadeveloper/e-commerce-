@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import orderService from '../services/orderService';
 import authService from '../services/authService';
+import { getImageUrl } from '../utils/imageUrl';
 
 interface Product {
   _id?: string;
@@ -348,7 +349,7 @@ const BillingPage: React.FC<BillingPageProps> = () => {
               <div className="flex items-center space-x-4 mb-6 pb-6 border-b border-gray-200">
                 {orderSummary.product.image && (
                   <img
-                    src={`http://localhost:5001/api/images/${orderSummary.product.image}`}
+                    src={getImageUrl(orderSummary.product.image)}
                     alt={orderSummary.product.name}
                     className="w-20 h-20 object-cover rounded-md"
                   />

@@ -4,6 +4,7 @@ import siteConfig from '../data/siteConfig.json';
 // TypeScript: JSON import typed as any for hero config
 const staticConfig: any = siteConfig;
 import siteConfigService from '../services/siteConfigService';
+import { getImageUrl } from '../utils/imageUrl';
 
 const HeroCarousel = () => {
   const [slides, setSlides] = useState<any[]>(staticConfig.hero?.slides || []);
@@ -274,30 +275,37 @@ const HeroCarousel = () => {
             <p className="text-gray-500 text-lg">Loading slides...</p>
           </div>
         ) : (
-          getVisibleSlides().map(({ slide, index, position }) => (
+          getVisibleSlides().map(({ slide, index, position }) => {
+            const imageUrl = slide.image ? getImageUrl(slide.image) : null;
+            
+            return (
           <div
             key={`${slide.id}-${index}-${position}`}
             ref={el => { slidesRef.current[index] = el; }}
             className={getSlideClass(index)}
             style={{
               ...getSlideStyle(index),
-              backgroundImage: `url(${slide.image})`,
+              backgroundImage: slide.image ? `url("${imageUrl}")` : 'none',
               backgroundSize: 'cover',
               backgroundRepeat: 'no-repeat',
-              backgroundPosition: 'center center'
+              backgroundPosition: 'center center',
+              boxShadow: 'inset 0 0 40px rgba(0, 0, 0, 0.2)'
             } as React.CSSProperties}
           >
             {/* Content Section - Overlaid on background */}
             <div 
               ref={el => { contentRef.current[index] = el; }}
-              className="flex flex-col items-center text-center px-4 sm:px-8 lg:px-16 py-4 sm:py-8 relative z-10 w-full h-full justify-start pt-8 sm:pt-16"
+              className="flex flex-col items-center text-center px-4 sm:px-8 lg:px-16 py-4 sm:py-8 relative z-10 w-[70%] sm:w-full mx-auto h-full justify-start pt-16 sm:pt-16"
             >
               {/* Main Heading */}
-              <h2 className={`font-normal mb-3 sm:mb-6 leading-tight text-black ${
-                index === activeIndex 
-                  ? 'text-[28px] sm:text-[40px] lg:text-[56px]' 
-                  : 'text-[20px] sm:text-[30px] lg:text-[40px]'
-              }`}>
+              <h2 
+                className={`font-normal mb-3 sm:mb-6 leading-tight ${
+                  index === activeIndex 
+                    ? 'text-[28px] sm:text-[40px] lg:text-[56px]' 
+                    : 'text-[20px] sm:text-[30px] lg:text-[40px]'
+                }`}
+                style={{ color: slide.textColor || '#000000' }}
+              >
                 {slide.heading.split('\n').map((line, lineIndex) => (
                   <React.Fragment key={lineIndex}>
                     {line}
@@ -306,12 +314,15 @@ const HeroCarousel = () => {
                 ))}
               </h2>
               
-              {/* Subheading - Hidden on mobile */}
-              <p className={`mb-6 sm:mb-12 max-w-xs sm:max-w-md hidden sm:block text-black ${
-                index === activeIndex 
-                  ? 'text-[14px] sm:text-[16px] lg:text-[20px]' 
-                  : 'text-[12px] sm:text-[14px] lg:text-[16px]'
-              }`}>
+              {/* Subheading - Now visible on mobile */}
+              <p 
+                className={`mb-3 sm:mb-6 max-w-xs sm:max-w-md ${
+                  index === activeIndex 
+                    ? 'text-[12px] sm:text-[16px] lg:text-[20px]' 
+                    : 'text-[10px] sm:text-[14px] lg:text-[16px]'
+                }`}
+                style={{ color: slide.textColor || '#000000' }}
+              >
                 {slide.subheading}
               </p>
               
@@ -320,8 +331,12 @@ const HeroCarousel = () => {
                 <a
                   href={slide.buttonLink || '/products'}
                   ref={buttonRef}
-                  style={{ marginTop: '30px' }}
-                  className="inline-flex items-center border-2 border-black px-4 sm:px-8 py-2 sm:py-3 rounded-full text-sm sm:text-lg font-medium transition-all duration-300 hover:bg-black hover:text-white group text-black"
+                  style={{ 
+                    marginTop: '30px',
+                    borderColor: slide.textColor || '#000000',
+                    color: slide.textColor || '#000000'
+                  }}
+                  className="inline-flex items-center border-2 px-4 sm:px-8 py-2 sm:py-3 rounded-full text-sm sm:text-lg font-medium transition-all duration-300 hover:bg-black hover:!text-white group"
                 >
                   {slide.button}
                   <svg
@@ -342,14 +357,17 @@ const HeroCarousel = () => {
             </div>
             
             {/* Hidden image ref for GSAP animations */}
-            <img 
-              ref={el => { imageRef.current[index] = el; }}
-              src={slide.image} 
-              alt={slide.heading}
-              className="hidden"
-            />
+            {slide.image && (
+              <img 
+                ref={el => { imageRef.current[index] = el; }}
+                src={getImageUrl(slide.image)} 
+                alt={slide.heading}
+                className="hidden"
+              />
+            )}
           </div>
-          ))
+            );
+          })
         )}
       </div>
 

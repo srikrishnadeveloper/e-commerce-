@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from "react";
 import siteConfigService from '../services/siteConfigService';
 import type { FeaturesSection, FeatureItem } from '../types';
-
-interface IconMap {
-  [key: string]: React.ReactElement;
-}
+import * as Icons from 'lucide-react';
 
 const ServiceFeaturesSection: React.FC = () => {
   const [featuresSection, setFeaturesSection] = useState<FeaturesSection | null>(null);
@@ -42,35 +39,21 @@ const ServiceFeaturesSection: React.FC = () => {
 
   const features: FeatureItem[] = featuresSection.features || [];
   
-  // Reorder features for mobile: put 24/7 Support (headphones) first
+  // Reorder features for mobile: put 24/7 Support (Headphones icon) first
   const mobileFeatures: FeatureItem[] = [...features].sort((a, b) => {
-    if (a.icon === 'headphones') return -1;
-    if (b.icon === 'headphones') return 1;
+    if (a.icon === 'Headphones') return -1;
+    if (b.icon === 'Headphones') return 1;
     return 0;
   });
 
-  // Icon mapping - replace with your preferred icons
-  const iconMap: IconMap = {
-    truck: (
-      <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M21 7.5l-2.25-1.313L16.875 4.5H15.75L14.25 2.25 12 1.5l-2.25.75L8.25 4.5H7.125L5.25 6.188 3 7.5v9a2.25 2.25 0 0 0 2.25 2.25h13.5A2.25 2.25 0 0 0 21 16.5v-9zM9 15.75l-3-3m0 0l3-3m-3 3h12" />
-      </svg>
-    ),
-    headphones: (
-      <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 01-.825-.242m9.345-8.334a2.126 2.126 0 00-.476-.095 48.64 48.64 0 00-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0011.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155" />
-      </svg>
-    ),
-    refresh: (
-      <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-      </svg>
-    ),
-    shield: (
-      <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.623 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
-      </svg>
-    )
+  // Render icon dynamically from Lucide
+  const renderIcon = (iconName: string, className: string = "w-10 h-10") => {
+    const IconComponent = Icons[iconName as keyof typeof Icons];
+    if (IconComponent) {
+      return <IconComponent className={className} />;
+    }
+    // Fallback if icon not found
+    return <Icons.HelpCircle className={className} />;
   };
 
   return (
@@ -85,7 +68,7 @@ const ServiceFeaturesSection: React.FC = () => {
             {/* Icon */}
             <div className="bg-gray-100 rounded-full flex items-center justify-center w-14 h-14 mb-2">
               <div className="text-black">
-                {iconMap[mobileFeatures[currentSlide]?.icon] || <div className="w-8 h-8 bg-gray-400 rounded" />}
+                {renderIcon(mobileFeatures[currentSlide]?.icon)}
               </div>
             </div>
             
@@ -122,7 +105,7 @@ const ServiceFeaturesSection: React.FC = () => {
               {/* Icon */}
               <div className="bg-gray-100 rounded-full flex items-center justify-center w-16 h-16 mb-4">
                 <div className="text-black">
-                  {iconMap[feature.icon] || <div className="w-8 h-8 bg-gray-400 rounded" />}
+                  {renderIcon(feature.icon)}
                 </div>
               </div>
               

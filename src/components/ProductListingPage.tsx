@@ -203,6 +203,9 @@ const ProductListingPage: React.FC = () => {
           getCategories()
         ]);
         
+        console.log('ProductListingPage - configData received:', configData);
+        console.log('ProductListingPage - productPages:', configData?.productPages);
+        
         setProducts(productsData);
         setSiteConfig(configData);
         

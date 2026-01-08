@@ -53,13 +53,27 @@ const UPIPaymentPage: React.FC = () => {
   };
 
   const handleSubmitTransaction = async () => {
-    if (!transactionId.trim()) {
+    const trimmedId = transactionId.trim();
+    
+    // Validation
+    if (!trimmedId) {
       setError('Please enter your UPI Transaction ID');
       return;
     }
 
-    if (transactionId.trim().length < 8) {
-      setError('Please enter a valid UPI Transaction ID');
+    if (trimmedId.length < 10) {
+      setError('Transaction ID must be at least 10 characters long');
+      return;
+    }
+
+    if (trimmedId.length > 35) {
+      setError('Transaction ID is too long. Please check and re-enter.');
+      return;
+    }
+
+    // Only allow alphanumeric characters
+    if (!/^[a-zA-Z0-9]+$/.test(trimmedId)) {
+      setError('Transaction ID should only contain letters and numbers');
       return;
     }
 

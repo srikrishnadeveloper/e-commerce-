@@ -5,6 +5,11 @@ export interface Color {
   selected?: boolean;
 }
 
+export interface SizeOption {
+  name: string;
+  price: number;
+}
+
 export interface Specifications {
   [key: string]: string;
 }
@@ -21,13 +26,11 @@ export interface Product {
   categoryId: string;
   images: string[];
   colors: Color[];
-  sizes: string[];
+  sizes: SizeOption[];
   inStock: boolean;
   rating: number;
   reviews: number;
-  features: string[];
   specifications: Specifications;
-  tags: string[];
   bestseller: boolean;
   hotDeal: boolean;
   onSale?: boolean;

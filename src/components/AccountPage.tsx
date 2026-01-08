@@ -440,36 +440,66 @@ const AccountPage = () => {
 
       {/* Desktop Table View */}
       <div className="hidden md:block overflow-x-auto">
-        <table className="w-full border-collapse min-w-[600px]">
+        <table className="w-full border-collapse">
           <thead>
-            <tr className="border-b">
-              <th className="text-left py-4 px-0 font-medium text-gray-700 text-sm lg:text-base">Order</th>
-              <th className="text-left py-4 px-2 lg:px-4 font-medium text-gray-700 text-sm lg:text-base">Date</th>
-              <th className="text-left py-4 px-2 lg:px-4 font-medium text-gray-700 text-sm lg:text-base">Status</th>
-              <th className="text-left py-4 px-2 lg:px-4 font-medium text-gray-700 text-sm lg:text-base">Total</th>
-              <th className="text-left py-4 px-2 lg:px-4 font-medium text-gray-700 text-sm lg:text-base">Actions</th>
+            <tr className="border-b border-gray-200">
+              <th className="text-left py-4 pr-6 font-semibold text-gray-900 text-sm tracking-wide uppercase">Product</th>
+              <th className="text-left py-4 px-6 font-semibold text-gray-900 text-sm tracking-wide uppercase">Date</th>
+              <th className="text-left py-4 px-6 font-semibold text-gray-900 text-sm tracking-wide uppercase">Status</th>
+              <th className="text-left py-4 px-6 font-semibold text-gray-900 text-sm tracking-wide uppercase">Total</th>
+              <th className="text-right py-4 pl-6 font-semibold text-gray-900 text-sm tracking-wide uppercase">Actions</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-gray-100">
             {ordersLoading ? (
               <tr>
-                <td colSpan={5} className="py-8 text-center text-gray-500">Loading orders...</td>
+                <td colSpan={5} className="py-12 text-center text-gray-500">Loading orders...</td>
               </tr>
             ) : orders.length === 0 ? (
               <tr>
-                <td colSpan={5} className="py-8 text-center text-gray-500">No orders found</td>
+                <td colSpan={5} className="py-12 text-center text-gray-500">No orders found</td>
               </tr>
             ) : (
               orders.map((order) => (
-                <tr key={order._id} className="border-b hover:bg-gray-50">
-                  <td className="py-4 px-0 text-sm lg:text-base">#{order.orderNumber || order._id.slice(-6)}</td>
-                  <td className="py-4 px-2 lg:px-4 text-sm lg:text-base whitespace-nowrap">{new Date(order.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</td>
-                  <td className="py-4 px-2 lg:px-4 capitalize text-sm lg:text-base">{order.status}</td>
-                  <td className="py-4 px-2 lg:px-4 text-sm lg:text-base whitespace-nowrap">₹{(order.total || order.totalAmount || 0).toFixed(2)} for {order.items?.length || 0} Items</td>
-                  <td className="py-4 px-2 lg:px-4">
+                <tr key={order._id} className="hover:bg-gray-50 transition-colors">
+                  <td className="py-5 pr-6">
+                    <div className="flex flex-col">
+                      <span className="text-gray-900 font-medium text-base">
+                        {order.items && order.items.length > 0 
+                          ? (order.items[0].product?.name || order.items[0].name || 'Unknown Product').length > 35
+                            ? (order.items[0].product?.name || order.items[0].name || 'Unknown Product').substring(0, 35) + '...'
+                            : (order.items[0].product?.name || order.items[0].name || 'Unknown Product')
+                          : 'No items'}
+                      </span>
+                      {order.items && order.items.length > 1 && (
+                        <span className="text-gray-500 text-sm mt-0.5">+{order.items.length - 1} more item{order.items.length > 2 ? 's' : ''}</span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="py-5 px-6 text-gray-600 text-base whitespace-nowrap">
+                    {new Date(order.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                  </td>
+                  <td className="py-5 px-6">
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium capitalize ${
+                      order.status === 'delivered' ? 'bg-green-100 text-green-800' :
+                      order.status === 'processing' ? 'bg-yellow-100 text-yellow-800' :
+                      order.status === 'shipped' ? 'bg-blue-100 text-blue-800' :
+                      order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {order.status}
+                    </span>
+                  </td>
+                  <td className="py-5 px-6">
+                    <div className="flex flex-col">
+                      <span className="text-gray-900 font-semibold text-base">₹{(order.total || order.totalAmount || 0).toFixed(2)}</span>
+                      <span className="text-gray-500 text-sm">{order.items?.length || 0} item{(order.items?.length || 0) !== 1 ? 's' : ''}</span>
+                    </div>
+                  </td>
+                  <td className="py-5 pl-6 text-right">
                     <Link
                       to={`/order-tracking/${order._id}`}
-                      className="inline-block bg-black text-white px-3 lg:px-4 py-2 text-sm font-medium hover:bg-gray-800 transition-colors rounded"
+                      className="inline-flex items-center justify-center bg-black text-white px-5 py-2.5 text-sm font-medium hover:bg-gray-800 transition-colors rounded"
                     >
                       Track Order
                     </Link>

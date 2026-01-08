@@ -191,7 +191,8 @@ export const searchProducts = async (query: string): Promise<Product[]> => {
  */
 export const getSiteConfig = async (): Promise<SiteConfig> => {
   try {
-    const response = await apiRequest('/siteconfig');
+    // Add cache-busting to ensure fresh data
+    const response = await apiRequest(`/siteconfig?_t=${Date.now()}`);
     return response.data || {} as SiteConfig;
   } catch (error) {
     return {} as SiteConfig;

@@ -298,11 +298,10 @@ const CheckoutPage: React.FC = () => {
           throw new Error(codResult.message || 'Failed to confirm COD order');
         }
 
-        setOrderSuccessData({
-          order: createdOrder,
-          email: billingDetails.email
+        // Navigate directly to order confirmation page
+        navigate('/order-confirmation', {
+          state: { order: createdOrder, email: billingDetails.email }
         });
-        setShowSuccessPopup(true);
         setSubmitting(false);
         return;
       }
@@ -379,11 +378,13 @@ const CheckoutPage: React.FC = () => {
               return;
             }
 
-            setOrderSuccessData({
-              order: verifyResult.data?.order || createdOrder,
-              email: billingDetails.email
+            // Navigate directly to order confirmation page
+            navigate('/order-confirmation', {
+              state: { 
+                order: verifyResult.data?.order || createdOrder, 
+                email: billingDetails.email 
+              }
             });
-            setShowSuccessPopup(true);
           } catch (verifyErr: any) {
             setError(verifyErr.message || 'Payment verification failed');
           } finally {
@@ -754,25 +755,7 @@ const CheckoutPage: React.FC = () => {
               </p>
             </div>
 
-            {/* Buttons */}
-            <div className="space-y-3">
-              <button
-                onClick={() => {
-                  navigate('/order-confirmation', {
-                    state: orderSuccessData
-                  });
-                }}
-                className="w-full bg-black text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition-colors"
-              >
-                View Order Details
-              </button>
-              <button
-                onClick={() => navigate('/products')}
-                className="w-full border border-gray-300 text-gray-700 py-3 px-6 rounded-lg font-medium hover:bg-gray-50 transition-colors"
-              >
-                Continue Shopping
-              </button>
-            </div>
+            {/* Auto redirect - no buttons needed */}
           </div>
         </div>
       )}

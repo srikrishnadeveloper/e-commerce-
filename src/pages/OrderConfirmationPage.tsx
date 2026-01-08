@@ -39,6 +39,10 @@ const OrderConfirmationPage: React.FC = () => {
   
   // Get order and email from navigation state
   const { order, email } = location.state || {};
+  
+  // Get user data from localStorage for fallback
+  const userData = localStorage.getItem('user');
+  const user = userData ? JSON.parse(userData) : null;
 
   useEffect(() => {
     // Redirect if no order data
@@ -59,6 +63,7 @@ const OrderConfirmationPage: React.FC = () => {
   }
 
   const formatPrice = (price: number) => {
+    if (!price && price !== 0) return '₹0.00';
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
@@ -67,11 +72,22 @@ const OrderConfirmationPage: React.FC = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'N/A';
+    return date.toLocaleDateString('en-US', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric'
     });
+  };
+
+  // Determine payment method from order data
+  const getPaymentMethod = () => {
+    if (order.paymentInfo?.method === 'manual_upi') return 'UPI Payment';
+    if (order.paymentInfo?.method === 'razorpay') return 'Online Payment';
+    if (order.paymentMethod === 'cod' || order.paymentInfo?.method === 'cod') return 'Cash on Delivery';
+    return 'Cash on Delivery'; // Default
   };
 
   return (
@@ -107,7 +123,7 @@ const OrderConfirmationPage: React.FC = () => {
             {/* Payment method */}
             <div className="flex justify-between items-center py-2 lg:py-3 border-b border-gray-200">
               <span className="text-gray-600 text-base lg:text-lg">Payment method</span>
-              <span className="text-gray-900 text-base lg:text-lg">Cash on Delivery</span>
+              <span className="text-gray-900 text-base lg:text-lg">{getPaymentMethod()}</span>
             </div>
             
             {/* Order ID as Card number replacement */}
@@ -119,13 +135,13 @@ const OrderConfirmationPage: React.FC = () => {
             {/* Cardholder name / Customer name */}
             <div className="flex justify-between items-center py-2 lg:py-3 border-b border-gray-200">
               <span className="text-gray-600 text-base lg:text-lg">Customer name</span>
-              <span className="text-gray-900 text-base lg:text-lg">{order.shippingAddress?.fullName || 'N/A'}</span>
+              <span className="text-gray-900 text-base lg:text-lg">{order.shippingAddress?.fullName || user?.name || 'N/A'}</span>
             </div>
             
             {/* Email */}
             <div className="flex justify-between items-center py-2 lg:py-3 border-b border-gray-200">
               <span className="text-gray-600 text-base lg:text-lg">Email</span>
-              <span className="text-gray-900 text-base lg:text-lg">{email || 'N/A'}</span>
+              <span className="text-gray-900 text-base lg:text-lg">{email || user?.email || 'N/A'}</span>
             </div>
             
             {/* Phone */}

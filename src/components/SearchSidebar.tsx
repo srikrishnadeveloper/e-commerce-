@@ -234,8 +234,7 @@ const SearchSidebar: React.FC<SearchSidebarProps> = ({ isOpen, onClose }) => {
             const searchableText = [
               product.name || '',
               product.description || '',
-              product.category || '',
-              ...(product.tags || [])
+              product.category || ''
             ].join(' ');
             
             // Calculate fuzzy match score for each expanded query term

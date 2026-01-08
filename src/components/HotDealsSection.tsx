@@ -83,6 +83,8 @@ const DealCard: React.FC<DealCardProps> = ({ deal, onColorSelect, onCloseDeal })
   const activeOriginalPrice = Array.isArray(variantOriginalPrices) && variantOriginalPrices[selectedColorIndex] != null
     ? variantOriginalPrices[selectedColorIndex]
     : deal.originalPrice;
+  // Check if this product has color variants
+  const hasColors = deal.colors && deal.colors.length > 0;
   // Normalize and sanitize image URL from product data
   const resolveImageSrc = (raw?: string): string => {
     const src = (raw || '').trim();
@@ -125,7 +127,7 @@ const DealCard: React.FC<DealCardProps> = ({ deal, onColorSelect, onCloseDeal })
       className="relative transition-transform duration-300 hover:scale-[1.02] hover:shadow-lg rounded-lg overflow-hidden flex-shrink-0 mr-8"
       style={{ 
       width: 'clamp(220px, 20vw, 300px)',
-      height: 'clamp(400px, 35vw, 480px)',
+      height: hasColors ? 'clamp(400px, 35vw, 480px)' : 'clamp(360px, 32vw, 440px)',
       backgroundColor: '#f8f8f8' 
     }}
       role="button"
@@ -167,7 +169,7 @@ const DealCard: React.FC<DealCardProps> = ({ deal, onColorSelect, onCloseDeal })
       </div>
       
       {/* Content Section */}
-      <div className="w-full text-center px-3" style={{ paddingTop: '10px', display: 'grid', gap: '8px' }}>
+      <div className="w-full text-center px-3" style={{ paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
         {/* Product Name */}
         <h3 
           className="text-black leading-tight flex items-center justify-center" 
@@ -199,28 +201,30 @@ const DealCard: React.FC<DealCardProps> = ({ deal, onColorSelect, onCloseDeal })
           )}
         </div>
         
-        {/* Color Swatches */}
-        <div className="flex justify-center gap-2">
-          {deal.colors && deal.colors.slice(0, 2).map((color, index) => (
-            <button
-              type="button"
-               key={`${getPid(deal)}-${color.name}-${index}`}
-               onClick={(e) => { e.stopPropagation(); onColorSelect(getPid(deal), index); }}
-               onKeyDown={(e) => {
-                 // Prevent card activation when navigating with keyboard on swatches
-                 if (e.key === 'Enter' || e.key === ' ') e.stopPropagation();
-               }}
-              className={`w-6 h-6 rounded-full border-2 transition-all duration-200 hover:scale-110 ${
-                color.selected 
-                  ? 'border-black shadow-md scale-110' 
-                  : 'border-gray-300 hover:border-gray-400'
-              }`}
-              style={{ backgroundColor: color.value }}
-              aria-label={`Select ${color.name} color`}
-              aria-pressed={!!color.selected}
-            />
-          ))}
-        </div>
+        {/* Color Swatches - Only show if colors exist */}
+        {deal.colors && deal.colors.length > 0 && (
+          <div className="flex justify-center gap-2" style={{ minHeight: '24px' }}>
+            {deal.colors.slice(0, 2).map((color, index) => (
+              <button
+                type="button"
+                 key={`${getPid(deal)}-${color.name}-${index}`}
+                 onClick={(e) => { e.stopPropagation(); onColorSelect(getPid(deal), index); }}
+                 onKeyDown={(e) => {
+                   // Prevent card activation when navigating with keyboard on swatches
+                   if (e.key === 'Enter' || e.key === ' ') e.stopPropagation();
+                 }}
+                className={`w-6 h-6 rounded-full border-2 transition-all duration-200 hover:scale-110 ${
+                  color.selected 
+                    ? 'border-black shadow-md scale-110' 
+                    : 'border-gray-300 hover:border-gray-400'
+                }`}
+                style={{ backgroundColor: color.value }}
+                aria-label={`Select ${color.name} color`}
+                aria-pressed={!!color.selected}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

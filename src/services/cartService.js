@@ -1,6 +1,36 @@
 import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:5001/api';
+const STATIC_BASE_URL = 'http://localhost:5001';
+
+// Helper to normalize image URLs
+const normalizeImageUrl = (img) => {
+  if (!img) return img;
+  if (/^https?:\/\//i.test(img)) return img;
+  if (img.startsWith('/images/')) return `${STATIC_BASE_URL}${img}`;
+  return `${STATIC_BASE_URL}/images/${img.replace(/^\/?/, '')}`;
+};
+
+// Normalize cart item images
+const normalizeCartItem = (item) => {
+  if (!item) return item;
+  if (item.product && item.product.images) {
+    item.product.images = item.product.images.map(normalizeImageUrl);
+  }
+  return item;
+};
+
+// Normalize all cart items
+const normalizeCart = (cartData) => {
+  if (!cartData) return cartData;
+  if (cartData.data && cartData.data.items) {
+    cartData.data.items = cartData.data.items.map(normalizeCartItem);
+  }
+  if (cartData.items) {
+    cartData.items = cartData.items.map(normalizeCartItem);
+  }
+  return cartData;
+};
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -56,7 +86,7 @@ class CartService {
   async getCart() {
     try {
       const response = await api.get('/cart');
-      return response.data;
+      return normalizeCart(response.data);
     } catch (error) {
       throw error.response?.data || { message: 'Failed to get cart' };
     }
