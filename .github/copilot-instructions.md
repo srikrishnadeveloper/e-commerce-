@@ -6,11 +6,12 @@
 ┌─────────────────────────────────────────────────────────────────┐
 │                     E-COMMERCE MONOREPO                         │
 ├─────────────────────────────────────────────────────────────────┤
-│  frontend/         adminfrontend/       adminbackend/           │
-│  (Customer)        (Admin Dashboard)    (Experimental)          │
-│  :5177             :8091                :5175                   │
-│       │                  │                   │                  │
-│       └──────────────────┼───────────────────┘                  │
+│  frontend/              adminfrontend/                          │
+│  (Customer)             (Admin Dashboard)                       │
+│  :5177                  :8091                                   │
+│       │                      │                                  │
+│       └──────────────────────┘                                  │
+│                          │                                      │
 │                          ▼                                      │
 │                    backend/ :5001                               │
 │                    (Express REST API)                           │
@@ -25,7 +26,38 @@
 | `backend/` | 5001 | REST API (Express + Mongoose) |
 | `frontend/` | 5177 | Customer storefront (React + Vite) |
 | `adminfrontend/` | 8091 | Admin dashboard (React + ShadCN) |
-| `adminbackend/` | 5175 | Experimental UI |
+
+## ⚠️ GIT REPOSITORY STRUCTURE - CRITICAL
+
+**Each folder has its OWN separate Git repository. NEVER push the entire monorepo!**
+
+| Folder | Repository | Branch |
+|--------|-----------|--------|
+| `frontend/` | `srikrishnadeveloper/e-commerce-` | `master` |
+| `backend/` | `srikrishnadeveloper/e-commerce-backend` | `main` |
+| `adminfrontend/` | `srikrishnadeveloper/e-commerce_adminfrontend` | `master` |
+
+### Push Commands (Run from each folder)
+```powershell
+# Frontend
+cd frontend
+git add -A; git commit -m "your message"; git push origin master
+
+# Backend  
+cd backend
+git add -A; git commit -m "your message"; git push origin main
+
+# Admin Frontend
+cd adminfrontend
+git add -A; git commit -m "your message"; git push origin master
+```
+
+### 🚫 NEVER DO THIS
+```powershell
+# WRONG - Do not push from root folder
+cd ecommerce
+git push  # ❌ This will try to push entire monorepo
+```
 
 ## Quick Start
 
@@ -74,13 +106,25 @@ db.siteconfigs.updateOne(
 
 | Priority | Task | Location | Action |
 |----------|------|----------|--------|
-| 🔴 HIGH | Remove test files | Root folder | Delete `test-*.js`, `check-*.js`, `quick-test.js` |
-| 🔴 HIGH | Remove .md clutter | Root folder | Delete `*_COMPLETE.md`, `*_FIX.md`, `*_IMPLEMENTATION.md` |
-| 🟡 MED | Duplicate `src/` folder | Root | Remove or consolidate with `frontend/src/` |
+| ✅ DONE | Remove test files | Root folder | Deleted test files |
+| ✅ DONE | Remove .md clutter | Root folder | Consolidated into `docs/` folder |
+| ✅ DONE | Duplicate `src/` folder | Root | **REMOVED** - was duplicate of `frontend/src/` |
 | 🟡 MED | Hardcoded ports | Multiple files | Use env vars for `localhost:5001`, `localhost:5000` |
 | 🟡 MED | Duplicate LoginModal | `frontend/src/components/` | Keep only `.tsx`, remove `.jsx` |
-| 🟢 LOW | Empty server.js | `adminbackend/` | Remove or implement |
 | 🟢 LOW | Backup files | `frontend/src/services/` | Remove `dataService_backup.js` |
+
+## 📚 Documentation Structure
+
+All documentation has been consolidated into the `docs/` folder:
+
+| File | Description |
+|------|-------------|
+| `docs/01_Project_Overview.md` | Project architecture and setup |
+| `docs/02_Tasks_and_TODOs.md` | Feature roadmap and improvements |
+| `docs/03_Admin_Auth_Guide.md` | Admin authentication documentation |
+| `docs/04_Email_Implementation.md` | Email service setup and templates |
+| `docs/05_Knowledge_Base.md` | Development knowledge transfer |
+| `docs/06_Testing_Guide.md` | Complete testing documentation (consolidated) |
 
 ## Key Patterns
 
@@ -161,6 +205,35 @@ Run: `npm run dev` in backend to test.
 
 ---
 
+##  Recent Updates (Jan 2026)
+
+### Product Features
+| Feature | Status | Details |
+|---------|--------|---------|
+| **Sizes with Prices** |  Complete | Products now support multiple sizes, each with its own price. Format: `sizes: [{name: String, price: Number}]` |
+| **Hot Deals Removed from bestseller** |  Complete | Removed `bestseller` field entirely. Only `hotDeal: boolean` remains for product flags |
+| **Hot Deals Auto-Sync** |  Complete | Toggling product's `hotDeal` checkbox automatically updates `SiteConfig.homepage.hotDealsSection.productIds` array |
+
+### Admin Dashboard Improvements
+| Feature | Location | Change |
+|---------|----------|--------|
+| **ProductModal Simplified** | `adminfrontend/src/components/modals/ProductModal.tsx` | Removed bestseller checkbox, kept only Hot Deals (with sync indicator) |
+| **Dashboard Sync Function** | `adminfrontend/src/components/Dashboard.tsx` | Added `syncHotDealWithConfig()` to auto-add/remove products from homepage config |
+| **Product Types Updated** | `adminfrontend/src/types/index.ts` | Removed `bestseller: boolean` from Product interface |
+
+### Analytics Fixes
+| Issue | Location | Fix |
+|-------|----------|-----|
+| **Revenue/Orders Not Showing** | `backend/src/services/analyticsService.js` | Changed filter from `paymentStatus: 'paid'` to `status: { $nin: ['cancelled', 'refunded'] }` to include COD orders |
+| **Payment Methods Filter** | `backend/src/controllers/analyticsController.js` | Same filter update for revenue time series and payment method breakdowns |
+
+### Frontend UX Enhancements
+| Feature | Location | Change |
+|---------|----------|--------|
+| **You May Also Like Redesign** | `frontend/src/components/ProductDetailPage.tsx` | Desktop: 4-column grid (up to 8 products). Mobile: 2-column carousel with infinite loop, improved hover effects, quick actions |
+
+---
+
 ##  Bugs Fixed (E2E Testing - Nov 29, 2025)
 
 | Bug | Location | Fix |
@@ -179,7 +252,7 @@ Run: `npm run dev` in backend to test.
 |---|------|-------------|----------|
 | 1 | **Payment Integration** | Implement Razorpay/Stripe payment gateway | `backend/`, `frontend/` |
 | 2 | **Email Notifications** | Send order confirmations, status updates, shipping alerts | `backend/src/utils/email.js` |
-| 3 | **Admin Authentication** | Add proper JWT auth for admin dashboard | `adminfrontend/`, `adminbackend/` |
+| 3 | **Admin Authentication** | Add proper JWT auth for admin dashboard | `adminfrontend/`, `backend/` |
 | 4 | **Process Refund Feature** | Enable refund processing for paid orders | `backend/src/controllers/adminOrderController.js` |
 | 5 | **Password Reset Flow** | Forgot password email + reset token | `backend/src/controllers/authController.js` |
 | 6 | **Input Validation** | Server-side validation for all endpoints | `backend/src/middleware/` |
@@ -229,16 +302,15 @@ Run: `npm run dev` in backend to test.
 
 | # | Issue | Description | Location |
 |---|-------|-------------|----------|
-| 36 | **Duplicate src folder** | Root `/src` duplicates `frontend/src` | `/src/` |
+| ✅ | **Duplicate src folder** | Root `/src` duplicates `frontend/src` | **REMOVED** |
 | 37 | **Hardcoded ports** | Change to environment variables | Multiple files |
 | 38 | **LoginModal duplicates** | Remove `.jsx` version | `frontend/src/components/` |
-| 39 | **Empty server.js** | Remove or implement | `adminbackend/server.js` |
-| 40 | **Backup files** | Clean up `*_backup.js` files | `frontend/src/services/` |
-| 41 | **Test files cleanup** | Remove `test-*.js`, `check-*.js` | Root folder |
-| 42 | **MD file cleanup** | Remove `*_COMPLETE.md`, `*_FIX.md` | Root folder |
-| 43 | **Error boundary** | Add React error boundaries | `frontend/src/App.tsx` |
-| 44 | **Loading states** | Consistent skeleton loaders | `frontend/src/components/` |
-| 45 | **API error handling** | Unified error response format | `backend/src/middleware/errorHandler.js` |
+| 39 | **Backup files** | Clean up `*_backup.js` files | `frontend/src/services/` |
+| ✅ | **Test files cleanup** | Remove `test-*.js`, `check-*.js` | **DONE** |
+| ✅ | **MD file cleanup** | Remove `*_COMPLETE.md`, `*_FIX.md` | **DONE** - moved to `docs/` |
+| 42 | **Error boundary** | Add React error boundaries | `frontend/src/App.tsx` |
+| 43 | **Loading states** | Consistent skeleton loaders | `frontend/src/components/` |
+| 44 | **API error handling** | Unified error response format | `backend/src/middleware/errorHandler.js` |
 
 ---
 
