@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest",
+        "--browser=chromium",
+        "--allowed-hosts=localhost,127.0.0.1",
+        "--allowed-origins=http://localhost:5177;http://localhost:5001",
+        "--storage-state=frontend/tests/.auth/user.json",
+        "--output-dir=.playwright-mcp/output",
+        "--viewport-size=1280x720",
+        "--save-session",
+        "--save-trace",
+        "--save-video=1024x768"
+      ]
+    }
+  }
+}

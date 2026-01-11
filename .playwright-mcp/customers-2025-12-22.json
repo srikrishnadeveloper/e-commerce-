@@ -1,0 +1,62 @@
+{
+  "status": "success",
+  "count": 8,
+  "data": [
+    {
+      "name": "CLI Test",
+      "email": "cli939833038@example.com",
+      "phone": "",
+      "totalOrders": 0,
+      "totalSpent": "0.00"
+    },
+    {
+      "name": "Arjun M",
+      "email": "arjunn19m@gmail.com",
+      "phone": "",
+      "totalOrders": 0,
+      "totalSpent": "0.00"
+    },
+    {
+      "name": "Test Order Simple User",
+      "email": "test-order-simple@example.com",
+      "phone": "",
+      "totalOrders": 1,
+      "totalSpent": "59.99"
+    },
+    {
+      "name": "Test Order User",
+      "email": "test-order@example.com",
+      "phone": "",
+      "totalOrders": 1,
+      "totalSpent": "99.98"
+    },
+    {
+      "name": "resopi6098",
+      "email": "resopi6098@besenica.com",
+      "phone": "",
+      "totalOrders": 0,
+      "totalSpent": "0.00"
+    },
+    {
+      "name": "Test User",
+      "email": "testaddress@test.com",
+      "phone": "",
+      "totalOrders": 2,
+      "totalSpent": "52.98"
+    },
+    {
+      "name": "srikrishna",
+      "email": "srikrishnawebdeveloper@gmail.com",
+      "phone": "",
+      "totalOrders": 8,
+      "totalSpent": "602.83"
+    },
+    {
+      "name": "srikrishna",
+      "email": "srik27600@gmail.com",
+      "phone": "",
+      "totalOrders": 2,
+      "totalSpent": "12848.95"
+    }
+  ]
+}

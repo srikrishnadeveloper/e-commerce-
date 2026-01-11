@@ -29,17 +29,8 @@
             "problemMatcher": []
         },
         {
-            "label": "Admin Backend UI",
-            "type": "shell",
-            "command": "npm run dev",
-            "options": { "cwd": "${workspaceFolder}/adminbackend" },
-            "isBackground": true,
-            "presentation": { "reveal": "always", "panel": "dedicated", "group": "workspace" },
-            "problemMatcher": []
-        },
-        {
             "label": "Start Workspace",
-            "dependsOn": ["Backend API", "Frontend Store", "Admin Dashboard", "Admin Backend UI"],
+            "dependsOn": ["Backend API", "Frontend Store", "Admin Dashboard"],
             "dependsOrder": "parallel",
             "problemMatcher": [],
             "runOptions": { "runOn": "default" }

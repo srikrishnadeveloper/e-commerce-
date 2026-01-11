@@ -3,8 +3,7 @@
 $services = @(
     @{ Name="Backend API";       Path="backend";       Port=5001; Command="npm run dev" },
     @{ Name="Frontend Store";    Path="frontend";      Port=5177; Command="npm run dev" },
-    @{ Name="Admin Dashboard";   Path="adminfrontend"; Port=8091; Command="npm run dev" },
-    @{ Name="Admin Backend UI";  Path="adminbackend";  Port=5175; Command="npm run dev" }
+    @{ Name="Admin Dashboard";   Path="adminfrontend"; Port=8091; Command="npm run dev" }
 )
 
 Write-Host "🚀 Starting E-commerce Workspace..." -ForegroundColor Cyan
